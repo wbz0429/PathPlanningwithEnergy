@@ -1,0 +1,5 @@
+airsim
+numpy
+opencv-python
+matplotlib
+pandas
