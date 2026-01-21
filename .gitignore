@@ -60,3 +60,10 @@ settings.json
 # Temporary files
 *.tmp
 *.temp
+nul
+
+# Claude Code
+.claude/
+
+# Personal documents
+硕士研究生选题报告表*.md
