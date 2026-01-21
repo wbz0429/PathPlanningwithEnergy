@@ -4,30 +4,28 @@
 
 ---
 
-## 1. 地面深度信息误识别问题 [未解决]
+## 1. 地面深度信息误识别问题 [已解决]
 
 ### 问题描述
-深度相机向下倾斜时会观测到地面，系统将地面点云错误识别为高度 8-9m 的障碍物墙壁，导致路径规划失败或产生不必要的绕行。
+深度相机向下倾斜或无人机俯仰时会观测到地面，如果不做处理，系统会将地面点云错误识别为障碍物，导致路径规划失败或产生不必要的绕行。
 
-### 问题根源分析
+### 当前解决方案
 
-#### 1.1 坐标变换链路
+通过**多层过滤机制**解决此问题，核心处理在 `mapping/incremental_map.py:134-187` 的 `_accumulate_points()` 方法中。
+
+#### 1.1 感知→建图完整链路
+
 ```
-深度图像素 → 相机坐标系 → 机体坐标系 → 世界坐标系(NED)
+深度图 ──→ 相机坐标系点云 ──→ 机体坐标系 ──→ 世界坐标系(NED) ──→ 地面过滤 ──→ VoxelGrid ──→ ESDF
+         transforms.py:65-119  transforms.py:50-56  transforms.py:58-60   incremental_map.py
 ```
 
-相关代码位置：
-- `utils/transforms.py:65-119` - `depth_image_to_camera_points()` 深度图转点云
-- `utils/transforms.py:29-62` - `transform_camera_to_world()` 坐标变换
-- `mapping/incremental_map.py:134-187` - `_accumulate_points()` 点云累积
-
-#### 1.2 当前的地面过滤逻辑（不完善）
+#### 1.2 地面过滤（核心处理）
 
 ```python
 # mapping/incremental_map.py:149-166
-# 地面过滤参数
-drone_z = camera_pos[2]  # 负值，如-3表示3米高
-ground_threshold = -0.5  # Z > -0.5 的点认为是地面
+# NED坐标系：Z=0 是地面，Z 负值表示高度
+ground_threshold = -0.5  # Z > -0.5m 的点认为是地面
 
 for point in points_world:
     point_z = point[2]
@@ -36,70 +34,81 @@ for point in points_world:
         continue  # 跳过地面点
 ```
 
-**问题**：
-1. `ground_threshold = -0.5` 是硬编码的固定值，只过滤 Z > -0.5m 的点
-2. 当无人机在 3m 高度（Z = -3.0）时，地面点的 Z 坐标应该接近 0
-3. 但如果坐标变换有误差，或者地面不平坦，地面点可能被计算为 Z = -8 或 -9
-4. 这些点会被错误地标记为障碍物
+**原理**：
+- NED 坐标系中，地面 Z = 0，空中 Z < 0
+- 地面点变换到世界坐标系后，Z 值应接近 0
+- 设置阈值 -0.5m，过滤掉所有 Z > -0.5m 的点（即距地面 0.5m 以内）
+- 真正的障碍物（建筑物、墙壁）Z 值会远小于 -0.5m，不会被过滤
 
-#### 1.3 可能的误差来源
+#### 1.3 无人机保护半径
 
-**A. 深度图到相机坐标系转换**
 ```python
-# utils/transforms.py:111-117
-x_cam = (u - cx) * z / fx
-y_cam = (v - cy) * z / fy
-z_cam = z
+# mapping/incremental_map.py:156-171
+drone_protection_radius = 2.0
 
-# 相机坐标系: Z前, X右, Y下
-points_camera = np.stack([x_cam, y_cam, z_cam], axis=1)
+dist_to_drone = np.linalg.norm(point - camera_pos)
+if dist_to_drone < drone_protection_radius:
+    continue  # 跳过无人机附近的点
 ```
-- 假设相机内参 `fx`, `fy` 基于 FOV 计算，可能与 AirSim 实际相机参数不匹配
-- 深度值 `z` 是沿光轴的距离还是欧几里得距离？需要确认
 
-**B. 相机到机体坐标系变换**
-```python
-# utils/transforms.py:50-56
-R_body_camera = np.array([
-    [0, 0, 1],   # 机体X = 相机Z
-    [1, 0, 0],   # 机体Y = 相机X
-    [0, 1, 0]    # 机体Z = 相机Y
-])
-```
-- 假设相机安装在机体正前方，无俯仰角
-- 如果相机有向下的安装角度，此变换矩阵需要修正
+**作用**：防止深度传感器噪声将无人机自身或近距离噪点标记为障碍物。
 
-**C. 机体到世界坐标系变换**
-```python
-# utils/transforms.py:58-60
-R_world_body = quaternion_to_rotation_matrix(drone_orientation)
-points_world = (R_world_body @ points_body.T).T + drone_position
-```
-- 依赖 AirSim 返回的四元数姿态
-- 如果无人机有俯仰角，地面点会被投影到错误的高度
-
-### 排查步骤建议
-
-1. **验证深度值含义**：确认 AirSim 深度图返回的是光轴距离还是欧几里得距离
-2. **检查相机安装角度**：确认相机是否有向下的俯仰角，如有需要在变换中补偿
-3. **打印调试信息**：在 `_accumulate_points()` 中打印地面点的原始深度值和变换后的世界坐标
-4. **可视化点云**：将原始点云和变换后的点云分别可视化，对比分析
-
-### 临时解决方案
-
-当前代码使用了两个保护机制，但不能根本解决问题：
+#### 1.4 无人机周围清除机制
 
 ```python
 # mapping/incremental_map.py:108-124
 def _clear_around_drone(self, drone_pos, radius=2.5):
     """清除无人机周围的障碍物标记"""
-    # 防止无人机被错误标记在障碍物内
+    # 每次更新前清除 2.5m 范围内的障碍物
 
 # mapping/incremental_map.py:126-132
 def _ensure_drone_safe(self, drone_pos):
     """确保ESDF中无人机位置是安全的"""
-    # 如果ESDF显示在障碍物内，再次清除
+    # 如果ESDF显示无人机在障碍物内，清除 3m 范围
 ```
+
+**作用**：双重保险，确保无人机当前位置始终是安全的。
+
+### 坐标变换实现
+
+#### A. 深度图转相机坐标系点云
+```python
+# utils/transforms.py:65-119
+def depth_image_to_camera_points(depth_image, fov_deg=90.0, subsample=4, max_depth=25.0):
+    # 基于 FOV 计算相机内参
+    fx = w / (2 * np.tan(fov_rad / 2))
+
+    # 过滤无效深度
+    valid = (z > 0) & (z < max_depth)
+
+    # 相机坐标系: Z前, X右, Y下
+    x_cam = (u - cx) * z / fx
+    y_cam = (v - cy) * z / fy
+    z_cam = z
+```
+
+#### B. 相机→机体→世界坐标系变换
+```python
+# utils/transforms.py:29-62
+def transform_camera_to_world(points_camera, drone_position, drone_orientation):
+    # 1. 相机 → 机体（固定变换矩阵）
+    R_body_camera = np.array([
+        [0, 0, 1],   # 机体X = 相机Z（前）
+        [1, 0, 0],   # 机体Y = 相机X（右）
+        [0, 1, 0]    # 机体Z = 相机Y（下）
+    ])
+    points_body = (R_body_camera @ points_camera.T).T
+
+    # 2. 机体 → 世界（使用无人机姿态四元数）
+    R_world_body = quaternion_to_rotation_matrix(drone_orientation)
+    points_world = (R_world_body @ points_body.T).T + drone_position
+```
+
+### 潜在局限性
+
+1. **硬编码阈值**：`ground_threshold = -0.5` 和 `drone_protection_radius = 2.0` 是固定值，应考虑移入 `PlanningConfig`
+2. **平坦地面假设**：假设地面 Z ≈ 0，对于起伏地形可能需要动态调整阈值
+3. **相机安装假设**：假设相机正前方安装无俯仰角，如有安装角度需修正 `R_body_camera`
 
 ---
 
@@ -257,16 +266,17 @@ drone_protection_radius = 2.0  # 应该放入 PlanningConfig
 
 ## 优先级排序
 
-| 优先级 | 问题 | 影响程度 | 修复难度 |
-|--------|------|----------|----------|
-| **P0** | 地面误识别 | 高 - 导致规划失败 | 中 - 需要排查坐标变换 |
-| P1 | RRT* 局部最优 | 中 - 复杂环境失败 | 高 - 需要算法改进 |
-| P2 | 单相机盲区 | 中 - 侧向障碍物 | 高 - 需要硬件/仿真支持 |
-| P3 | 静态环境假设 | 低 - 仿真环境静态 | 中 - 需要动态更新机制 |
-| P4 | 代码冗余 | 低 - 不影响功能 | 低 - 删除即可 |
+| 优先级 | 问题 | 状态 | 影响程度 | 修复难度 |
+|--------|------|------|----------|----------|
+| ~~P0~~ | 地面误识别 | **已解决** | - | - |
+| P1 | RRT* 局部最优 | 待优化 | 中 - 复杂环境失败 | 高 - 需要算法改进 |
+| P2 | 单相机盲区 | 设计局限 | 中 - 侧向障碍物 | 高 - 需要硬件/仿真支持 |
+| P3 | 静态环境假设 | 设计局限 | 低 - 仿真环境静态 | 中 - 需要动态更新机制 |
+| P4 | 代码冗余 | 待清理 | 低 - 不影响功能 | 低 - 删除即可 |
 
 ---
 
 ## 更新日志
 
+- **2026-01-21**: 更新地面误识别问题状态为"已解决"，补充完整的处理链路和代码说明
 - **2026-01-21**: 初始版本，记录所有已知问题
