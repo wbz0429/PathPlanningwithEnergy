@@ -1,164 +1,201 @@
 """
-fly_planned_path.py - Fly along planned path test
-1. Get depth image and build map
-2. Plan path
-3. Control drone to fly along path
+fly_planned_path.py - Receding Horizon Planning Flight Test
+使用增量式建图 + 滚动规划实现动态避障
+
+Phase 2: 解决单次感知的遮挡问题
 """
 
-import airsim
 import numpy as np
 import time
-import cv2
+import sys
+import os
 
-from path_planning import PathPlanner, PlanningConfig
+# 添加模块路径
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-
-def get_depth_image(client):
-    """Get depth image"""
-    responses = client.simGetImages([
-        airsim.ImageRequest("0", airsim.ImageType.DepthPlanar, True)
-    ])
-    depth = np.array(responses[0].image_data_float, dtype=np.float32)
-    depth = depth.reshape(responses[0].height, responses[0].width)
-    return depth
-
-
-def get_drone_position(client):
-    """Get drone position"""
-    state = client.getMultirotorState()
-    pos = state.kinematics_estimated.position
-    return np.array([pos.x_val, pos.y_val, pos.z_val])
-
-
-def fly_to_point(client, target, velocity=2.0):
-    """
-    Fly to target point
-
-    Args:
-        client: AirSim client
-        target: Target position [x, y, z]
-        velocity: Flight speed m/s
-    """
-    client.moveToPositionAsync(
-        target[0], target[1], target[2],
-        velocity,
-        timeout_sec=30,
-        drivetrain=airsim.DrivetrainType.MaxDegreeOfFreedom,
-        yaw_mode=airsim.YawMode(is_rate=False, yaw_or_rate=0)
-    ).join()
+from planning.config import PlanningConfig
+from mapping.incremental_map import IncrementalMapManager
+from planning.receding_horizon import RecedingHorizonPlanner
+from control.drone_interface import DroneInterface
 
 
 def main():
-    print("=" * 60)
-    print("Path Planning Flight Test")
-    print("=" * 60)
+    print("\n" + "=" * 70)
+    print("  RECEDING HORIZON PLANNING - Phase 2")
+    print("  Incremental Mapping + Dynamic Replanning")
+    print("=" * 70)
 
-    # Connect to AirSim
+    # === 1. 初始化无人机接口 ===
     print("\n[1] Connecting to AirSim...")
-    client = airsim.MultirotorClient()
-    client.confirmConnection()
-    client.enableApiControl(True)
-    client.armDisarm(True)
-    print("Connected!")
+    drone = DroneInterface()
 
-    # Takeoff
-    print("\n[2] Taking off...")
-    client.takeoffAsync().join()
-    time.sleep(1)
-
-    # Fly to initial height (low altitude to test obstacle avoidance)
-    initial_height = -2.0  # NED coordinate, negative = up, 2m height
-    print(f"    Flying to height: {-initial_height}m")
-    client.moveToZAsync(initial_height, 2).join()
-    time.sleep(1)
-
-    # Get current position and depth image
-    print("\n[3] Getting environment info...")
-    drone_pos = get_drone_position(client)
-    depth = get_depth_image(client)
-    print(f"    Drone position: ({drone_pos[0]:.2f}, {drone_pos[1]:.2f}, {drone_pos[2]:.2f})")
-    print(f"    Depth image size: {depth.shape}")
-
-    # Initialize planner
-    print("\n[4] Initializing path planner...")
-    config = PlanningConfig(
-        voxel_size=0.5,
-        grid_size=(80, 80, 40),
-        origin=(drone_pos[0] - 10.0, drone_pos[1] - 20.0, drone_pos[2] - 10.0),
-        max_depth=25.0,
-        step_size=1.5,
-        max_iterations=5000,
-        goal_sample_rate=0.15,
-        search_radius=3.0,
-        safety_margin=1.0
-    )
-    planner = PathPlanner(config)
-
-    # Update map
-    print("\n[5] Building 3D map...")
-    occupied_count = planner.update_map(depth, drone_pos)
-    print(f"    Occupied voxels: {occupied_count}")
-
-    # Set start and goal
-    start = drone_pos.copy()
-    start[0] -= 1.0  # Move back slightly to ensure safe start
-
-    # Goal: bypass obstacle to front-right
-    goal = np.array([drone_pos[0] + 15.0, drone_pos[1] + 10.0, drone_pos[2]])
-
-    print(f"\n[6] Planning path...")
-    print(f"    Start: ({start[0]:.2f}, {start[1]:.2f}, {start[2]:.2f})")
-    print(f"    Goal:  ({goal[0]:.2f}, {goal[1]:.2f}, {goal[2]:.2f})")
-
-    # Plan path
-    path = planner.plan_path(start, goal)
-
-    if path is None:
-        print("    Path planning FAILED!")
-        client.landAsync().join()
-        client.armDisarm(False)
-        client.enableApiControl(False)
+    try:
+        drone.connect()
+    except Exception as e:
+        print(f"✗ Failed to connect to AirSim: {e}")
+        print("  Make sure AirSim is running!")
         return
 
-    print(f"    Planning SUCCESS! Waypoints: {len(path)}")
-    for i, p in enumerate(path):
-        print(f"      [{i}] ({p[0]:.2f}, {p[1]:.2f}, {p[2]:.2f})")
+    try:
+        # === 2. 起飞 ===
+        print("\n[2] Taking off...")
+        drone.takeoff()
+        time.sleep(1)
 
-    # Fly along path
-    print("\n[7] Flying along path...")
-    flight_speed = 3.0  # m/s
+        # 飞到初始高度
+        initial_height = -3.0  # NED coordinate, 3m altitude
+        print(f"    Flying to altitude: {-initial_height}m")
+        drone.move_to_z(initial_height, velocity=2.0)
+        time.sleep(1)
 
-    for i, waypoint in enumerate(path):
-        print(f"\n    Flying to waypoint [{i}]: ({waypoint[0]:.2f}, {waypoint[1]:.2f}, {waypoint[2]:.2f})")
+        # === 3. 获取初始位置 ===
+        print("\n[3] Getting initial position...")
+        initial_pos, initial_ori = drone.get_pose()
+        print(f"    Position: ({initial_pos[0]:.2f}, {initial_pos[1]:.2f}, {initial_pos[2]:.2f})")
+        print(f"    Orientation: ({initial_ori[0]:.3f}, {initial_ori[1]:.3f}, "
+              f"{initial_ori[2]:.3f}, {initial_ori[3]:.3f})")
 
-        # Fly to target
-        fly_to_point(client, waypoint, velocity=flight_speed)
+        # === 4. 初始化规划配置 ===
+        print("\n[4] Initializing planner configuration...")
 
-        # Get current position
-        current_pos = get_drone_position(client)
-        distance = np.linalg.norm(current_pos - waypoint)
-        print(f"    Arrived! Position: ({current_pos[0]:.2f}, {current_pos[1]:.2f}, {current_pos[2]:.2f})")
-        print(f"    Distance to target: {distance:.2f}m")
+        # 规划配置 - 使用固定origin覆盖整个飞行区域
+        # Blocks场景中建筑物在X=23~53m范围，需要确保grid覆盖这个区域
+        # 目标在Y=25，需要确保Y方向覆盖足够
+        planning_config = PlanningConfig(
+            voxel_size=0.5,
+            grid_size=(120, 120, 40),  # 扩大Y方向覆盖60m
+            origin=(-10.0, -30.0, -15.0),  # 固定origin，覆盖X=-10~50, Y=-30~30, Z=-15~5
+            max_depth=25.0,
+            step_size=1.5,
+            max_iterations=3000,
+            goal_sample_rate=0.2,
+            search_radius=4.0,
+            safety_margin=1.5  # 增大安全边距，防止撞墙
+        )
 
-        time.sleep(0.5)
+        # 滚动规划配置 - 优化后的参数
+        receding_config = {
+            'local_horizon': 8.0,      # 增大局部目标距离到8m
+            'execution_ratio': 0.5,    # 执行路径的前50%
+            'replan_threshold': 1.5,   # 重规划阈值
+            'goal_tolerance': 1.5,     # 放宽到达目标的判定阈值
+            'max_iterations': 50,      # 最大循环次数
+            'flight_velocity': 2.0,    # 飞行速度 m/s（稍微降低以提高稳定性）
+            'visualize': True,         # 启用可视化
+            'enhanced_viz': True,      # 使用增强版可视化器
+            'save_video': True,        # 保存视频
+            'video_fps': 10            # 视频帧率
+        }
 
-    print("\n[8] Path flight completed!")
+        print(f"    Voxel size: {planning_config.voxel_size}m")
+        print(f"    Grid size: {planning_config.grid_size}")
+        print(f"    Local horizon: {receding_config['local_horizon']}m")
+        print(f"    Execution ratio: {receding_config['execution_ratio']}")
 
-    # Hover for a moment
-    print("    Hovering for 3 seconds...")
-    time.sleep(3)
+        # === 5. 初始化地图管理器和规划器 ===
+        print("\n[5] Initializing map manager and planner...")
+        map_manager = IncrementalMapManager(planning_config)
+        planner = RecedingHorizonPlanner(map_manager, drone, receding_config)
+        print("    [OK] Initialization complete")
 
-    # Land
-    print("\n[9] Landing...")
-    client.landAsync().join()
+        # === 6. 设置全局目标 ===
+        print("\n[6] Setting global goal...")
 
-    # Release control
-    client.armDisarm(False)
-    client.enableApiControl(False)
+        # 根据场景分析结果：
+        # - Blocks场景中，最近的建筑物在 X=23~33m 处
+        # - 建筑物高度覆盖 -1m ~ 14m（多层建筑）
+        # - 建筑物Y范围约 -21.5 ~ 18.5m（很宽）
+        #
+        # 策略：设置目标在建筑物侧面，让无人机从侧面绕过
+        # 建筑物边缘在Y=18.5，所以目标设在Y=25可以绕过
+        global_goal = np.array([
+            initial_pos[0] + 35.0,  # X: 前方 35m（超过建筑物）
+            initial_pos[1] + 25.0,  # Y: 右侧 25m（绕过建筑物边缘）
+            initial_pos[2]          # Z: 保持高度
+        ])
 
-    print("\n" + "=" * 60)
-    print("Test completed!")
-    print("=" * 60)
+        print(f"    Start:  ({initial_pos[0]:.2f}, {initial_pos[1]:.2f}, {initial_pos[2]:.2f})")
+        print(f"    Goal:   ({global_goal[0]:.2f}, {global_goal[1]:.2f}, {global_goal[2]:.2f})")
+        print(f"    Distance: {np.linalg.norm(global_goal - initial_pos):.2f}m")
+        print("\n    *** OBSTACLE AVOIDANCE TEST ***")
+        print("    Obstacle detected at X=8-10m (directly ahead)")
+        print("    Goal is at X=15m (behind obstacle), Y=5m (lateral offset)")
+        print("    The drone must navigate around the obstacle")
+
+        # === 7. 执行滚动规划 ===
+        print("\n[7] Starting receding horizon planning...")
+        print("    Press Ctrl+C to stop\n")
+
+        start_time = time.time()
+        success = planner.plan_and_execute(global_goal)
+        elapsed_time = time.time() - start_time
+
+        # === 8. 结果报告 ===
+        print("\n" + "=" * 70)
+        if success:
+            print("  [SUCCESS] MISSION SUCCESS!")
+            print(f"  Reached goal in {elapsed_time:.1f} seconds")
+        else:
+            print("  [FAILED] MISSION FAILED")
+            print(f"  Stopped after {elapsed_time:.1f} seconds")
+        print("=" * 70)
+
+        # 获取执行轨迹
+        trajectory = planner.get_trajectory()
+        print(f"\n  Trajectory statistics:")
+        print(f"    Total waypoints executed: {len(trajectory)}")
+        if len(trajectory) > 0:
+            traj_arr = np.array(trajectory)
+            total_distance = np.sum(np.linalg.norm(np.diff(traj_arr, axis=0), axis=1))
+            print(f"    Total distance traveled: {total_distance:.2f}m")
+
+        # 地图统计
+        map_stats = map_manager.get_map_stats()
+        print(f"\n  Map statistics:")
+        print(f"    Total updates: {map_stats['total_updates']}")
+        print(f"    Occupied voxels: {map_stats['occupied_voxels']}")
+        print(f"    Free voxels: {map_stats['free_voxels']}")
+        print(f"    Unknown voxels: {map_stats['unknown_voxels']}")
+
+        # 保存可视化
+        if planner.visualizer:
+            print("\n[8] Saving visualization...")
+            planner.visualizer.save_figure('receding_horizon_result.png')
+
+        # === 9. 悬停并降落 ===
+        print("\n[9] Hovering for 3 seconds...")
+        drone.hover()
+        time.sleep(3)
+
+        print("\n[10] Landing...")
+        drone.land()
+
+    except KeyboardInterrupt:
+        print("\n\n[INTERRUPTED] Interrupted by user!")
+        print("  Emergency landing...")
+        drone.land()
+
+    except Exception as e:
+        print(f"\n\n[ERROR] Error occurred: {e}")
+        import traceback
+        traceback.print_exc()
+        print("  Emergency landing...")
+        try:
+            drone.land()
+        except:
+            pass
+
+    finally:
+        # === 清理 ===
+        print("\n[11] Cleaning up...")
+        drone.disconnect()
+
+        if planner.visualizer:
+            planner.visualizer.close()
+
+        print("\n" + "=" * 70)
+        print("  Test completed!")
+        print("=" * 70)
 
 
 if __name__ == "__main__":
