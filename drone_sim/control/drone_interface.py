@@ -114,14 +114,14 @@ class DroneInterface:
 
         return depth
 
-    def move_to_position(self, target: np.ndarray, velocity: float = 2.0, timeout: float = 30.0):
+    def move_to_position(self, target: np.ndarray, velocity: float = 2.0, timeout: float = 10.0):
         """
         移动到目标位置
 
         Args:
             target: 目标位置 [x, y, z]
             velocity: 飞行速度 (m/s)
-            timeout: 超时时间 (秒)
+            timeout: 超时时间 (秒) - 缩短默认值，避免卡在不可达航点
         """
         if not self.is_connected:
             raise RuntimeError("Not connected to AirSim")
@@ -147,9 +147,40 @@ class DroneInterface:
 
         self.client.moveToZAsync(z, velocity).join()
 
+    def set_yaw(self, yaw_deg: float, duration: float = 0.5):
+        """
+        原地转向指定 yaw 角度（不移动位置）
+
+        Args:
+            yaw_deg: 目标 yaw 角度（度），0=North/X+, 90=East/Y+
+            duration: 转向持续时间（秒）
+        """
+        if not self.is_connected:
+            raise RuntimeError("Not connected to AirSim")
+
+        self.client.moveByVelocityAsync(
+            0, 0, 0, duration,
+            drivetrain=airsim.DrivetrainType.MaxDegreeOfFreedom,
+            yaw_mode=airsim.YawMode(is_rate=False, yaw_or_rate=yaw_deg)
+        ).join()
+
     def hover(self):
         """悬停"""
         if not self.is_connected:
             raise RuntimeError("Not connected to AirSim")
 
         self.client.hoverAsync().join()
+
+    def reset(self):
+        """
+        重置无人机到初始位置
+
+        注意：reset后需要重新enableApiControl和armDisarm
+        """
+        if not self.client:
+            raise RuntimeError("Not connected to AirSim")
+
+        self.client.reset()
+        self.client.enableApiControl(True)
+        self.client.armDisarm(True)
+        print("[OK] Reset to initial position")

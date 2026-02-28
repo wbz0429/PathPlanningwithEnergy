@@ -59,7 +59,8 @@ class IncrementalMapManager:
         start_time = time.time()
 
         # 0. 清除无人机当前位置周围的障碍物（防止被之前的观测错误标记）
-        self._clear_around_drone(drone_position, radius=2.5)
+        # 注意：半径不能太大，否则会清除真实障碍物
+        self._clear_around_drone(drone_position, radius=1.0)
 
         # 1. 深度图 → 相机坐标系点云
         points_camera = depth_image_to_camera_points(
@@ -128,7 +129,7 @@ class IncrementalMapManager:
         if self.esdf.distance_field is not None:
             dist = self.esdf.get_distance(drone_pos)
             if dist < 0:  # 在障碍物内
-                self._clear_around_drone(drone_pos, radius=3.0)
+                self._clear_around_drone(drone_pos, radius=1.5)
                 self.esdf.compute()  # 重新计算ESDF
 
     def _accumulate_points(self, points_world: np.ndarray,
@@ -155,7 +156,8 @@ class IncrementalMapManager:
 
         # 无人机保护半径：不在无人机周围标记障碍物
         # 这防止深度传感器噪声导致无人机被标记为在障碍物内
-        drone_protection_radius = 2.0
+        # 注意：不能太大，否则近距离障碍物检测不到
+        drone_protection_radius = 0.8
 
         # 标记占据体素
         for point in points_world:
@@ -189,32 +191,45 @@ class IncrementalMapManager:
     def _mark_free_space(self, camera_pos: np.ndarray,
                         points: np.ndarray):
         """
-        简化的 ray casting：标记相机到障碍物之间的空闲空间
+        向量化 ray casting：标记相机到障碍物之间的空闲空间
+        使用 500 条射线覆盖更多空间（约 5x 提升）
         """
-        # 下采样点云以提高效率
-        if len(points) > 100:
-            sampled_indices = np.random.choice(len(points), 100, replace=False)
+        num_rays = 500
+        if len(points) > num_rays:
+            sampled_indices = np.random.choice(len(points), num_rays, replace=False)
             sampled_points = points[sampled_indices]
         else:
             sampled_points = points
 
-        for point in sampled_points:
-            # 沿射线采样
-            direction = point - camera_pos
-            distance = np.linalg.norm(direction)
-            if distance < 0.1:
+        # 向量化计算所有射线的方向和距离
+        directions = sampled_points - camera_pos  # (N, 3)
+        distances = np.linalg.norm(directions, axis=1)  # (N,)
+
+        # 过滤太近的点
+        valid_mask = distances > 0.1
+        directions = directions[valid_mask]
+        distances = distances[valid_mask]
+
+        if len(directions) == 0:
+            return
+
+        # 归一化方向
+        directions = directions / distances[:, np.newaxis]  # (N, 3)
+
+        # 对每条射线，沿射线每 0.5m 采样
+        step = 0.5
+        for ray_idx in range(len(directions)):
+            num_samples = int(distances[ray_idx] / step)
+            if num_samples < 2:
                 continue
 
-            direction = direction / distance
+            # 生成采样点 (跳过起点和终点)
+            t_values = np.arange(1, num_samples) * step  # (M,)
+            sample_points = camera_pos + directions[ray_idx] * t_values[:, np.newaxis]  # (M, 3)
 
-            # 每隔 0.5m 采样一个点
-            num_samples = int(distance / 0.5)
-            for i in range(1, num_samples):  # 跳过起点和终点
-                sample_point = camera_pos + direction * (i * 0.5)
-                idx = self.voxel_grid.world_to_grid(sample_point)
-
+            for sp in sample_points:
+                idx = self.voxel_grid.world_to_grid(sp)
                 if self.voxel_grid.is_valid_index(idx):
-                    # 只有未被占据的体素才标记为空闲
                     if self.voxel_grid.grid[idx] == 0:
                         self.voxel_grid.grid[idx] = -1
 

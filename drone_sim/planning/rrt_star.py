@@ -1,9 +1,10 @@
 """
 RRT* - Rapidly-exploring Random Tree Star algorithm
+支持能量感知的路径规划
 """
 
 import numpy as np
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
     from mapping.voxel_grid import VoxelGrid
@@ -11,13 +12,95 @@ if TYPE_CHECKING:
     from .config import PlanningConfig
 
 
+class EnergyAwareCostFunction:
+    """
+    能量感知代价函数
+
+    Cost = w_e × (energy/E_ref) + w_d × (dist/D_ref) + w_t × (time/T_ref)
+    """
+
+    def __init__(self, config: 'PlanningConfig', energy_model=None):
+        """
+        初始化代价函数
+
+        Args:
+            config: 规划配置
+            energy_model: 能耗模型（PhysicsEnergyModel 或 HybridEnergyModel）
+        """
+        self.config = config
+        self.energy_model = energy_model
+
+        # 如果没有提供能耗模型，尝试导入默认的物理模型
+        if self.energy_model is None and config.energy_aware:
+            try:
+                from energy.physics_model import PhysicsEnergyModel
+                self.energy_model = PhysicsEnergyModel()
+            except ImportError:
+                print("  [Warning] Energy model not available, using distance-only cost")
+
+    def compute_cost(self, from_point: np.ndarray, to_point: np.ndarray) -> float:
+        """
+        计算两点之间的代价
+
+        Args:
+            from_point: 起点
+            to_point: 终点
+
+        Returns:
+            归一化加权代价
+        """
+        # 计算距离
+        distance = np.linalg.norm(to_point - from_point)
+
+        if distance < 1e-6:
+            return 0.0
+
+        # 如果不启用能量感知或没有能耗模型，返回纯距离代价
+        if not self.config.energy_aware or self.energy_model is None:
+            return distance
+
+        # 计算时间
+        time = distance / self.config.flight_velocity
+
+        # 计算能耗
+        energy, _ = self.energy_model.compute_energy_for_segment(
+            from_point, to_point, self.config.flight_velocity
+        )
+
+        # 归一化并加权
+        cost = (
+            self.config.weight_energy * (energy / self.config.energy_ref) +
+            self.config.weight_distance * (distance / self.config.distance_ref) +
+            self.config.weight_time * (time / self.config.time_ref)
+        )
+
+        return cost
+
+    def compute_path_cost(self, path: List[np.ndarray]) -> float:
+        """计算整条路径的代价"""
+        total_cost = 0.0
+        for i in range(len(path) - 1):
+            total_cost += self.compute_cost(path[i], path[i + 1])
+        return total_cost
+
+
 class RRTStar:
     """
     RRT* 路径规划算法
-    改进版：局部采样 + 偏向采样 + 更好的绕障能力
+    改进版：局部采样 + 偏向采样 + 能量感知代价 + 更好的绕障能力
     """
 
-    def __init__(self, voxel_grid: 'VoxelGrid', esdf: 'ESDF', config: 'PlanningConfig'):
+    def __init__(self, voxel_grid: 'VoxelGrid', esdf: 'ESDF', config: 'PlanningConfig',
+                 energy_model=None):
+        """
+        初始化 RRT* 规划器
+
+        Args:
+            voxel_grid: 体素栅格地图
+            esdf: ESDF 距离场
+            config: 规划配置
+            energy_model: 能耗模型（可选），用于能量感知规划
+        """
         self.voxel_grid = voxel_grid
         self.esdf = esdf
         self.config = config
@@ -28,6 +111,12 @@ class RRTStar:
 
         # 存储搜索树边（用于可视化）
         self.tree_edges = []
+
+        # 能量感知代价函数
+        self.cost_function = EnergyAwareCostFunction(config, energy_model)
+
+        # 记录规划统计信息
+        self.last_plan_stats = {}
 
     def plan(self, start: np.ndarray, goal: np.ndarray) -> Optional[List[np.ndarray]]:
         """
@@ -105,8 +194,8 @@ class RRTStar:
             # 找附近节点
             near_indices = self._near_nodes(nodes, new_point)
 
-            # 选择最优父节点
-            min_cost = costs[nearest_idx] + np.linalg.norm(new_point - nearest)
+            # 选择最优父节点 - 使用能量感知代价
+            min_cost = costs[nearest_idx] + self.cost_function.compute_cost(nearest, new_point)
             min_parent = nearest_idx
 
             for near_idx in near_indices:
@@ -114,7 +203,7 @@ class RRTStar:
                     continue
                 near_node = nodes[near_idx]
                 if self._is_collision_free(near_node, new_point):
-                    new_cost = costs[near_idx] + np.linalg.norm(new_point - near_node)
+                    new_cost = costs[near_idx] + self.cost_function.compute_cost(near_node, new_point)
                     if new_cost < min_cost:
                         min_cost = new_cost
                         min_parent = near_idx
@@ -122,13 +211,13 @@ class RRTStar:
             parents[new_idx] = min_parent
             costs[new_idx] = min_cost
 
-            # 重连接附近节点
+            # 重连接附近节点 - 使用能量感知代价
             for near_idx in near_indices:
                 if near_idx == new_idx:
                     continue
                 near_node = nodes[near_idx]
                 if self._is_collision_free(new_point, near_node):
-                    new_cost = costs[new_idx] + np.linalg.norm(near_node - new_point)
+                    new_cost = costs[new_idx] + self.cost_function.compute_cost(new_point, near_node)
                     if new_cost < costs[near_idx]:
                         parents[near_idx] = new_idx
                         costs[near_idx] = new_cost
@@ -145,7 +234,7 @@ class RRTStar:
                     goal_idx = len(nodes)
                     nodes.append(goal.copy())
                     parents[goal_idx] = new_idx
-                    costs[goal_idx] = costs[new_idx] + np.linalg.norm(goal - new_point)
+                    costs[goal_idx] = costs[new_idx] + self.cost_function.compute_cost(new_point, goal)
                     print(f"  [RRT*] Path found! Iterations: {i+1}")
                     break
                 elif not goal_safe and dist_to_goal < self.config.step_size * 2:
@@ -174,7 +263,49 @@ class RRTStar:
         # 路径平滑
         path = self._smooth_path(path)
 
+        # 记录规划统计信息
+        self._compute_plan_stats(path)
+
         return path
+
+    def _compute_plan_stats(self, path: List[np.ndarray]):
+        """计算并记录规划统计信息"""
+        if path is None or len(path) < 2:
+            self.last_plan_stats = {}
+            return
+
+        # 计算路径总距离
+        total_distance = sum(
+            np.linalg.norm(path[i+1] - path[i])
+            for i in range(len(path) - 1)
+        )
+
+        # 计算路径总代价
+        total_cost = self.cost_function.compute_path_cost(path)
+
+        # 计算能耗（如果有能耗模型）
+        total_energy = 0.0
+        total_time = 0.0
+        if self.cost_function.energy_model is not None:
+            for i in range(len(path) - 1):
+                energy, time = self.cost_function.energy_model.compute_energy_for_segment(
+                    path[i], path[i+1], self.config.flight_velocity
+                )
+                total_energy += energy
+                total_time += time
+
+        self.last_plan_stats = {
+            'path_length': len(path),
+            'total_distance': total_distance,
+            'total_cost': total_cost,
+            'total_energy_joules': total_energy,
+            'total_time_seconds': total_time,
+            'energy_aware': self.config.energy_aware
+        }
+
+    def get_plan_stats(self) -> dict:
+        """获取上次规划的统计信息"""
+        return self.last_plan_stats
 
     def _compute_sampling_bounds(self, start: np.ndarray, goal: np.ndarray):
         """计算局部采样范围"""
@@ -204,8 +335,13 @@ class RRTStar:
         - 20% 概率采样目标点
         - 30% 概率在目标方向两侧采样（用于绕障）
         - 50% 概率在局部范围内随机采样
+
+        能量感知模式下会更多探索不同高度
         """
         r = np.random.random()
+
+        # 能量感知模式下，减少高度锁定的概率
+        height_lock_prob = 0.3 if self.config.energy_aware else 0.7
 
         if r < 0.2:
             # 直接采样目标
@@ -233,7 +369,16 @@ class RRTStar:
             # 随机距离
             sample_dist = np.random.uniform(1.0, min(dist, self.config.step_size * 4))
             sample = start + rotated_dir * sample_dist
-            sample[2] = start[2]  # 保持高度
+
+            # 能量感知模式：有概率探索不同高度
+            if np.random.random() < height_lock_prob:
+                sample[2] = start[2]  # 保持高度
+            else:
+                # 随机高度变化（向上或向下）
+                z_variation = np.random.uniform(-3.0, 3.0)
+                sample[2] = np.clip(start[2] + z_variation,
+                                   self.local_bounds_min[2],
+                                   self.local_bounds_max[2])
 
             # 确保在边界内
             sample = np.clip(sample, self.local_bounds_min, self.local_bounds_max)
@@ -242,8 +387,8 @@ class RRTStar:
         else:
             # 局部随机采样
             sample = np.random.uniform(self.local_bounds_min, self.local_bounds_max)
-            # 偏向保持当前高度
-            if np.random.random() < 0.7:
+            # 根据模式决定高度锁定概率
+            if np.random.random() < height_lock_prob:
                 sample[2] = start[2]
             return sample
 
@@ -273,25 +418,52 @@ class RRTStar:
         return from_point + direction / distance * self.config.step_size
 
     def _is_valid_point(self, point: np.ndarray) -> bool:
-        """检查点是否有效（在边界内且不在障碍物中）"""
+        """
+        检查点是否有效（在边界内且不在障碍物中）
+        Unknown 区域处理：
+        - ESDF距离 >= unknown_safe_threshold → 允许（远离已知障碍物，乐观通行）
+        - ESDF距离 < unknown_safe_threshold → 拒绝（靠近已知障碍物，保守拒绝）
+        """
         if not all(self.bounds_min[i] <= point[i] <= self.bounds_max[i] for i in range(3)):
             return False
-        return self.esdf.is_safe(point, self.config.safety_margin)
+        if not self.esdf.is_safe(point, self.config.safety_margin):
+            return False
+        idx = self.voxel_grid.world_to_grid(point)
+        if self.voxel_grid.is_valid_index(idx):
+            if self.voxel_grid.grid[idx] == 0:
+                # unknown 区域 — 根据 ESDF 距离决定是否允许
+                esdf_dist = self.esdf.get_distance(point)
+                if esdf_dist < self.config.unknown_safe_threshold:
+                    return False  # 靠近已知障碍物，保守拒绝
+                # 远离已知障碍物，乐观允许通行
+        return True
 
     def _is_collision_free(self, from_point: np.ndarray, to_point: np.ndarray) -> bool:
-        """检查路径段是否无碰撞"""
+        """
+        检查路径段是否无碰撞
+        Unknown 区域：ESDF距离 >= threshold → 允许，否则拒绝
+        """
         direction = to_point - from_point
         distance = np.linalg.norm(direction)
         if distance < 1e-6:
             return True
 
-        # 沿路径采样检查
-        num_checks = max(2, int(distance / (self.config.voxel_size * 0.5)))
+        # 沿路径采样检查（每 0.2m 采样一次，比体素尺寸更密集）
+        check_interval = self.config.voxel_size * 0.4  # 0.2m
+        num_checks = max(3, int(distance / check_interval))
         for i in range(num_checks + 1):
             t = i / num_checks
             point = from_point + t * direction
+            # ESDF 安全检查
             if not self.esdf.is_safe(point, self.config.safety_margin):
                 return False
+            # unknown 区域检查：根据 ESDF 距离决定
+            idx = self.voxel_grid.world_to_grid(point)
+            if self.voxel_grid.is_valid_index(idx):
+                if self.voxel_grid.grid[idx] == 0:
+                    esdf_dist = self.esdf.get_distance(point)
+                    if esdf_dist < self.config.unknown_safe_threshold:
+                        return False
         return True
 
     def _smooth_path(self, path: List[np.ndarray]) -> List[np.ndarray]:

@@ -220,13 +220,17 @@ def test_rrt_star():
         voxel_size=0.5,
         grid_size=(40, 40, 20),
         origin=(-10.0, -10.0, -5.0),
-        max_iterations=500,
+        max_iterations=2000,
         step_size=1.0
     )
 
     voxel_grid = VoxelGrid(config)
 
-    # 创建一个简单的障碍物墙
+    # 创建一个简单的障碍物墙，并将其余空间标记为已知空闲
+    # 先将所有体素标记为空闲（模拟已探索环境）
+    voxel_grid.grid[:] = -1
+
+    # 再设置障碍物墙
     for i in range(18, 22):
         for j in range(10, 30):
             for k in range(5, 15):

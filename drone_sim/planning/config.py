@@ -25,4 +25,19 @@ class PlanningConfig:
     search_radius: float = 4.0       # 重连接搜索半径（增大）
 
     # 安全参数
-    safety_margin: float = 0.8       # 安全边距（米）- 从1.0降低到0.8
+    safety_margin: float = 1.0       # 安全边距（米）- 覆盖体素误差0.25m + 无人机半径0.3m + 缓冲0.45m
+    unknown_safe_threshold: float = 2.0  # Unknown区域安全阈值：ESDF距离>=此值的unknown视为可通行
+
+    # 能量感知规划参数
+    energy_aware: bool = True        # 是否启用能量感知规划
+    flight_velocity: float = 2.0     # 规划时假设的飞行速度 (m/s)
+
+    # 代价函数权重（归一化后）
+    weight_energy: float = 0.6       # 能耗权重（最重要）
+    weight_distance: float = 0.3     # 距离权重
+    weight_time: float = 0.1         # 时间权重
+
+    # 归一化参考值
+    energy_ref: float = 500.0        # 能耗参考值 (J)，约10米水平飞行
+    distance_ref: float = 10.0       # 距离参考值 (m)
+    time_ref: float = 5.0            # 时间参考值 (s)

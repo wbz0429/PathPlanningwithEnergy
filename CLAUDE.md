@@ -84,6 +84,51 @@ python test_modules.py
 - Tests all Phase 2 modules: VoxelGrid, ESDF, IncrementalMap, RRT*, transforms, performance monitoring
 - 7 test cases covering core functionality
 
+**Test energy consumption models (Phase 3):**
+```cmd
+python test_energy_model.py
+```
+- Tests physics model (BEMT), neural residual model, and hybrid model
+- Validates power computation for various flight states
+
+**Test energy-aware path planning:**
+```cmd
+python test_energy_aware_planning.py
+```
+- Tests EnergyAwareCostFunction with different weights
+- Compares energy-aware vs distance-only planning
+- Validates climb penalty effect (爬升能耗惩罚)
+
+**Compare energy planning strategies:**
+```cmd
+python test_energy_comparison.py
+```
+- Detailed analysis of path energy consumption
+- Tests different obstacle scenarios (wide-low vs narrow-tall)
+- Weight sensitivity analysis
+
+**Energy-aware flight with visualization (Phase 3):**
+```cmd
+python fly_with_energy_visualization.py
+```
+- Resets drone to initial position
+- Executes energy-aware path planning
+- Tracks energy consumption per segment
+- Generates `energy_flight_visualization.png` with:
+  - 3D trajectory colored by cumulative energy
+  - Power consumption charts
+  - Energy distribution analysis
+  - Flight statistics summary
+
+**Generate energy analysis report (no AirSim required):**
+```cmd
+python generate_energy_analysis_report.py
+```
+- Generates three analysis figures:
+  - `energy_model_analysis.png`: Power model characteristics
+  - `cost_function_analysis.png`: Cost function breakdown
+  - `planning_comparison.png`: Energy-aware vs distance-only comparison
+
 **Visualize depth data:**
 ```cmd
 python visualize_depth.py    # 2D depth visualization
@@ -144,9 +189,13 @@ The codebase is organized into modular packages:
 
 **`planning/`** - Path planning algorithms
 - `config.py`: PlanningConfig dataclass - Centralized configuration parameters
+  - Includes energy-aware planning weights (weight_energy, weight_distance, weight_time)
+  - Normalization references (energy_ref, distance_ref, time_ref)
 - `rrt_star.py`: RRTStar class - Sampling-based path planner
   - Implements RRT* with rewiring optimization
-  - Collision detection based on ESDF safety margins
+  - **Energy-aware cost function**: `Cost = w_e×(E/E_ref) + w_d×(D/D_ref) + w_t×(T/T_ref)`
+  - EnergyAwareCostFunction class for multi-objective optimization
+  - Collision detection based on ESDF safety margins (hard constraint)
   - Path smoothing post-processing
   - Performance: ~52ms for local planning
 - `receding_horizon.py`: RecedingHorizonPlanner - Main planning controller
@@ -180,6 +229,15 @@ The codebase is organized into modular packages:
   - Updates dynamically during flight
   - Saves final result as PNG
 
+**`energy/`** - Energy consumption modeling (Phase 3)
+- `physics_model.py`: PhysicsEnergyModel - BEMT-based power computation
+  - Computes induced, profile, parasite, and climb power components
+  - QuadrotorParams dataclass for vehicle parameters
+- `neural_model.py`: NeuralResidualModel - Neural network for residual correction
+  - Learns discrepancy between physics model and real data
+- `hybrid_model.py`: HybridEnergyModel - Combined physics + neural model
+  - EnergyCostFunction for path planning integration
+
 **Legacy modules (Phase 1):**
 - `perception.py`: ObstacleDetector - Simple depth-based obstacle detection
 - `main_control.py`: DroneController - Reactive obstacle avoidance (turn right)
@@ -199,8 +257,17 @@ The codebase is organized into modular packages:
 
 All planning parameters are centralized in `planning/config.py` (`PlanningConfig` dataclass). Key defaults:
 - Grid: 80×80×40 voxels at 0.5m resolution (40×40×20m space)
-- RRT*: 2000 iterations, 1.5m step size, 1.0m safety margin
+- RRT*: 2000 iterations, 1.5m step size, 0.8m safety margin
 - Receding horizon: 6m local horizon, 40% execution ratio, 2.5 m/s velocity
+
+**Energy-aware planning parameters:**
+- `energy_aware`: bool = True (enable/disable energy optimization)
+- `weight_energy`: float = 0.6 (energy weight, highest priority)
+- `weight_distance`: float = 0.3 (distance weight)
+- `weight_time`: float = 0.1 (time weight)
+- `energy_ref`: float = 500.0 J (normalization reference)
+- `distance_ref`: float = 10.0 m
+- `time_ref`: float = 5.0 s
 
 See `fly_planned_path.py:62-86` for runtime configuration example.
 
@@ -211,9 +278,43 @@ See `fly_planned_path.py:62-86` for runtime configuration example.
 3. **Static environment assumption**: Does not handle dynamic obstacles
 4. **Local minima**: RRT* can get stuck in complex environments, fallback strategies help but don't guarantee success
 
+## Troubleshooting
+
+### Ground Misidentification (Solved)
+The system filters ground points in `mapping/incremental_map.py:134-187` using:
+- Ground threshold filter: Points with Z > -0.5m (NED coordinates) are filtered as ground
+- Drone protection radius: Points within 2.0m of drone are ignored
+- Drone area clearing: 2.5m radius cleared before each map update
+
+### Coordinate Systems
+- **AirSim camera**: Z forward, X right, Y down
+- **AirSim body**: X forward, Y right, Z down
+- **World (NED)**: X north, Y east, Z down (ground = 0, altitude = negative Z)
+
+Transform chain: `depth image → camera frame → body frame → world frame (NED)`
+See `utils/transforms.py` for implementation.
+
 ## Development Notes
 
-### Phase 2 (Current - Receding Horizon Planning)
+### Phase 3 (Current - Energy-Aware Planning)
+- `energy/` module implements hybrid physics + neural energy model
+- BEMT (Blade Element Momentum Theory) for physics-based power estimation
+  - Hover power: ~150W, Cruise power: ~144W at 2m/s
+  - Climb penalty: +4.7% to +25% depending on climb rate
+- Neural residual model learns correction from real flight data
+- **Energy-aware RRT* cost function** integrated in `planning/rrt_star.py`
+  - Multi-objective: safety (hard constraint) > energy > distance > time
+  - Normalized weighted sum: `Cost = w_e×(E/E_ref) + w_d×(D/D_ref) + w_t×(T/T_ref)`
+  - Climb path costs ~3-5% more than horizontal (diluted by distance term)
+- Energy tracking in `RecedingHorizonPlanner`:
+  - Tracks `total_energy_consumed` during flight
+  - Records `energy_history` per segment
+  - `get_energy_stats()` returns full statistics
+- Visualization: `fly_with_energy_visualization.py` generates flight energy reports
+- Test scripts: `test_energy_model.py`, `test_energy_aware_planning.py`, `test_energy_comparison.py`
+- Analysis: `generate_energy_analysis_report.py` creates comparison figures
+
+### Phase 2 (Receding Horizon Planning)
 - Modular architecture with separate packages for mapping, planning, control, utils, visualization
 - Incremental mapping solves occlusion problem by accumulating observations
 - Receding horizon planning enables navigation to goals behind obstacles
