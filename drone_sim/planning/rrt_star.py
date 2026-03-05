@@ -467,20 +467,87 @@ class RRTStar:
         return True
 
     def _smooth_path(self, path: List[np.ndarray]) -> List[np.ndarray]:
-        """简单的路径平滑"""
+        """
+        路径平滑：先适度简化，再 B-spline 拟合
+        """
         if len(path) <= 2:
             return path
 
-        smoothed = [path[0]]
+        # 第一步：适度简化（保留更多中间点用于 B-spline）
+        # 不是贪心跳到最远，而是每次跳固定距离
+        simplified = [path[0]]
         i = 0
+        max_skip_dist = 10.0  # 每次最多跳10米
+
         while i < len(path) - 1:
-            # 尝试跳过中间点
-            j = len(path) - 1
-            while j > i + 1:
-                if self._is_collision_free(path[i], path[j]):
+            # 从远到近找第一个可达且距离不超过 max_skip_dist 的点
+            best_j = i + 1
+            for j in range(len(path) - 1, i, -1):
+                dist = np.linalg.norm(path[j] - path[i])
+                if dist <= max_skip_dist and self._is_collision_free(path[i], path[j]):
+                    best_j = j
                     break
-                j -= 1
-            smoothed.append(path[j])
-            i = j
+            simplified.append(path[best_j])
+            i = best_j
+
+        # 第二步：B-spline 平滑（如果简化后还有足够的点）
+        if len(simplified) >= 4:
+            try:
+                smoothed = self._bspline_smooth(simplified)
+                return smoothed
+            except Exception as e:
+                # B-spline 失败则返回简化路径
+                print(f"  [RRT*] B-spline failed: {e}, using simplified path")
+                return simplified
+        else:
+            # 点太少，直接返回简化路径
+            return simplified
+
+    def _bspline_smooth(self, path: List[np.ndarray], num_samples: int = None) -> List[np.ndarray]:
+        """
+        使用 B-spline 平滑路径
+
+        Args:
+            path: 原始路径点
+            num_samples: 采样点数量（默认为原路径长度的2倍）
+
+        Returns:
+            平滑后的路径
+        """
+        from scipy.interpolate import splprep, splev
+
+        if len(path) < 4:
+            return path
+
+        # 转换为数组
+        path_array = np.array(path)
+
+        # 计算路径总长度
+        path_length = sum(
+            np.linalg.norm(path[i+1] - path[i])
+            for i in range(len(path) - 1)
+        )
+
+        # 采样点数量：每0.3m一个点
+        if num_samples is None:
+            num_samples = max(len(path) * 2, int(path_length / 0.3))
+
+        # B-spline 拟合（k=3 表示三次样条）
+        # s=0 表示精确通过所有控制点，s>0 允许偏差
+        tck, u = splprep([path_array[:, 0], path_array[:, 1], path_array[:, 2]],
+                         s=0.1, k=min(3, len(path) - 1))
+
+        # 在 [0, 1] 区间均匀采样
+        u_new = np.linspace(0, 1, num_samples)
+        smooth_points = splev(u_new, tck)
+
+        # 转换回列表格式
+        smoothed = [np.array([x, y, z]) for x, y, z in zip(*smooth_points)]
+
+        # 碰撞检查：如果平滑后的路径有碰撞，回退到原路径
+        for i in range(len(smoothed) - 1):
+            if not self._is_collision_free(smoothed[i], smoothed[i+1]):
+                print("  [RRT*] B-spline smoothing caused collision, using simplified path")
+                return path
 
         return smoothed
