@@ -19,9 +19,11 @@ class PlanningConfig:
     max_depth: float = 25.0          # 最大有效深度
 
     # RRT* 参数
+    # 注意：以下参数基于特定测试场景调优，不同环境可能需要重新调整
+    # max_iterations 越大规划越慢但成功率越高；goal_sample_rate 越大收敛越快但探索越少
     step_size: float = 1.5           # RRT 步长（增大以加快搜索）
-    max_iterations: int = 3000       # 最大迭代次数
-    goal_sample_rate: float = 0.2    # 目标采样概率（提高）
+    max_iterations: int = 5000       # 最大迭代次数（原值3000，复杂场景下需要更多迭代）
+    goal_sample_rate: float = 0.4    # 目标采样概率（原值0.2，提高以加速收敛，但可能降低复杂环境探索能力）
     search_radius: float = 4.0       # 重连接搜索半径（增大）
 
     # 安全参数

@@ -80,6 +80,14 @@ class RecedingHorizonPlanner:
         # 执行轨迹记录
         self.executed_trajectory = []
 
+        # 实时可视化回调（外部设置）
+        self.realtime_callback = None
+
+        # 路径缓存与复用：保存上次规划的完整路径
+        self._cached_path = None  # 上次规划的完整路径
+        self._cached_path_index = 0  # 当前执行到的索引
+        self._last_flight_direction = None  # 上次飞行方向（用于方向连续性）
+
         # wall-follow 状态：记住侧移方向，避免来回摇摆
         self._wall_follow_direction = None  # 'left' or 'right', 一旦选定就坚持
         self._wall_follow_blocked_count = 0  # wall-follow 连续被 blocked 的次数
@@ -248,73 +256,77 @@ class RecedingHorizonPlanner:
                         forward_blocked = False
                 else:
                     pass  # forward not blocked, use normal RRT*
-            elif forward_blocked and self._wall_follow_blocked_count < 3:
-                # 检查 Y 偏移是否已经足够大（已经绕过墙边缘）
-                # Row1 墙宽 40m (Y=-21.5 到 18.5)，只需绕到边缘外 2m 即可
-                y_offset_from_start = abs(current_pos[1] - global_goal[1])
-                if y_offset_from_start > 22.0:
-                    # Y 偏移已经很大，不再侧移，改为沿 X+ 前进绕过墙角
-                    print(f"  [WALL-FOLLOW] Y offset={y_offset_from_start:.1f}m > 22m, switching to X+ advance")
-                    x_target = current_pos.copy()
-                    x_target[0] += self.local_horizon
-                    x_target[2] = global_goal[2]
-                    # 检查 X+ 是否安全
-                    x_safe = True
-                    for d in np.arange(0.5, self.local_horizon, 1.0):
-                        check_pt = current_pos.copy()
-                        check_pt[0] += d
-                        if self.map_manager.esdf.distance_field is not None:
-                            dist = self.map_manager.esdf.get_distance(check_pt)
-                            if dist < self.map_manager.config.safety_margin:
-                                x_safe = False
-                                break
-                    if x_safe:
-                        current_path = [current_pos.copy(), x_target]
-                        forward_blocked = False  # 跳过后续 wall-follow 逻辑
-                    else:
-                        # X+ 也不安全，继续 wall-follow
-                        pass
-
-                if forward_blocked:
-                    # 检查是否超过同方向最大 wall-follow 次数
-                    if self._wall_follow_iterations >= self._wall_follow_max_iterations:
-                        old_dir = self._wall_follow_direction
-                        self._wall_follow_direction = 'right' if old_dir == 'left' else 'left' if old_dir == 'right' else None
-                        self._wall_follow_iterations = 0
-                        print(f"  [WALL-FOLLOW] Max iterations ({self._wall_follow_max_iterations}) "
-                              f"in {old_dir} direction, flipping to {self._wall_follow_direction}")
-
-                    wall_follow_path = self._wall_follow_step(current_pos, global_goal)
-                    if wall_follow_path is not None:
-                        current_path = wall_follow_path
-                        self._wall_follow_blocked_count = 0
-                        self._wall_follow_iterations += 1
-                        print(f"[WALL-FOLLOW] Lateral move: {len(current_path)} waypoints "
-                              f"(iter {self._wall_follow_iterations}/{self._wall_follow_max_iterations})")
-                    else:
-                        # 沿墙侧移失败，计数+1，回退到 RRT*
-                        self._wall_follow_blocked_count += 1
-                        forward_blocked = False
-                        print(f"  [WALL-FOLLOW] Blocked count: {self._wall_follow_blocked_count}/3")
             elif forward_blocked:
-                # wall-follow 连续 blocked 太多次，翻转方向而不是回退到 RRT*
-                old_dir = self._wall_follow_direction
-                self._wall_follow_direction = 'right' if old_dir == 'left' else 'left'
-                self._wall_follow_blocked_count = 0
-                self._wall_follow_iterations = 0
-                print(f"  [WALL-FOLLOW] Blocked {old_dir} 3 times, flipping to {self._wall_follow_direction}")
-                # 立即尝试新方向
-                wall_follow_path = self._wall_follow_step(current_pos, global_goal)
-                if wall_follow_path is not None:
-                    current_path = wall_follow_path
-                    self._wall_follow_iterations += 1
-                    print(f"[WALL-FOLLOW] Flipped lateral move: {len(current_path)} waypoints")
-                else:
-                    # 两个方向都 blocked，回退到 RRT*
-                    self._wall_follow_direction = None
-                    self._wall_follow_cooldown = 1
+                # === 前方被挡：先让 RRT* 尝试找缝隙，失败才 wall-follow ===
+                print(f"  [BLOCKED] Forward blocked, trying RRT* first before wall-follow...")
+                local_goal = self._select_local_goal(current_pos, global_goal, map_stats)
+                print(f"  RRT* local goal: ({local_goal[0]:.2f}, {local_goal[1]:.2f}, {local_goal[2]:.2f})")
+
+                with self.perf_monitor.measure('planning'):
+                    rrt_path = self.rrt.plan(current_pos, local_goal)
+
+                if rrt_path is not None and len(rrt_path) >= 2:
+                    # RRT* 找到了路径（可能穿过缝隙），使用它
+                    current_path = rrt_path
                     forward_blocked = False
-                    print(f"  [WALL-FOLLOW] Both directions blocked, falling back to RRT*")
+                    # 如果 RRT* 成功，重置 wall-follow 状态
+                    self._wall_follow_direction = None
+                    self._wall_follow_iterations = 0
+                    self._wall_follow_blocked_count = 0
+                    print(f"  [BLOCKED] RRT* found path through gap! {len(rrt_path)} waypoints")
+                else:
+                    # RRT* 也失败了，进入 wall-follow
+                    print(f"  [BLOCKED] RRT* failed, falling back to wall-follow")
+
+                    # 检查 Y 偏移是否已经足够大
+                    y_offset_from_start = abs(current_pos[1] - global_goal[1])
+                    if y_offset_from_start > 22.0:
+                        print(f"  [WALL-FOLLOW] Y offset={y_offset_from_start:.1f}m > 22m, switching to X+ advance")
+                        x_target = current_pos.copy()
+                        x_target[0] += self.local_horizon
+                        x_target[2] = global_goal[2]
+                        x_safe = True
+                        for d in np.arange(0.5, self.local_horizon, 1.0):
+                            check_pt = current_pos.copy()
+                            check_pt[0] += d
+                            if self.map_manager.esdf.distance_field is not None:
+                                dist = self.map_manager.esdf.get_distance(check_pt)
+                                if dist < self.map_manager.config.safety_margin:
+                                    x_safe = False
+                                    break
+                        if x_safe:
+                            current_path = [current_pos.copy(), x_target]
+                            forward_blocked = False
+                        else:
+                            pass
+
+                    if forward_blocked:
+                        if self._wall_follow_blocked_count >= 3:
+                            # wall-follow 连续 blocked 太多次，翻转方向
+                            old_dir = self._wall_follow_direction
+                            self._wall_follow_direction = 'right' if old_dir == 'left' else 'left'
+                            self._wall_follow_blocked_count = 0
+                            self._wall_follow_iterations = 0
+                            print(f"  [WALL-FOLLOW] Blocked {old_dir} 3 times, flipping to {self._wall_follow_direction}")
+
+                        if self._wall_follow_iterations >= self._wall_follow_max_iterations:
+                            old_dir = self._wall_follow_direction
+                            self._wall_follow_direction = 'right' if old_dir == 'left' else 'left' if old_dir == 'right' else None
+                            self._wall_follow_iterations = 0
+                            print(f"  [WALL-FOLLOW] Max iterations ({self._wall_follow_max_iterations}) "
+                                  f"in {old_dir} direction, flipping to {self._wall_follow_direction}")
+
+                        wall_follow_path = self._wall_follow_step(current_pos, global_goal)
+                        if wall_follow_path is not None:
+                            current_path = wall_follow_path
+                            self._wall_follow_blocked_count = 0
+                            self._wall_follow_iterations += 1
+                            print(f"[WALL-FOLLOW] Lateral move: {len(current_path)} waypoints "
+                                  f"(iter {self._wall_follow_iterations}/{self._wall_follow_max_iterations})")
+                        else:
+                            self._wall_follow_blocked_count += 1
+                            forward_blocked = False
+                            print(f"  [WALL-FOLLOW] Blocked count: {self._wall_follow_blocked_count}/3")
 
             if not forward_blocked:
                 # === 4.5 Y 回归模式 ===
@@ -451,21 +463,48 @@ class RecedingHorizonPlanner:
                     self.drone.set_yaw(base_yaw, duration=0.3)
                     _time.sleep(0.1)
                 else:
-                    # 正常 RRT* 规划
-                    local_goal = self._select_local_goal(current_pos, global_goal, map_stats)
-                    print(f"Local goal: ({local_goal[0]:.2f}, {local_goal[1]:.2f}, {local_goal[2]:.2f})")
+                    # === 路径缓存复用机制 ===
+                    # 检查是否可以复用上次规划的剩余路径
+                    reuse_cached = False
+                    if self._cached_path is not None and self._cached_path_index < len(self._cached_path):
+                        remaining_path = self._cached_path[self._cached_path_index:]
+                        if len(remaining_path) > 2:
+                            # 检查剩余路径是否仍然有效（无碰撞）
+                            path_valid = True
+                            for i in range(len(remaining_path) - 1):
+                                if not self._check_path_safe(remaining_path[i], remaining_path[i+1]):
+                                    path_valid = False
+                                    break
 
-                    with self.perf_monitor.measure('planning'):
-                        current_path = self.rrt.plan(current_pos, local_goal)
+                            if path_valid:
+                                # 检查起点是否接近当前位置
+                                dist_to_path_start = np.linalg.norm(current_pos - remaining_path[0])
+                                if dist_to_path_start < 2.0:
+                                    print(f"  [PATH-REUSE] Using cached path ({len(remaining_path)} waypoints remaining)")
+                                    current_path = remaining_path
+                                    reuse_cached = True
 
-                    if current_path is None:
-                        print("[FAILED] Planning failed! Trying alternative local goals...")
-                        current_path = self._try_alternative_goals(current_pos, global_goal)
+                    if not reuse_cached:
+                        # 正常 RRT* 规划
+                        local_goal = self._select_local_goal(current_pos, global_goal, map_stats)
+                        print(f"Local goal: ({local_goal[0]:.2f}, {local_goal[1]:.2f}, {local_goal[2]:.2f})")
+
+                        with self.perf_monitor.measure('planning'):
+                            # 正常 RRT* 规划
+                            current_path = self.rrt.plan(current_pos, local_goal)
 
                         if current_path is None:
-                            print("[FAILED] All alternatives failed! Stopping.")
-                            self.perf_monitor.print_summary()
-                            return False
+                            print("[FAILED] Planning failed! Trying alternative local goals...")
+                            current_path = self._try_alternative_goals(current_pos, global_goal)
+
+                            if current_path is None:
+                                print("[FAILED] All alternatives failed! Stopping.")
+                                self.perf_monitor.print_summary()
+                                return False
+
+                        # 缓存新规划的路径
+                        self._cached_path = current_path
+                        self._cached_path_index = 0
 
             print(f"Path planned: {len(current_path)} waypoints")
 
@@ -478,6 +517,10 @@ class RecedingHorizonPlanner:
 
             execution_length = max(1, int(len(path_to_execute) * self.execution_ratio))
             waypoints_to_execute = path_to_execute[:execution_length]
+
+            # 更新缓存路径索引
+            if self._cached_path is not None:
+                self._cached_path_index += execution_length
 
             print(f"Executing {len(waypoints_to_execute)} waypoints...")
 
@@ -526,6 +569,13 @@ class RecedingHorizonPlanner:
                     self.drone.move_to_position(wp_fixed, velocity=self.flight_velocity)
                     self.executed_trajectory.append(wp_fixed)
 
+                    # 更新飞行方向（用于下次规划的方向连续性）
+                    if len(self.executed_trajectory) >= 2:
+                        direction = self.executed_trajectory[-1] - self.executed_trajectory[-2]
+                        direction_norm = np.linalg.norm(direction)
+                        if direction_norm > 0.1:
+                            self._last_flight_direction = direction / direction_norm
+
                     # === 执行后安全检查 ===
                     # 到达航点后，快速感知并更新地图，检查前方是否安全
                     if i < len(waypoints_to_execute) - 1:
@@ -542,7 +592,15 @@ class RecedingHorizonPlanner:
                 if abort_execution:
                     print("  [REPLAN] Execution aborted, will replan in next iteration")
 
-            # === 7. 可视化 ===
+            # === 7. 实时可视化回调 ===
+            if self.realtime_callback is not None:
+                try:
+                    obstacles = self.map_manager.voxel_grid.get_occupied_voxels()
+                    self.realtime_callback(current_pos, obstacles)
+                except Exception as e:
+                    print(f"  [WARNING] Realtime callback error: {e}")
+
+            # === 8. 可视化 ===
             if self.visualizer:
                 # 准备深度点云（如果是增强版可视化器）
                 depth_points = None
@@ -1060,11 +1118,15 @@ class RecedingHorizonPlanner:
         else:
             # 首次选择：选择墙更短的一侧（更快找到边缘）
             # 通过检查两侧哪个方向更早遇到空旷区域来判断
+            # 改进：优先选择已知空闲的路径，避免盲目进入未知区域
             best_dir = None
             best_score = -np.inf
 
             for lateral_dir, name in [(left, "left"), (right, "right")]:
                 score = 0.0
+                known_free_count = 0  # 统计已知空闲的点数
+                unknown_count = 0     # 统计未知的点数
+
                 for d in [3.0, 6.0, 10.0, 15.0, 20.0, 25.0]:
                     check_point = current_pos + lateral_dir * d
                     check_point[2] = current_pos[2]
@@ -1089,12 +1151,30 @@ class RecedingHorizonPlanner:
                         and self.map_manager.voxel_grid.grid[forward_idx] == -1
                     )
 
-                    if lateral_safety > self.map_manager.config.safety_margin:
-                        score += 1.0 if lateral_known_free else 0.3
-                    if forward_safety > self.map_manager.config.safety_margin:
-                        score += 3.0 if forward_known_free else 1.0
+                    # 统计已知空闲和未知的点
+                    if lateral_known_free:
+                        known_free_count += 1
+                    elif lateral_safety > self.map_manager.config.safety_margin:
+                        unknown_count += 1
 
-                print(f"  [WALL-FOLLOW] {name} score: {score:.1f}")
+                    if forward_known_free:
+                        known_free_count += 2  # 前方权重更高
+
+                    # 评分：已知空闲给高分，未知给低分
+                    if lateral_safety > self.map_manager.config.safety_margin:
+                        score += 1.5 if lateral_known_free else 0.2  # 降低未知空间的分数
+                    if forward_safety > self.map_manager.config.safety_margin:
+                        score += 4.0 if forward_known_free else 0.5  # 大幅降低未知空间的分数
+
+                # 额外奖励：如果有很多已知空闲点，说明这个方向已经被探索过
+                if known_free_count > 3:
+                    score += known_free_count * 0.5
+
+                # 惩罚：如果大部分是未知空间，可能是盲区
+                if unknown_count > known_free_count:
+                    score -= unknown_count * 0.3
+
+                print(f"  [WALL-FOLLOW] {name} score: {score:.1f} (known_free={known_free_count}, unknown={unknown_count})")
                 if score > best_score:
                     best_score = score
                     best_dir = lateral_dir
