@@ -563,6 +563,10 @@ class RecedingHorizonPlanner:
             if self._cached_path is not None:
                 self._cached_path_index += execution_length
 
+            # === 预处理：提取最长前向连续子路径，避免 skip 造成跳跃 ===
+            waypoints_to_execute = self._extract_forward_prefix(
+                waypoints_to_execute, current_pos, global_goal)
+
             print(f"Executing {len(waypoints_to_execute)} waypoints...")
 
             with self.perf_monitor.measure('execution'):
@@ -571,15 +575,6 @@ class RecedingHorizonPlanner:
                     # 高度处理：允许 Dubins 爬升角产生的 Z 变化，但限制在目标高度附近
                     wp_fixed = wp.copy()
                     wp_fixed[2] = np.clip(wp[2], global_goal[2] - 2.0, global_goal[2] + 2.0)
-                    actual_pos, actual_ori = self.drone.get_pose()
-
-                    # === 方向检查：跳过往回飞的航点 ===
-                    step_vec = wp_fixed - actual_pos
-                    goal_vec = global_goal - actual_pos
-                    forward_proj = np.dot(step_vec[:2], goal_vec[:2])
-                    if forward_proj < 0 and np.linalg.norm(step_vec[:2]) > 0.5:
-                        print(f"  [SKIP] Waypoint {i+1} goes backward, skipping")
-                        continue
 
                     print(f"  -> Waypoint {i+1}/{len(waypoints_to_execute)}: "
                           f"({wp_fixed[0]:.2f}, {wp_fixed[1]:.2f}, {wp_fixed[2]:.2f})")
@@ -778,6 +773,52 @@ class RecedingHorizonPlanner:
             self.dubins_params,
             safety_check=self._check_path_safe,
         )
+
+    def _extract_forward_prefix(self, waypoints: List[np.ndarray],
+                                 current_pos: np.ndarray,
+                                 global_goal: np.ndarray) -> List[np.ndarray]:
+        """
+        从航点列表中提取最长的前向连续子路径。
+
+        遇到第一个 backward 航点时直接截断，而不是跳过后继续执行后面的点。
+        这样避免了 skip 造成的轨迹跳跃（直角）。
+
+        Args:
+            waypoints: 待执行的航点列表
+            current_pos: 当前无人机位置
+            global_goal: 全局目标
+
+        Returns:
+            截断后的前向航点列表（至少保留 1 个点）
+        """
+        if len(waypoints) <= 1:
+            return waypoints
+
+        goal_dir = global_goal[:2] - current_pos[:2]
+        goal_norm = np.linalg.norm(goal_dir)
+        if goal_norm < 1e-6:
+            return waypoints
+        goal_dir = goal_dir / goal_norm
+
+        # 逐点检查：从 current_pos 出发，每个航点必须朝目标方向前进
+        ref_pos = current_pos
+        forward_count = 0
+        for wp in waypoints:
+            step_vec = wp[:2] - ref_pos[:2]
+            if np.linalg.norm(step_vec) > 0.5 and np.dot(step_vec, goal_dir) < 0:
+                break
+            forward_count += 1
+            ref_pos = wp
+
+        if forward_count == 0:
+            # 第一个点就 backward，至少保留它（让主循环下一轮重规划）
+            return waypoints[:1]
+
+        if forward_count < len(waypoints):
+            print(f"  [FWD-TRIM] Trimmed path: {len(waypoints)} -> {forward_count} waypoints "
+                  f"(removed {len(waypoints) - forward_count} backward pts)")
+
+        return waypoints[:forward_count]
 
     def get_energy_stats(self) -> dict:
         """获取能耗统计信息"""
