@@ -115,6 +115,9 @@ class RRTStar:
         # 能量感知代价函数
         self.cost_function = EnergyAwareCostFunction(config, energy_model)
 
+        # 规划超时
+        self.planning_timeout = getattr(config, 'planning_timeout', 3.0)
+
         # 记录规划统计信息
         self.last_plan_stats = {}
 
@@ -164,7 +167,16 @@ class RRTStar:
         best_dist_to_goal = np.inf
         best_node_idx = 0
 
+        import time as _time
+        plan_start_time = _time.time()
+
         for i in range(self.config.max_iterations):
+            # 每100次迭代检查超时
+            if i % 100 == 0 and i > 0:
+                if _time.time() - plan_start_time > self.planning_timeout:
+                    print(f"  [RRT*] Timeout after {i} iterations ({self.planning_timeout}s)")
+                    break
+
             # 智能采样
             sample = self._smart_sample(start, goal, nodes, i)
 

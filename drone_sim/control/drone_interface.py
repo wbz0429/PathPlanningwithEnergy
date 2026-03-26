@@ -126,8 +126,17 @@ class DroneInterface:
         if not self.is_connected:
             raise RuntimeError("Not connected to AirSim")
 
+        # Z 补偿：AirSim 水平飞行时 Z 会下沉（NED 坐标 Z 变更负）
+        # 检测下沉并预先往上偏移抵消
+        actual_z = self.client.getMultirotorState().kinematics_estimated.position.z_val
+        z_compensated = target[2]
+        if actual_z < target[2] - 0.1:  # 无人机比目标低 0.1m 以上
+            correction = (target[2] - actual_z) * 0.8
+            correction = min(correction, 0.3)  # 最多往上补偿 0.3m，防止过冲
+            z_compensated = target[2] + correction
+
         self.client.moveToPositionAsync(
-            target[0], target[1], target[2],
+            target[0], target[1], z_compensated,
             velocity,
             timeout_sec=timeout,
             drivetrain=airsim.DrivetrainType.MaxDegreeOfFreedom,

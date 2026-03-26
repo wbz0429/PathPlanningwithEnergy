@@ -25,6 +25,7 @@ class PlanningConfig:
     max_iterations: int = 5000       # 最大迭代次数（原值3000，复杂场景下需要更多迭代）
     goal_sample_rate: float = 0.4    # 目标采样概率（原值0.2，提高以加速收敛，但可能降低复杂环境探索能力）
     search_radius: float = 4.0       # 重连接搜索半径（增大）
+    planning_timeout: float = 3.0    # RRT* 单次规划超时（秒）
 
     # 安全参数
     safety_margin: float = 1.0       # 安全边距（米）- 覆盖体素误差0.25m + 无人机半径0.3m + 缓冲0.45m
@@ -43,3 +44,8 @@ class PlanningConfig:
     energy_ref: float = 500.0        # 能耗参考值 (J)，约10米水平飞行
     distance_ref: float = 10.0       # 距离参考值 (m)
     time_ref: float = 5.0            # 时间参考值 (s)
+
+    # 3D Dubins 路径平滑参数
+    dubins_turning_radius: float = 1.5    # 最小转弯半径 (m)
+    dubins_max_climb_angle: float = 30.0  # 最大爬升角 (度)
+    dubins_sample_distance: float = 0.3   # 沿弧长采样间距 (m)

@@ -11,6 +11,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from mapping.incremental_map import IncrementalMapManager
 from planning.rrt_star import RRTStar
+from planning.dubins_3d import Dubins3DParams, dubins_3d_blend_junction
 from control.drone_interface import DroneInterface
 from utils.performance import PerformanceMonitor
 
@@ -95,6 +96,22 @@ class RecedingHorizonPlanner:
         self._wall_follow_iterations = 0  # 当前方向连续 wall-follow 的次数
         self._wall_follow_max_iterations = 15  # 同方向最大 wall-follow 次数（墙宽40m，每步5m，需要至少8步）
 
+        # 圆弧平滑参数（3D Dubins 替代 B-spline）
+        self.arc_smoothing = config.get('arc_smoothing', True)
+        self.arc_overlap_points = config.get('arc_overlap_points', 3)
+        self._executed_tail = []  # 最近执行的N个航点，用于衔接平滑
+
+        # 3D Dubins 参数
+        self.dubins_params = Dubins3DParams(
+            turning_radius=config.get('dubins_turning_radius', 1.5),
+            max_climb_angle=config.get('dubins_max_climb_angle', 30.0),
+            sample_distance=config.get('dubins_sample_distance', 0.3),
+        )
+
+        # yaw 扫描降频
+        self._yaw_scan_interval = 3  # 每3轮 blocked 扫描一次
+        self._blocked_since_last_scan = 0  # 距上次扫描的 blocked 轮数
+
         # 卡住检测：记录最近位置历史，检测原地打转
         self._position_history = []  # 最近 N 次迭代的位置
         self._stuck_counter = 0  # 连续卡住计数
@@ -145,15 +162,7 @@ class RecedingHorizonPlanner:
                 print(f"  [INIT] best_forward_x = {self._best_forward_x:.1f}m")
 
             # === 1.3 高度修正 ===
-            # 如果 Z 偏离目标高度超过 0.5m，先修正高度
-            z_error = abs(current_pos[2] - global_goal[2])
-            if z_error > 0.5:
-                print(f"  [Z-FIX] Z drifted by {z_error:.2f}m, correcting altitude...")
-                fix_pos = current_pos.copy()
-                fix_pos[2] = global_goal[2]
-                self.drone.move_to_position(fix_pos, velocity=self.flight_velocity)
-                current_pos, current_ori = self.drone.get_pose()
-                print(f"  [Z-FIX] After correction: Z={current_pos[2]:.2f}")
+            # 在航点执行时通过 move_to_position 的 Z 分量持续修正
 
             # === 1.5 卡住检测 ===
             is_stuck = self._detect_stuck(current_pos, global_goal)
@@ -216,13 +225,19 @@ class RecedingHorizonPlanner:
                         self._wall_follow_direction = None
                         self._wall_follow_cooldown = 1
                         self._wall_follow_iterations = 0
+                        self._blocked_since_last_scan = 0
                     elif not forward_blocked:
                         # X+ 通畅但还没绕过墙，继续 wall-follow
                         print(f"  [WALL-FOLLOW] Forward seems clear but X={current_pos[0]:.1f}<33, keeping wall-follow")
 
                 if forward_blocked:
-                    print("  [SCAN] Forward blocked, performing yaw scan...")
-                    self._yaw_scan(current_pos, global_goal)
+                    self._blocked_since_last_scan += 1
+                    if self._blocked_since_last_scan >= self._yaw_scan_interval:
+                        print("  [SCAN] Forward blocked, performing yaw scan...")
+                        self._yaw_scan(current_pos, global_goal)
+                        self._blocked_since_last_scan = 0
+                    else:
+                        print(f"  [SCAN] Skipping yaw scan ({self._blocked_since_last_scan}/{self._yaw_scan_interval})")
 
             print(f"Map update: +{map_stats['new_occupied']} voxels, "
                   f"total {map_stats['total_occupied']} occupied")
@@ -257,27 +272,33 @@ class RecedingHorizonPlanner:
                 else:
                     pass  # forward not blocked, use normal RRT*
             elif forward_blocked:
-                # === 前方被挡：先让 RRT* 尝试找缝隙，失败才 wall-follow ===
-                print(f"  [BLOCKED] Forward blocked, trying RRT* first before wall-follow...")
-                local_goal = self._select_local_goal(current_pos, global_goal, map_stats)
-                print(f"  RRT* local goal: ({local_goal[0]:.2f}, {local_goal[1]:.2f}, {local_goal[2]:.2f})")
-
-                with self.perf_monitor.measure('planning'):
-                    rrt_path = self.rrt.plan(current_pos, local_goal)
-
-                if rrt_path is not None and len(rrt_path) >= 2:
-                    # RRT* 找到了路径（可能穿过缝隙），使用它
-                    current_path = rrt_path
-                    forward_blocked = False
-                    # 如果 RRT* 成功，重置 wall-follow 状态
-                    self._wall_follow_direction = None
-                    self._wall_follow_iterations = 0
-                    self._wall_follow_blocked_count = 0
-                    print(f"  [BLOCKED] RRT* found path through gap! {len(rrt_path)} waypoints")
+                # === 前方被挡 ===
+                # 如果已经在 wall-follow 状态，直接继续，不浪费时间尝试 RRT*
+                if self._wall_follow_direction is not None:
+                    print(f"  [BLOCKED] Already in wall-follow ({self._wall_follow_direction}), skipping RRT*")
                 else:
-                    # RRT* 也失败了，进入 wall-follow
-                    print(f"  [BLOCKED] RRT* failed, falling back to wall-follow")
+                    # 首次 blocked，尝试 RRT* 找缝隙
+                    print(f"  [BLOCKED] Forward blocked, trying RRT* first before wall-follow...")
+                    local_goal = self._select_local_goal(current_pos, global_goal, map_stats)
+                    print(f"  RRT* local goal: ({local_goal[0]:.2f}, {local_goal[1]:.2f}, {local_goal[2]:.2f})")
 
+                    with self.perf_monitor.measure('planning'):
+                        rrt_path = self.rrt.plan(current_pos, local_goal)
+
+                    if rrt_path is not None and len(rrt_path) >= 2:
+                        # RRT* 找到了路径（可能穿过缝隙），使用它
+                        current_path = rrt_path
+                        forward_blocked = False
+                        # 如果 RRT* 成功，重置 wall-follow 状态
+                        self._wall_follow_direction = None
+                        self._wall_follow_iterations = 0
+                        self._wall_follow_blocked_count = 0
+                        print(f"  [BLOCKED] RRT* found path through gap! {len(rrt_path)} waypoints")
+                    else:
+                        # RRT* 也失败了，进入 wall-follow
+                        print(f"  [BLOCKED] RRT* failed, falling back to wall-follow")
+
+                if forward_blocked:
                     # 检查 Y 偏移是否已经足够大
                     y_offset_from_start = abs(current_pos[1] - global_goal[1])
                     if y_offset_from_start > 22.0:
@@ -480,9 +501,22 @@ class RecedingHorizonPlanner:
                                 # 检查起点是否接近当前位置
                                 dist_to_path_start = np.linalg.norm(current_pos - remaining_path[0])
                                 if dist_to_path_start < 2.0:
-                                    print(f"  [PATH-REUSE] Using cached path ({len(remaining_path)} waypoints remaining)")
-                                    current_path = remaining_path
-                                    reuse_cached = True
+                                    # 检查路径方向：第一步必须朝目标前进（不能往回飞）
+                                    if len(remaining_path) >= 2:
+                                        step_dir = remaining_path[1] - current_pos
+                                        goal_dir = global_goal - current_pos
+                                        # 投影到目标方向，必须为正（前进）
+                                        forward_proj = np.dot(step_dir[:2], goal_dir[:2])
+                                        if forward_proj < 0:
+                                            print(f"  [PATH-REUSE] Cached path goes backward, replanning")
+                                        else:
+                                            print(f"  [PATH-REUSE] Using cached path ({len(remaining_path)} waypoints remaining)")
+                                            current_path = remaining_path
+                                            reuse_cached = True
+                                    else:
+                                        print(f"  [PATH-REUSE] Using cached path ({len(remaining_path)} waypoints remaining)")
+                                        current_path = remaining_path
+                                        reuse_cached = True
 
                     if not reuse_cached:
                         # 正常 RRT* 规划
@@ -501,6 +535,13 @@ class RecedingHorizonPlanner:
                                 print("[FAILED] All alternatives failed! Stopping.")
                                 self.perf_monitor.print_summary()
                                 return False
+
+                        # 圆弧平滑：在已执行轨迹和新路径衔接处做 B-spline 过渡
+                        if (self.arc_smoothing
+                                and len(self._executed_tail) >= 2
+                                and current_path is not None
+                                and len(current_path) >= 2):
+                            current_path = self._blend_junction(self._executed_tail, current_path)
 
                         # 缓存新规划的路径
                         self._cached_path = current_path
@@ -527,9 +568,18 @@ class RecedingHorizonPlanner:
             with self.perf_monitor.measure('execution'):
                 abort_execution = False
                 for i, wp in enumerate(waypoints_to_execute):
-                    # 强制保持目标高度，防止无人机下沉
+                    # 高度处理：允许 Dubins 爬升角产生的 Z 变化，但限制在目标高度附近
                     wp_fixed = wp.copy()
-                    wp_fixed[2] = global_goal[2]  # 使用全局目标的高度
+                    wp_fixed[2] = np.clip(wp[2], global_goal[2] - 2.0, global_goal[2] + 2.0)
+                    actual_pos, actual_ori = self.drone.get_pose()
+
+                    # === 方向检查：跳过往回飞的航点 ===
+                    step_vec = wp_fixed - actual_pos
+                    goal_vec = global_goal - actual_pos
+                    forward_proj = np.dot(step_vec[:2], goal_vec[:2])
+                    if forward_proj < 0 and np.linalg.norm(step_vec[:2]) > 0.5:
+                        print(f"  [SKIP] Waypoint {i+1} goes backward, skipping")
+                        continue
 
                     print(f"  -> Waypoint {i+1}/{len(waypoints_to_execute)}: "
                           f"({wp_fixed[0]:.2f}, {wp_fixed[1]:.2f}, {wp_fixed[2]:.2f})")
@@ -568,6 +618,11 @@ class RecedingHorizonPlanner:
 
                     self.drone.move_to_position(wp_fixed, velocity=self.flight_velocity)
                     self.executed_trajectory.append(wp_fixed)
+
+                    # 维护圆弧平滑所需的执行尾部
+                    self._executed_tail.append(wp_fixed.copy())
+                    if len(self._executed_tail) > self.arc_overlap_points + 1:
+                        self._executed_tail = self._executed_tail[-(self.arc_overlap_points + 1):]
 
                     # 更新飞行方向（用于下次规划的方向连续性）
                     if len(self.executed_trajectory) >= 2:
@@ -705,6 +760,25 @@ class RecedingHorizonPlanner:
             battery_used_pct = (self.total_energy_consumed / 3600) / battery_wh * 100
             print(f"  Battery used: {battery_used_pct:.1f}%")
 
+    def _blend_junction(self, executed_tail: List[np.ndarray],
+                        new_path: List[np.ndarray]) -> List[np.ndarray]:
+        """
+        3D Dubins 平滑：在已执行轨迹末尾和新规划路径开头之间做 CSC Dubins 过渡，
+        消除硬拐点，使航向和爬升角连续。
+
+        Args:
+            executed_tail: 已飞过的末尾 2-3 个点
+            new_path: 新规划的路径
+
+        Returns:
+            平滑后的路径（替换了开头部分），或原路径（平滑失败时）
+        """
+        return dubins_3d_blend_junction(
+            executed_tail, new_path,
+            self.dubins_params,
+            safety_check=self._check_path_safe,
+        )
+
     def get_energy_stats(self) -> dict:
         """获取能耗统计信息"""
         if len(self.executed_trajectory) < 2:
@@ -776,8 +850,10 @@ class RecedingHorizonPlanner:
                 direction = direction / distance
                 local_goal = current_pos + direction * self.local_horizon
 
-        # 强制保持当前高度（Z轴）
-        local_goal[2] = current_pos[2]
+        # Z 轴：逐步趋近 global_goal 高度（受爬升角约束）
+        max_dz = self.local_horizon * np.tan(np.radians(self.dubins_params.max_climb_angle))
+        target_dz = global_goal[2] - current_pos[2]
+        local_goal[2] = current_pos[2] + np.clip(target_dz, -max_dz, max_dz)
 
         # 检查局部目标是否安全（不在障碍物内）
         if self.map_manager.esdf.distance_field is not None:
@@ -1201,7 +1277,7 @@ class RecedingHorizonPlanner:
                 if self._check_path_safe(current_pos, target):
                     print(f"  [WALL-FOLLOW] Diagonal {best_name} {step_size:.0f}m + X+3m, "
                           f"target=({target[0]:.1f}, {target[1]:.1f}, {target[2]:.1f})")
-                    return [current_pos.copy(), target]
+                    return self._extend_wall_follow_path(current_pos, target, step_size)
 
             # 尝试2: 纯侧移（如果斜向不行）
             target2 = current_pos + best_dir * step_size
@@ -1212,7 +1288,7 @@ class RecedingHorizonPlanner:
                 if self._check_path_safe(current_pos, target2):
                     print(f"  [WALL-FOLLOW] Moving {best_name} {step_size:.0f}m along wall, "
                           f"target=({target2[0]:.1f}, {target2[1]:.1f}, {target2[2]:.1f})")
-                    return [current_pos.copy(), target2]
+                    return self._extend_wall_follow_path(current_pos, target2, step_size)
 
             # 尝试3: 斜向后退（侧移 + 后退2m），绕过墙角
             backward = -x_forward
@@ -1224,12 +1300,38 @@ class RecedingHorizonPlanner:
                 if self._check_path_safe(current_pos, target_diag):
                     print(f"  [WALL-FOLLOW] Diagonal {best_name} {step_size:.0f}m + back 2m, "
                           f"target=({target_diag[0]:.1f}, {target_diag[1]:.1f}, {target_diag[2]:.1f})")
-                    return [current_pos.copy(), target_diag]
+                    return self._extend_wall_follow_path(current_pos, target_diag, step_size)
 
         # 当前方向暂时走不通，但保留方向记忆（不清除！）
         # 返回 None 让主循环回退到 RRT*，下次 wall-follow 仍用同一方向
         print(f"  [WALL-FOLLOW] {best_name} temporarily blocked, keeping direction for next attempt")
         return None
+
+    def _extend_wall_follow_path(self, start: np.ndarray, first_target: np.ndarray,
+                                  step_size: float) -> List[np.ndarray]:
+        """
+        将 wall-follow 的两点路径扩展为多步路径，一次走更远。
+        沿 start->first_target 方向继续追加 2~3 个安全航点。
+        """
+        path = [start.copy(), first_target.copy()]
+        extend_dir = first_target - start
+        extend_norm = np.linalg.norm(extend_dir)
+        if extend_norm < 0.1:
+            return path
+        extend_dir = extend_dir / extend_norm
+
+        for _ in range(3):
+            next_pt = path[-1] + extend_dir * step_size
+            next_pt[2] = start[2]
+            safety = self.map_manager.esdf.get_distance(next_pt)
+            if safety >= self.map_manager.config.safety_margin and self._check_path_safe(path[-1], next_pt):
+                path.append(next_pt)
+            else:
+                break
+
+        if len(path) > 2:
+            print(f"  [WALL-FOLLOW] Extended to {len(path)} waypoints")
+        return path
 
     def _yaw_scan(self, current_pos: np.ndarray, global_goal: np.ndarray):
         """

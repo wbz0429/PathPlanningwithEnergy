@@ -79,30 +79,36 @@ def main():
             search_radius=4.0,
             safety_margin=1.0,  # 安全边距：体素误差0.25m + 无人机半径0.3m + 缓冲0.45m
             # 能量感知规划参数
-            energy_aware=True,
-            weight_energy=0.6,
-            weight_distance=0.3,
-            weight_time=0.1
+            energy_aware=False,
+            # weight_energy=0.6,
+            # weight_distance=0.3,
+            # weight_time=0.1
         )
 
         # 初始化能耗模型
-        energy_model = PhysicsEnergyModel()
-        print(f"    Energy model: BEMT physics model")
-        print(f"    Hover power: {energy_model.compute_hover_power():.1f} W")
+        energy_model = None  # PhysicsEnergyModel()
+        # print(f"    Energy model: BEMT physics model")
+        # print(f"    Hover power: {energy_model.compute_hover_power():.1f} W")
 
         # 滚动规划配置 - 优化后的参数
         receding_config = {
             'local_horizon': 8.0,      # 局部目标距离8m
-            'execution_ratio': 0.3,    # 只执行30%，更频繁重规划以提高安全性
+            'execution_ratio': 0.4,    # 执行40%，兼顾平滑和避障灵活性
             'replan_threshold': 1.5,   # 重规划阈值
             'goal_tolerance': 2.0,     # 放宽到达目标的判定阈值
-            'max_iterations': 80,      # 增大最大循环次数（因为每次执行更少）
+            'max_iterations': 80,      # 增大最大循环次数
             'flight_velocity': 1.5,    # 降低飞行速度，给感知更多反应时间
-            'timeout_seconds': 300,    # 5分钟超时
+            'timeout_seconds': 600,    # 10分钟超时
             'visualize': True,         # 启用可视化
             'enhanced_viz': True,      # 使用增强版可视化器
             'save_video': True,        # 保存视频
-            'video_fps': 10            # 视频帧率
+            'video_fps': 10,           # 视频帧率
+            'arc_smoothing': True,     # 启用 3D Dubins 平滑过渡
+            'arc_overlap_points': 3,   # 衔接处取3个控制点
+            # 3D Dubins 参数
+            'dubins_turning_radius': 1.5,    # 最小转弯半径 (m)
+            'dubins_max_climb_angle': 30.0,  # 最大爬升角 (度)
+            'dubins_sample_distance': 0.3,   # 沿弧长采样间距 (m)
         }
 
         print(f"    Voxel size: {planning_config.voxel_size}m")
