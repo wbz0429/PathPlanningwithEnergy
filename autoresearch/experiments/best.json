@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step_size": 2.419,
+    "max_iterations": 7124,
+    "goal_sample_rate": 0.504,
+    "search_radius": 3.929,
+    "dubins_turning_radius": 2.31,
+    "weight_energy": 0.13789981055399098,
+    "weight_distance": 0.509335880013259,
+    "weight_time": 0.35276430943275006
+  },
+  "result": {
+    "score": 18047.517928445544,
+    "energy_total": 18047.517928445544,
+    "energy_mean_per_sc": 6015.839309481848,
+    "vs_astar": 1.1059069894343134,
+    "min_success": 1.0,
+    "compute_s": 12.2989821434021,
+    "detail": {
+      "A_straight": {
+        "success": 1.0,
+        "energy_mean": 6714.1975983385755,
+        "energy_std": 51.50654337074389,
+        "length_mean": 93.13436950847542,
+        "compute_s": 2.3581926027933755
+      },
+      "B_diag_up": {
+        "success": 1.0,
+        "energy_mean": 5591.125372250363,
+        "energy_std": 21.852345617240392,
+        "length_mean": 77.55072737681914,
+        "compute_s": 0.5923256079355875
+      },
+      "C_diag_down": {
+        "success": 1.0,
+        "energy_mean": 5742.1949578566055,
+        "energy_std": 9.007024268997046,
+        "length_mean": 79.65147386666844,
+        "compute_s": 1.148707389831543
+      }
+    }
+  }
+}

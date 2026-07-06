@@ -158,15 +158,6 @@ class RRTStar:
         # 计算局部采样范围（以起点和终点为中心）
         self._compute_sampling_bounds(start, goal)
 
-        # [autoresearch stage-4] RRT-Connect 双向树分支（config.use_rrt_connect）
-        if getattr(self.config, 'use_rrt_connect', False):
-            raw = self._rrt_connect(start, goal, start_safe, goal_safe)
-            if raw is None or len(raw) < 2:
-                return None
-            raw = self._smooth_path(raw)
-            self._compute_plan_stats(raw)
-            return raw
-
         # 初始化树
         nodes = [start.copy()]
         parents = {0: -1}
@@ -287,77 +278,6 @@ class RRTStar:
         # 记录规划统计信息
         self._compute_plan_stats(path)
 
-        return path
-
-    # ============ [autoresearch stage-4] RRT-Connect 双向树 ============
-    def _rrt_connect(self, start, goal, start_safe=True, goal_safe=True):
-        """双向 RRT-Connect：start/goal 两棵树相向生长，连通即得可行路径。
-        反馈快、窄通道成功率高；能耗由后续 _smooth_path 捷径优化。"""
-        import time as _time
-        t0 = _time.time()
-        s_nodes = [start.copy()]; s_par = {0: -1}
-        g_nodes = [goal.copy()];  g_par = {0: -1}
-        lead_n, lead_p = s_nodes, s_par
-        follow_n, follow_p = g_nodes, g_par
-        lead_is_start = True
-
-        for i in range(self.config.max_iterations):
-            if i % 100 == 0 and i > 0 and _time.time() - t0 > self.planning_timeout:
-                print(f"  [RRT-Connect] Timeout after {i} iters ({self.planning_timeout}s)")
-                break
-
-            sample = self._random_sample()
-            stat, new_idx = self._extend_tree(lead_n, lead_p, sample)
-            if stat != 'trapped':
-                cstat, meet_idx = self._connect_tree(follow_n, follow_p, lead_n[new_idx])
-                if cstat == 'reached' and self._is_collision_free(lead_n[new_idx], follow_n[meet_idx]):
-                    lead_path = self._trace_tree(lead_n, lead_p, new_idx)
-                    follow_path = self._trace_tree(follow_n, follow_p, meet_idx)
-                    if lead_is_start:
-                        path = lead_path + follow_path[::-1]
-                    else:
-                        path = follow_path + lead_path[::-1]
-                    print(f"  [RRT-Connect] Connected! iters: {i+1}, "
-                          f"nodes: {len(s_nodes)+len(g_nodes)}")
-                    return path
-            # 交换两棵树（平衡生长）
-            lead_n, follow_n = follow_n, lead_n
-            lead_p, follow_p = follow_p, lead_p
-            lead_is_start = not lead_is_start
-
-        print(f"  [RRT-Connect] Failed after {self.config.max_iterations} iters")
-        return None
-
-    def _extend_tree(self, nodes, par, target):
-        """向 target 扩展一步。返回 ('reached'|'advanced'|'trapped', idx)。"""
-        n_idx = self._nearest_node(nodes, target)
-        nearest = nodes[n_idx]
-        new_point = self._steer(nearest, target)
-        if not self._is_collision_free(nearest, new_point):
-            return 'trapped', n_idx
-        new_idx = len(nodes)
-        nodes.append(new_point)
-        par[new_idx] = n_idx
-        if np.linalg.norm(new_point - target) < self.config.step_size * 0.5:
-            return 'reached', new_idx
-        return 'advanced', new_idx
-
-    def _connect_tree(self, nodes, par, target, max_steps=200):
-        """贪心地反复扩展直到到达 target 或受阻。"""
-        idx = self._nearest_node(nodes, target)
-        for _ in range(max_steps):
-            stat, idx = self._extend_tree(nodes, par, target)
-            if stat in ('reached', 'trapped'):
-                return stat, idx
-        return 'trapped', idx
-
-    def _trace_tree(self, nodes, par, idx):
-        """回溯：从根到 idx 的节点列表。"""
-        path = []
-        while idx != -1:
-            path.append(nodes[idx])
-            idx = par[idx]
-        path.reverse()
         return path
 
     def _compute_plan_stats(self, path: List[np.ndarray]):

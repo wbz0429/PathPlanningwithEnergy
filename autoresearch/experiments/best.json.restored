@@ -1,0 +1,15 @@
+{
+  "config": {
+    "step_size": 2.419,
+    "max_iterations": 7124,
+    "goal_sample_rate": 0.504,
+    "search_radius": 3.929,
+    "dubins_turning_radius": 2.31,
+    "weight_energy": 0.13789981055399098,
+    "weight_distance": 0.509335880013259,
+    "weight_time": 0.35276430943275006
+  },
+  "result": {
+    "note": "restored from stage-3 robust re-search; held-out vsA*=1.181, min_success=100%"
+  }
+}

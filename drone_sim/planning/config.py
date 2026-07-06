@@ -27,6 +27,9 @@ class PlanningConfig:
     search_radius: float = 4.0       # 重连接搜索半径（增大）
     planning_timeout: float = 3.0    # RRT* 单次规划超时（秒）
 
+    # 规划算法选择 [autoresearch stage-4]
+    use_rrt_connect: bool = False    # True=双向 RRT-Connect（快、窄通道强），False=能量感知 RRT*
+
     # 安全参数
     safety_margin: float = 1.0       # 安全边距（米）- 覆盖体素误差0.25m + 无人机半径0.3m + 缓冲0.45m
     unknown_safe_threshold: float = 2.0  # Unknown区域安全阈值：ESDF距离>=此值的unknown视为可通行
