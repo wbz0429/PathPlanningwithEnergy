@@ -361,8 +361,8 @@ def smooth_path(path, is_collision_free, config):
     S = pts[0]
     G = pts[-1]
     feasible = []
-    for zc in (-11.5, -12.5):
-        for f1 in (0.1, 0.2, 0.3):
+    for zc in (-11.2, -11.5, -12.0, -12.5):
+        for f1 in (0.08, 0.12, 0.18, 0.25, 0.32):
             for f2 in (0.8, 0.85, 0.9, 0.95):
                 P1 = S + (G - S) * f1
                 P1[2] = zc
@@ -376,7 +376,7 @@ def smooth_path(path, is_collision_free, config):
     if feasible:
         feasible.sort(key=lambda t: t[0])
         best_J = _proxy3d(pts)
-        for _J_raw, cand in feasible[:2]:
+        for _J_raw, cand in feasible[:3]:
             polished = _sweeps(cand)
             Jp = _proxy3d(polished)
             if Jp < best_J - 1e-6:
