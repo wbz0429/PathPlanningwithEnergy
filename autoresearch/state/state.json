@@ -1,10 +1,10 @@
 {
   "phase": "loop",
-  "iteration": 1,
+  "iteration": 2,
   "episode": 0,
   "milestone": 0,
   "plateau_count": 0,
-  "bottleneck": "worst scenario: A_straight (succ 0%)",
+  "bottleneck": "worst scenario: A_straight (succ 100% but E≈1602J, ~1.8x B — jagged RRT-Connect detour around solid walls; smoother is next lever)",
   "best": {
     "config": {
       "step_size": 1.5,
@@ -13,11 +13,12 @@
       "search_radius": 4.0,
       "weight_energy": 0.6,
       "weight_distance": 0.3,
-      "weight_time": 0.1
+      "weight_time": 0.1,
+      "use_rrt_connect": true
     },
     "smoother": "default",
-    "score": 15000.0,
-    "min_success": 0.0
+    "score": 3191.2230972712337,
+    "min_success": 1.0
   },
   "cadence": {
     "episode_cap": 10,

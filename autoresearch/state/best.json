@@ -6,26 +6,27 @@
     "search_radius": 4.0,
     "weight_energy": 0.6,
     "weight_distance": 0.3,
-    "weight_time": 0.1
+    "weight_time": 0.1,
+    "use_rrt_connect": true
   },
   "smoother": "default",
   "result": {
-    "score": 15000.0,
-    "energy_total": null,
-    "min_success": 0.0
+    "score": 3191.2230972712337,
+    "energy_total": 3191.2230972712337,
+    "min_success": 1.0
   },
   "detail": {
     "A_straight": {
-      "success": 0.0,
-      "energy_mean": null
+      "success": 1.0,
+      "energy_mean": 1602.083271894359
     },
     "B_diag_up": {
-      "success": 0.6666666666666666,
-      "energy_mean": 693.6384266587634
+      "success": 1.0,
+      "energy_mean": 899.3606586914854
     },
     "C_diag_down": {
-      "success": 0.3333333333333333,
-      "energy_mean": 685.2671302574466
+      "success": 1.0,
+      "energy_mean": 689.7791666853891
     }
   }
 }
