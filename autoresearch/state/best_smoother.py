@@ -261,6 +261,57 @@ def smooth_path(path, is_collision_free, config):
             else:
                 k += 1
 
+        # move F: double-bend — replace a sharp corner vertex with TWO
+        # outward-spread vertices in one candidate (chamfer is the m=0
+        # special case). Directly reaches the two-gentle-corners-with-
+        # long-legs geometry that single insertions approach only slowly.
+        base = _proxy(pts)
+        k = 1
+        while k < len(pts) - 1 and len(pts) < MAX_WP:
+            A, P, B = pts[k - 1], pts[k], pts[k + 1]
+            v1 = P - A
+            v2 = B - P
+            L1 = float(np.linalg.norm(v1))
+            L2 = float(np.linalg.norm(v2))
+            if L1 < 6.0 or L2 < 6.0:
+                k += 1
+                continue
+            u1 = v1 / L1
+            u2 = v2 / L2
+            cosang = max(-1.0, min(1.0, float(np.dot(u1, u2))))
+            theta = math.acos(cosang)
+            if theta < 0.4:
+                k += 1
+                continue
+            inside = u2 - u1
+            w1 = -inside + float(np.dot(inside, u1)) * u1
+            nw1 = float(np.linalg.norm(w1))
+            w2 = -inside + float(np.dot(inside, u2)) * u2
+            nw2 = float(np.linalg.norm(w2))
+            if nw1 < 1e-9 or nw2 < 1e-9:
+                k += 1
+                continue
+            w1 = w1 / nw1
+            w2 = w2 / nw2
+            best = None
+            for f in (0.35, 0.55):
+                for m in (0.0, 2.0, 4.0, 6.0):
+                    Q1 = P - u1 * (f * L1) + w1 * m
+                    Q2 = P + u2 * (f * L2) + w2 * m
+                    cand = pts[:k] + [Q1, Q2] + pts[k + 1:]
+                    J = _proxy(cand)
+                    if J < base - 1e-6 and (best is None or J < best[0]):
+                        if (is_collision_free(pts[k - 1], Q1)
+                                and is_collision_free(Q1, Q2)
+                                and is_collision_free(Q2, pts[k + 1])):
+                            best = (J, cand)
+            if best is not None:
+                base, pts = best
+                improved = True
+                k += 2
+            else:
+                k += 1
+
         if not improved:
             break
 
