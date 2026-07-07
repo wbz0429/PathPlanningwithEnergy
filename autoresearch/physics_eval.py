@@ -169,10 +169,11 @@ def evaluate(overrides: dict, runs: int = 3, seed0: int = 0, smoother_src=None,
     仍冻结 BEMT/kinodynamic/尺子;overrides 只应含 Layer-1 可动键。
     返回 dict:score(越低越好), energy_total, vs_anchor, min_success, detail。
     """
-    import random
+    import random, contextlib
     from planning.config import PlanningConfig
     from planning.rrt_star import RRTStar
     import candidate as cand
+    import sandbox
 
     vg, esdf, em = get_grounded_map()
     if "vstar" not in _GCACHE:
@@ -184,27 +185,42 @@ def evaluate(overrides: dict, runs: int = 3, seed0: int = 0, smoother_src=None,
     ck = dict(ev.BASE); ck.update(overrides)
     ck.setdefault("energy_aware", True); ck.setdefault("flight_velocity", 2.0)
 
-    # 代码候选:monkeypatch 平滑器(经沙箱在调用方校验)
+    def _bad(reason):
+        return {"score": 9e9, "energy_total": None, "min_success": 0.0,
+                "detail": {}, "vstar": vstar, "_bad": reason}
+
+    # 代码候选:AST 沙箱 + 契约测试 + 崩溃/超时守卫(机械强制,不靠自觉)
     orig = RRTStar._smooth_path
     if smoother_src is not None:
-        fn = cand.load_smoother(smoother_src)
+        ok, reason = sandbox.check_code(smoother_src)
+        if not ok:
+            return _bad(f"INVALID:{reason}")
+        try:
+            fn = cand.load_smoother(smoother_src)
+            cand.contract_test(fn)
+        except Exception as e:
+            return _bad(f"CONTRACT:{type(e).__name__}:{e}")
         RRTStar._smooth_path = cand.make_patch_method(fn)
 
     detail = {}
+    guard = sandbox.time_limit(300) if smoother_src is not None else contextlib.nullcontext()
     try:
-        for sc in scs:
-            succ = 0; Es = []
-            for r in range(runs):
-                random.seed(seed0 + r); np.random.seed(seed0 + r)
-                path = RRTStar(vg, esdf, PlanningConfig(**ck), energy_model=em).plan(sc["start"], sc["goal"])
-                if path and len(path) >= 2 and _path_collision_free(path, esdf, sm):
-                    succ += 1
-                    Es.append(energy_with_profile(path, em, vstar))
-            sr = succ / runs
-            detail[sc["name"]] = {"success": sr,
-                                  "energy_mean": float(np.mean(Es)) if Es else None}
-            if verbose:
-                print(f"    [{sc['name']}] succ={sr:.0%} E={detail[sc['name']]['energy_mean']}")
+        with guard:
+            for sc in scs:
+                succ = 0; Es = []
+                for r in range(runs):
+                    random.seed(seed0 + r); np.random.seed(seed0 + r)
+                    path = RRTStar(vg, esdf, PlanningConfig(**ck), energy_model=em).plan(sc["start"], sc["goal"])
+                    if path and len(path) >= 2 and _path_collision_free(path, esdf, sm):
+                        succ += 1
+                        Es.append(energy_with_profile(path, em, vstar))
+                sr = succ / runs
+                detail[sc["name"]] = {"success": sr,
+                                      "energy_mean": float(np.mean(Es)) if Es else None}
+                if verbose:
+                    print(f"    [{sc['name']}] succ={sr:.0%} E={detail[sc['name']]['energy_mean']}")
+    except Exception as e:
+        return _bad(f"CRASH:{type(e).__name__}:{e}")
     finally:
         RRTStar._smooth_path = orig
 
