@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step_size": 1.5,
+    "max_iterations": 5000,
+    "goal_sample_rate": 0.4,
+    "search_radius": 4.0,
+    "weight_energy": 0.6,
+    "weight_distance": 0.3,
+    "weight_time": 0.1
+  },
+  "smoother": "default",
+  "result": {
+    "score": 15000.0,
+    "energy_total": null,
+    "min_success": 0.0
+  },
+  "detail": {
+    "A_straight": {
+      "success": 0.0,
+      "energy_mean": null
+    },
+    "B_diag_up": {
+      "success": 0.6666666666666666,
+      "energy_mean": 693.6384266587634
+    },
+    "C_diag_down": {
+      "success": 0.3333333333333333,
+      "energy_mean": 685.2671302574466
+    }
+  }
+}

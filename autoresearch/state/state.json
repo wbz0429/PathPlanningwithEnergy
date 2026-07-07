@@ -1,17 +1,23 @@
 {
   "phase": "loop",
-  "iteration": 0,
+  "iteration": 1,
   "episode": 0,
   "milestone": 0,
   "plateau_count": 0,
-  "bottleneck": "scenario A: must climb over solid Row1/Row4 walls; reliability + profile-energy",
+  "bottleneck": "worst scenario: A_straight (succ 0%)",
   "best": {
     "config": {
-      "step_size": 1.5, "max_iterations": 5000, "goal_sample_rate": 0.4,
-      "search_radius": 4.0, "weight_energy": 0.6, "weight_distance": 0.3, "weight_time": 0.1
+      "step_size": 1.5,
+      "max_iterations": 5000,
+      "goal_sample_rate": 0.4,
+      "search_radius": 4.0,
+      "weight_energy": 0.6,
+      "weight_distance": 0.3,
+      "weight_time": 0.1
     },
     "smoother": "default",
-    "score": null
+    "score": 15000.0,
+    "min_success": 0.0
   },
   "cadence": {
     "episode_cap": 10,
