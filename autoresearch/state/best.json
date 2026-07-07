@@ -9,24 +9,24 @@
     "weight_time": 0.1,
     "use_rrt_connect": true
   },
-  "smoother": "default",
+  "smoother": "best_smoother.py (shortcut + profile-energy-proxy local search: remove/move/chamfer/split)",
   "result": {
-    "score": 3191.2230972712337,
-    "energy_total": 3191.2230972712337,
+    "score": 2694.251263609961,
+    "energy_total": 2694.251263609961,
     "min_success": 1.0
   },
   "detail": {
     "A_straight": {
       "success": 1.0,
-      "energy_mean": 1602.083271894359
+      "energy_mean": 1164.4439242083088
     },
     "B_diag_up": {
       "success": 1.0,
-      "energy_mean": 899.3606586914854
+      "energy_mean": 847.7112837145752
     },
     "C_diag_down": {
       "success": 1.0,
-      "energy_mean": 689.7791666853891
+      "energy_mean": 682.0960556870767
     }
   }
 }

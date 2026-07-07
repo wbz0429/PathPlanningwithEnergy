@@ -1,10 +1,10 @@
 {
   "phase": "loop",
-  "iteration": 2,
+  "iteration": 3,
   "episode": 0,
   "milestone": 0,
   "plateau_count": 0,
-  "bottleneck": "worst scenario: A_straight (succ 100% but E≈1602J, ~1.8x B — jagged RRT-Connect detour around solid walls; smoother is next lever)",
+  "bottleneck": "worst scenario: A_straight (succ 100%, E≈1164J vs lower-bound ~680J — residual: RRT-Connect topology variance (overshoot routes) + structurally sharp final corner behind Row4 edge)",
   "best": {
     "config": {
       "step_size": 1.5,
@@ -16,8 +16,8 @@
       "weight_time": 0.1,
       "use_rrt_connect": true
     },
-    "smoother": "default",
-    "score": 3191.2230972712337,
+    "smoother": "best_smoother.py (shortcut + profile-energy-proxy local search: remove/move/chamfer/split)",
+    "score": 2694.251263609961,
     "min_success": 1.0
   },
   "cadence": {
