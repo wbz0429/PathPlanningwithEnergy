@@ -1,10 +1,10 @@
 {
   "phase": "loop",
-  "iteration": 19,
-  "episode": 2,
-  "milestone": 0,
-  "plateau_count": 0,
-  "bottleneck": "floor ~2078 (A 797/B 634/C 648). All structural ideas now tried; C's corner tax is the only line item never improved (south corridor 7.5m). Milestone (episode 3) at iteration 20 boundary.",
+  "iteration": 22,
+  "episode": 3,
+  "milestone": 3,
+  "plateau_count": 1,
+  "bottleneck": "MILESTONE 1 DONE (validated on seed_val=100: 2079.2, no overfitting). Awaiting user review. If continued: remaining headroom requires unfreezing Layer-2 (sampler z-clamp, kinodynamic) — a scope decision for the user.",
   "best": {
     "config": {
       "step_size": 4.5,

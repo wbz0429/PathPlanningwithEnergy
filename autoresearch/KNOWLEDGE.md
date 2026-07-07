@@ -17,6 +17,16 @@
 - 参数:step_size / max_iterations / goal_sample_rate / search_radius / weight_* / use_rrt_connect
 - 代码:平滑器 `smooth_path`(降低转弯锐度=降能耗的直接抓手);后续可开采样器。
 
+## Milestone 1(Ep3,iter 21,2026-07-08)
+
+**结果**:score 15000 → **2078.4**(训练种子 0-2),留出验证 seed_val=100 → **2079.2**(Δ+0.04%,三场景 100% 成功;同种子下未调优基线 10684.5、A 场景 0% 成功)——**增益全部泛化,无种子过拟合**。
+
+**最终配置**:`use_rrt_connect=true, step_size=4.5`(其余参数确认为死旋钮);平滑器 v13 = 多趟视线捷径 + 悲观线性 proxy 局部搜索(顶点删除/搬移16m/粗chamfer/共线分割/split-bend/double-bend,6 趟内收敛)+ 翻墙宏路线探针(先碰撞查、后 polish、再用爬降感知 3D proxy 排序采纳)+ raw 顶点 corner-cap-aware 骨架 DP。
+
+**21 轮账本**:7 KEEP(RRT-Connect −79%、proxy 平滑器 −15.6%、split-bend −5.7%、double-bend −0.1%、step 3.0 −8.2%、step 4.5 −1.5%、翻墙探针 −9.2%、细网格 −0.1%、骨架 DP −0.2%)、9 REVERT/no-op(每个都关闭了一条搜索方向并留下判据)。三条硬结论:①度量的 phantom-R 特性决定"少顶点长腿"优于圆弧离散;②BEMT 下降近免费 → 翻墙拓扑占优但必须 polish 后再比较;③悲观 proxy 做局部搜索优于精确 proxy。
+
+**剩余瓶颈**(若继续):A 797J vs 长度下界 ~527J(爬升税+驼峰-v* 耦合,家族地板);B 634/C 648 转角税守恒。突破需要 Layer-1 之外的自由度(如采样器 z 解锁、kinodynamic 松绑——均属冻结层,不可动)。
+
 ## Insights(loop 追加)
 - **[Ep1] 度量的 phantom-R 特性**:评测器 R=min(L1,L2)/θ——两条长腿夹一个锐角会被解读成"大半径"(快),细分成短弦反而变慢。最优形状=**少顶点、长而均衡的腿、小角度**,不是密集圆弧。平滑器要用"顶点搬移/粗 chamfer/共线分割隔离慢区/split+bend 复合步"这一族走法(iter2-4,score 3191→2538)。
 - **[Ep1] 冻结 BEMT 的垂直不对称**(实测 compute_energy_for_segment):12 m/s 时 爬升(24°)=16.0 J/m,平飞=8.2,**下降=1.6 J/m(近乎免费)**;高度往返净成本≈+3 J/m·爬升米。文献同向:min-distance≠min-energy、爬/降不对称 TSP 代价(arXiv:2410.17585;对角下降 +16.6% 能量换 +88% 水平距离)。
@@ -24,4 +34,6 @@
 - **[Ep1] 平飞功率抛物线拟合**(冻结 BEMT 自测):P(v)=164.8−11.39v+0.492v²(W),v*≈18.3、e/m*≈6.63 J/m 吻合;爬升 +1.26·W·vz,下降 −1.2·W·|vz|、地板 ~10W。但注意:**局部走法用更准的 3D proxy 反而略退步**(A 1009→1043,v5/v6),经验上局部 sweep 保留 v4 的线性悲观拟合(150/v−1.6)更好——悲观偏置推动更高 vcap。3D proxy 只用于给拓扑候选排序。
 - **[Ep2] A≈799J 已近本家族地板**:翻墙路线的"驼峰"(z=-15.2)不是浪费——它换来 26m 爬升腿满速 v*(压低驼峰→apex 角变锐→大腿被 cap 到 ~14,得不偿失,v8/v10 no-op、v9 更差已证)。**悲观线性 proxy 做局部走法一贯优于"更准"的 3D proxy**(高估中速成本→逼出高 vcap 几何,真评测器更买账)。
 - **[Ep2] 转角守恒律**:R=minL/θ 下,把一个弯拆成 n 个小弯要求腿长成比例增长,而走廊长度固定→B/C 的 ~130J 转角税基本不可再压(拆弯/racing-line 摆宽的解析核算都是 wash)。赛车文献同理:时间对速度比对距离更敏感,应加权偏向最小曲率(min-curvature > min-length),我们的 vcap proxy 已内建此权衡。
+- **[Ep3] 种子过拟合风险(算法配置文献)**:固定种子调参会"过拟合到该种子"——训练种子上优、新种子上劣(arXiv:1705.06058 算法配置陷阱;arXiv:2302.14422 SBMP 调参用 held-out 验证)。本 loop 全程只用 seed 0-2 训练;**任何"地板已到"的结论必须过 seed_val=100 的留出验证**才算数。
+- **[Ep3] 骨架选择:贪心捷径+局部修复 ≈ 全局 DP(差距仅 ~4J/B 场景)**:对 raw 顶点做 corner-cap-aware 二阶 DP 选骨架,只在 B 上赢 3.6J(A 被模板概率主导、C 拓扑受限)。平滑器 sweep 6 趟内全收敛(12 趟 no-op)。
 - **[Ep1] RRT-Connect 骨架質量由 step_size 主导**:1.5→3.0(−8.2%)→4.5(−1.5%)→6.0(反弹 +2.3%),峰值 4.5m。weight_*/search_radius 在 RRT-Connect 分支是死旋钮;goal_sample_rate 在 _smart_sample 里被硬编码 0.2 取代,也是死旋钮。
