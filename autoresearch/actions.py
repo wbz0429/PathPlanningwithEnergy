@@ -18,15 +18,17 @@ PARAM_SPACE = {
     "max_iterations":        (3000, 8000, "int"),
     "goal_sample_rate":      (0.1, 0.6,  "float"),
     "search_radius":         (3.0, 7.0,  "float"),
-    "dubins_turning_radius": (1.0, 2.5,  "float"),
     "weight_energy":         (0.0, 1.0,  "float"),
     "weight_distance":       (0.0, 1.0,  "float"),
     "weight_time":           (0.0, 1.0,  "float"),
 }
-# 安全/评测相关字段:锁定,LLM 不可改(防 reward hacking / 破坏可比性)
+# 安全/物理/评测相关字段:锁定,agent 不可改(防 reward hacking / 破坏可比性)
+# [Phase A] kinodynamic 旋钮(转弯半径/爬升角)是车辆物理极限,且 BEMT 不给转弯计价 →
+#           它们是隐藏作弊向量,必须冻结(见 LAYERS.md Layer-0 / Q3 决策)。
 LOCKED_FIELDS = {
     "voxel_size", "grid_size", "origin", "safety_margin", "max_depth",
     "energy_ref", "distance_ref", "time_ref", "flight_velocity", "planning_timeout",
+    "dubins_turning_radius", "dubins_max_climb_angle", "dubins_sample_distance",
 }
 
 
