@@ -1,13 +1,13 @@
 {
   "phase": "loop",
-  "iteration": 6,
+  "iteration": 7,
   "episode": 0,
   "milestone": 0,
   "plateau_count": 0,
-  "bottleneck": "worst scenario: A_straight (E≈1030J vs LB ~620J — two unavoidable corridor corners; both smoother and skeleton levers now partially spent. Next: try step_size 4.5-6 or max_iterations/goal knobs; note weight_*/search_radius are dead under RRT-Connect)",
+  "bottleneck": "worst scenario: A_straight (E≈1009J vs LB ~620J). step_size ladder diminishing (3.0:-8.2%, 4.5:-1.5%); one more rung (6.0) plausible, else corner-geometry floor reached — consider z-dimension moves in smoother (over-wall route) or accept floor",
   "best": {
     "config": {
-      "step_size": 3.0,
+      "step_size": 4.5,
       "max_iterations": 5000,
       "goal_sample_rate": 0.4,
       "search_radius": 4.0,
@@ -17,7 +17,7 @@
       "use_rrt_connect": true
     },
     "smoother": "best_smoother.py (v4: + double-bend move)",
-    "score": 2328.9327525981603,
+    "score": 2294.7614345088,
     "min_success": 1.0
   },
   "cadence": {
