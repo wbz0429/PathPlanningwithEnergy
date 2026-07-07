@@ -1,10 +1,10 @@
 {
   "phase": "loop",
-  "iteration": 3,
+  "iteration": 4,
   "episode": 0,
   "milestone": 0,
   "plateau_count": 0,
-  "bottleneck": "worst scenario: A_straight (succ 100%, E≈1164J vs lower-bound ~680J — residual: RRT-Connect topology variance (overshoot routes) + structurally sharp final corner behind Row4 edge)",
+  "bottleneck": "worst scenario: A_straight (succ 100%, E≈1055J vs LB ~620J — residual: 2 unavoidable corridor corners still cap long legs at 7-11 m/s; smoother local search plateauing, next lever may be planner-side (step_size) or smarter corner geometry)",
   "best": {
     "config": {
       "step_size": 1.5,
@@ -16,8 +16,8 @@
       "weight_time": 0.1,
       "use_rrt_connect": true
     },
-    "smoother": "best_smoother.py (shortcut + profile-energy-proxy local search: remove/move/chamfer/split)",
-    "score": 2694.251263609961,
+    "smoother": "best_smoother.py (v3: shortcut + proxy local search: remove/relocate16m+diag/chamfer/split/split-bend)",
+    "score": 2540.425235689478,
     "min_success": 1.0
   },
   "cadence": {

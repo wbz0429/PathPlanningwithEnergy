@@ -115,9 +115,16 @@ def smooth_path(path, is_collision_free, config):
             nn = float(np.linalg.norm(norm))
             norm = norm / nn if nn > 1e-9 else np.array([0.0, 0.0, 1.0])
             zax = np.array([0.0, 0.0, 1.0])
+            diag1 = tang + norm
+            nd = float(np.linalg.norm(diag1))
+            diag1 = diag1 / nd if nd > 1e-9 else tang
+            diag2 = tang - norm
+            nd = float(np.linalg.norm(diag2))
+            diag2 = diag2 / nd if nd > 1e-9 else tang
             best = None
-            for direc in (tang, -tang, norm, -norm, zax, -zax):
-                for step in (8.0, 4.0, 2.0):
+            for direc in (tang, -tang, norm, -norm, diag1, -diag1, diag2, -diag2,
+                          zax, -zax):
+                for step in (16.0, 8.0, 4.0, 2.0):
                     Q = P + direc * step
                     cand = pts[:k] + [Q] + pts[k + 1:]
                     J = _proxy(cand)
@@ -197,6 +204,62 @@ def smooth_path(path, is_collision_free, config):
                     placed = True
                     break
             k += 2 if placed else 1
+
+        # move E: split+bend — escape the local minimum where a collinear
+        # split alone shrinks min(L1, L2) at a sharp corner (rejected) but
+        # split-then-bend-outward would divide the turn into two gentle
+        # corners with long legs. Insert a vertex on a leg adjacent to a
+        # sharp corner AND offset it perpendicular-outward in one candidate.
+        base = _proxy(pts)
+        k = 1
+        while k < len(pts) - 1 and len(pts) < MAX_WP:
+            A, P, B = pts[k - 1], pts[k], pts[k + 1]
+            v1 = P - A
+            v2 = B - P
+            L1 = float(np.linalg.norm(v1))
+            L2 = float(np.linalg.norm(v2))
+            if L1 < 1e-6 or L2 < 1e-6:
+                k += 1
+                continue
+            u1 = v1 / L1
+            u2 = v2 / L2
+            cosang = max(-1.0, min(1.0, float(np.dot(u1, u2))))
+            theta = math.acos(cosang)
+            if theta < 0.5:
+                k += 1
+                continue
+            inside = u2 - u1          # points into the turn
+            best = None
+            for prev_side in (True, False):
+                leg_u = u1 if prev_side else u2
+                L = L1 if prev_side else L2
+                if L < 6.0:
+                    continue
+                # outward = -(inside) component perpendicular to this leg
+                w = -inside + float(np.dot(inside, leg_u)) * leg_u
+                nw = float(np.linalg.norm(w))
+                if nw < 1e-9:
+                    continue
+                w = w / nw
+                for f in (0.4, 0.6):
+                    Q0 = P - u1 * (f * L1) if prev_side else P + u2 * (f * L2)
+                    for m in (2.0, 4.0, 6.0):
+                        Q = Q0 + w * m
+                        idx = k if prev_side else k + 1
+                        cand = pts[:idx] + [Q] + pts[idx:]
+                        J = _proxy(cand)
+                        if J < base - 1e-6 and (best is None or J < best[0]):
+                            a_pt = pts[idx - 1]
+                            b_pt = pts[idx]
+                            if (is_collision_free(a_pt, Q)
+                                    and is_collision_free(Q, b_pt)):
+                                best = (J, cand)
+            if best is not None:
+                base, pts = best
+                improved = True
+                k += 2
+            else:
+                k += 1
 
         if not improved:
             break
