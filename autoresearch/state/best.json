@@ -9,10 +9,10 @@
     "weight_time": 0.1,
     "use_rrt_connect": true
   },
-  "smoother": "best_smoother.py (v11: v7 + finer probe grid)",
+  "smoother": "best_smoother.py (v13: v11 + skeleton-DP probe)",
   "result": {
-    "score": 2081.9979645402614,
-    "energy_total": 2081.9979645402614,
+    "score": 2078.4468619035383,
+    "energy_total": 2078.4468619035383,
     "min_success": 1.0
   },
   "detail": {
@@ -22,7 +22,7 @@
     },
     "B_diag_up": {
       "success": 1.0,
-      "energy_mean": 637.1596648051785
+      "energy_mean": 633.6085621684557
     },
     "C_diag_down": {
       "success": 1.0,

@@ -98,6 +98,7 @@ def smooth_path(path, is_collision_free, config):
         return [np.asarray(p, dtype=float).copy() for p in path]
 
     pts = [np.asarray(p, dtype=float).copy() for p in path]
+    raw = [p.copy() for p in pts]
 
     # ---- pass 1: iterative line-of-sight shortcutting (minimal skeleton) ----
     for _ in range(10):
@@ -382,5 +383,77 @@ def smooth_path(path, is_collision_free, config):
             if Jp < best_J - 1e-6:
                 best_J = Jp
                 pts = polished
+
+    # ---- skeleton-DP probe: global corner placement over raw vertices ----
+    # Greedy farthest-first shortcutting fixes corners at visibility-jump
+    # artifacts. A second-order DP over the raw polyline picks the skeleton
+    # minimizing a corner-cap-aware cost (each edge half priced by the speed
+    # cap of its adjacent corner). Candidate only — polished and adopted
+    # solely when the climb-aware ranking proxy improves.
+    if len(raw) > 90:
+        raw = raw[::2]
+        if float(np.linalg.norm(raw[-1] - pts[-1])) > 1e-9:
+            raw.append(pts[-1].copy())
+    n_raw = len(raw)
+    if 4 <= n_raw <= 90:
+        vis = [[False] * n_raw for _ in range(n_raw)]
+        for i in range(n_raw - 1):
+            for j in range(i + 1, n_raw):
+                if j == i + 1 or is_collision_free(raw[i], raw[j]):
+                    vis[i][j] = True
+
+        def _em(v):
+            return P0 / max(0.5, v) - PSLOPE
+
+        def _elen(i, j):
+            return float(np.linalg.norm(raw[j] - raw[i]))
+
+        dp = {}
+        par = {}
+        for j in range(1, n_raw):
+            if vis[0][j]:
+                dp[(0, j)] = 0.5 * _elen(0, j) * _em(V_STAR)
+                par[(0, j)] = None
+        for j in range(1, n_raw - 1):
+            for i in range(j):
+                if (i, j) not in dp:
+                    continue
+                base_c = dp[(i, j)]
+                v1 = raw[j] - raw[i]
+                L1 = _elen(i, j)
+                for k in range(j + 1, n_raw):
+                    if not vis[j][k]:
+                        continue
+                    v2 = raw[k] - raw[j]
+                    L2 = _elen(j, k)
+                    if L1 < 1e-9 or L2 < 1e-9:
+                        continue
+                    cosv = max(-1.0, min(1.0,
+                               float(np.dot(v1 / L1, v2 / L2))))
+                    theta = math.acos(cosv)
+                    R = max(0.3, min(L1, L2) / max(theta, 1e-3))
+                    vt = min(V_STAR, math.sqrt(A_LAT * R))
+                    c = base_c + 0.5 * (L1 + L2) * _em(vt)
+                    if c < dp.get((j, k), 1e18):
+                        dp[(j, k)] = c
+                        par[(j, k)] = i
+        end = None
+        best_c = 1e18
+        for i in range(n_raw - 1):
+            if (i, n_raw - 1) in dp:
+                c = dp[(i, n_raw - 1)] + 0.5 * _elen(i, n_raw - 1) * _em(V_STAR)
+                if c < best_c:
+                    best_c = c
+                    end = i
+        if end is not None:
+            idxs = [n_raw - 1, end]
+            while par[(idxs[-1], idxs[-2])] is not None:
+                idxs.append(par[(idxs[-1], idxs[-2])])
+            idxs.reverse()
+            skel = [raw[i].copy() for i in idxs]
+            if len(skel) >= 2:
+                polished = _sweeps(skel)
+                if _proxy3d(polished) < _proxy3d(pts) - 1e-6:
+                    pts = polished
 
     return pts

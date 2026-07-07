@@ -1,10 +1,10 @@
 {
   "phase": "loop",
-  "iteration": 16,
+  "iteration": 19,
   "episode": 2,
   "milestone": 0,
   "plateau_count": 0,
-  "bottleneck": "family floor ~2082 reached (A 797 over-wall, B 637, C 648 — corner-tax conserved). All Layer-1 params resolved/dead. Milestone due at episode 3 (next boundary): summarize + stop for user review.",
+  "bottleneck": "floor ~2078 (A 797/B 634/C 648). All structural ideas now tried; C's corner tax is the only line item never improved (south corridor 7.5m). Milestone (episode 3) at iteration 20 boundary.",
   "best": {
     "config": {
       "step_size": 4.5,
@@ -16,8 +16,8 @@
       "weight_time": 0.1,
       "use_rrt_connect": true
     },
-    "smoother": "best_smoother.py (v11: v7 + finer probe grid)",
-    "score": 2081.9979645402614,
+    "smoother": "best_smoother.py (v13: v11 + skeleton-DP probe)",
+    "score": 2078.4468619035383,
     "min_success": 1.0
   },
   "cadence": {
