@@ -1,10 +1,10 @@
 {
   "phase": "loop",
-  "iteration": 7,
-  "episode": 0,
+  "iteration": 11,
+  "episode": 1,
   "milestone": 0,
   "plateau_count": 0,
-  "bottleneck": "worst scenario: A_straight (E≈1009J vs LB ~620J). step_size ladder diminishing (3.0:-8.2%, 4.5:-1.5%); one more rung (6.0) plausible, else corner-geometry floor reached — consider z-dimension moves in smoother (over-wall route) or accept floor",
+  "bottleneck": "worst scenario: A_straight (E≈799J, over-wall route; LB ~490J for 74m at v*). Residual: climb-leg cost + steep final descent corner. B(637)/C(648) now comparable — next levers: extend probe templates to B/C-shaped diagonals? polish descent corner geometry? or diminishing returns",
   "best": {
     "config": {
       "step_size": 4.5,
@@ -16,8 +16,8 @@
       "weight_time": 0.1,
       "use_rrt_connect": true
     },
-    "smoother": "best_smoother.py (v4: + double-bend move)",
-    "score": 2294.7614345088,
+    "smoother": "best_smoother.py (v7: v4 local search + polish-before-compare over-wall probe, 3D ranker)",
+    "score": 2084.0061209565006,
     "min_success": 1.0
   },
   "cadence": {

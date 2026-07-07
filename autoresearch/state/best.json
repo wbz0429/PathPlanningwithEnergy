@@ -9,16 +9,16 @@
     "weight_time": 0.1,
     "use_rrt_connect": true
   },
-  "smoother": "best_smoother.py (v4: + double-bend move)",
+  "smoother": "best_smoother.py (v7: v4 local search + polish-before-compare over-wall probe, 3D ranker)",
   "result": {
-    "score": 2294.7614345088,
-    "energy_total": 2294.7614345088,
+    "score": 2084.0061209565006,
+    "energy_total": 2084.0061209565006,
     "min_success": 1.0
   },
   "detail": {
     "A_straight": {
       "success": 1.0,
-      "energy_mean": 1009.3455876281824
+      "energy_mean": 798.5902740758829
     },
     "B_diag_up": {
       "success": 1.0,
