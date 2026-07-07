@@ -1,13 +1,13 @@
 {
   "phase": "loop",
-  "iteration": 5,
+  "iteration": 6,
   "episode": 0,
   "milestone": 0,
   "plateau_count": 0,
-  "bottleneck": "worst scenario: A_straight (E≈1053J vs LB ~620J). Smoother local search SATURATED (v4 gained only 2.6J) — residual is planner topology variance (south-side detours, overshoot skeletons RRT-Connect hands over). Next lever: planner params (step_size) or accept structural floor.",
+  "bottleneck": "worst scenario: A_straight (E≈1030J vs LB ~620J — two unavoidable corridor corners; both smoother and skeleton levers now partially spent. Next: try step_size 4.5-6 or max_iterations/goal knobs; note weight_*/search_radius are dead under RRT-Connect)",
   "best": {
     "config": {
-      "step_size": 1.5,
+      "step_size": 3.0,
       "max_iterations": 5000,
       "goal_sample_rate": 0.4,
       "search_radius": 4.0,
@@ -17,7 +17,7 @@
       "use_rrt_connect": true
     },
     "smoother": "best_smoother.py (v4: + double-bend move)",
-    "score": 2537.7984676531773,
+    "score": 2328.9327525981603,
     "min_success": 1.0
   },
   "cadence": {

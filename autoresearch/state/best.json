@@ -1,6 +1,6 @@
 {
   "config": {
-    "step_size": 1.5,
+    "step_size": 3.0,
     "max_iterations": 5000,
     "goal_sample_rate": 0.4,
     "search_radius": 4.0,
@@ -11,22 +11,22 @@
   },
   "smoother": "best_smoother.py (v4: + double-bend move)",
   "result": {
-    "score": 2537.7984676531773,
-    "energy_total": 2537.7984676531773,
+    "score": 2328.9327525981603,
+    "energy_total": 2328.9327525981603,
     "min_success": 1.0
   },
   "detail": {
     "A_straight": {
       "success": 1.0,
-      "energy_mean": 1052.540215214971
+      "energy_mean": 1029.9341084386053
     },
     "B_diag_up": {
       "success": 1.0,
-      "energy_mean": 839.0644050891675
+      "energy_mean": 649.8608117107794
     },
     "C_diag_down": {
       "success": 1.0,
-      "energy_mean": 646.1938473490385
+      "energy_mean": 649.1378324487756
     }
   }
 }
