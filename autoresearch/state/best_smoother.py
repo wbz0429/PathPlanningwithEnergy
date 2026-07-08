@@ -459,4 +459,35 @@ def smooth_path(path, is_collision_free, config):
                 if _proxy3d(polished) < _proxy3d(pts) - 1e-6:
                     pts = polished
 
+    # ---- basin hopping: perturb + re-polish, keep best by 3D ranking ----
+    # Every polish above is deterministic from one start and lands in one
+    # local optimum. Perturb interior vertices (+-2m; np.random is seeded
+    # per run by the evaluator, so this stays reproducible), re-polish, and
+    # keep the best candidate — only if it passes a full collision recheck.
+    best_J = _proxy3d(pts)
+    for _trial in range(2):
+        cand = [p.copy() for p in pts]
+        if len(cand) <= 2:
+            break
+        for i in range(1, len(cand) - 1):
+            cand[i] = cand[i] + (np.random.rand(3) - 0.5) * 4.0
+        ok = True
+        for i in range(len(cand) - 1):
+            if not is_collision_free(cand[i], cand[i + 1]):
+                ok = False
+                break
+        if not ok:
+            continue
+        cand = _sweeps(cand)
+        J = _proxy3d(cand)
+        if J < best_J - 1e-6:
+            ok2 = True
+            for i in range(len(cand) - 1):
+                if not is_collision_free(cand[i], cand[i + 1]):
+                    ok2 = False
+                    break
+            if ok2:
+                best_J = J
+                pts = cand
+
     return pts

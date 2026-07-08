@@ -1,10 +1,10 @@
 {
   "phase": "phase_b_sampler",
-  "iteration": 28,
+  "iteration": 29,
   "episode": 3,
   "milestone": 3,
-  "plateau_count": 1,
-  "bottleneck": "floor 2075.4 (A 797/B 634/C 645). Out-of-plane freedom fully harvested. Within-rules space exhausted — awaiting human direction pick in program.md (options 1-4).",
+  "plateau_count": 0,
+  "bottleneck": "floor ~2068 (A 797/B 626/C 645). Basin hopping opened a new lever family (stochastic restarts) — worth one more probe (more trials/larger perturbation) before episode 4 EXPLORE.",
   "best": {
     "config": {
       "step_size": 4.5,
@@ -16,8 +16,8 @@
       "weight_time": 0.1,
       "use_rrt_connect": true
     },
-    "smoother": "best_smoother.py (v16: v13 + binormal relocation)",
-    "score": 2075.420762113223,
+    "smoother": "best_smoother.py (v18: v16 + basin hopping)",
+    "score": 2068.284154261574,
     "min_success": 1.0
   },
   "cadence": {
