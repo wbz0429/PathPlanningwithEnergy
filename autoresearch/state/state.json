@@ -17,7 +17,7 @@
       "use_rrt_connect": true
     },
     "smoother": "best_smoother.py (v24: v22 + grid-calibrated 3D surrogate)",
-    "score": null,
+    "score": 2821.7,
     "min_success": 1.0
   },
   "cadence": {
