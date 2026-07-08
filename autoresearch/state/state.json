@@ -1,10 +1,10 @@
 {
   "phase": "s3a_speed",
-  "iteration": 40,
-  "episode": 6,
+  "iteration": 41,
+  "episode": 7,
   "milestone": 6,
-  "plateau_count": 0,
-  "bottleneck": "S3a: DP speed profile landed (-9.1%). Next: iteration 40 = episode 7 EXPLORE boundary — speed-planning families (S-curve/time-optimal/energy-optimal control); also surrogate may misprice accel-BEMT coupling (DP assumes constant speed per segment; true accel happens WITHIN segments).",
+  "plateau_count": 1,
+  "bottleneck": "S3a floor forming ~2565 (A 986/B 781/C 798). DP speed profile is the exact optimum of the evaluator's cost structure GIVEN the surrogate; remaining error = e/m fit (~±0.3 J/m). Next: bake the measured 8x9 grid as a bilinear lookup into speed_profile (kills fit error); then S3a likely exhausted -> milestone 3 at episode 9.",
   "best": {
     "config": {
       "step_size": 4.5,
@@ -16,8 +16,8 @@
       "weight_time": 0.1,
       "use_rrt_connect": true
     },
-    "smoother": "best_smoother.py (v24: v22 + grid-calibrated 3D surrogate)",
-    "score": 2565.8595483515633,
+    "smoother": "best_smoother.py (v27: DP-cost topology ranker)",
+    "score": 2565.4675483190354,
     "min_success": 1.0,
     "speed": "best_speed.py (v1: exact DP, calibrated surrogate + rise cost)"
   },

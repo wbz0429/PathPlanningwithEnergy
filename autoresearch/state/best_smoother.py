@@ -52,10 +52,20 @@ def _proxy(pts):
     return J
 
 
+M_EFF = 1.5 / (0.85 * 0.95)   # mass / (motor_eff * esc_eff) for rise cost
+DP_LEVELS = (0.5, 2.0, 4.0, 6.0, 8.0, 10.0, 11.5, 12.7, 14.0, 16.0, 18.2)
+
+
 def _proxy3d(pts):
-    """Climb/descent-aware ranking proxy — used ONLY to compare polished
-    topology candidates (over-wall template vs incumbent), never to accept
-    local moves (the pessimistic linear proxy performs better there)."""
+    """S3a geometry cost = DP-optimal speed cost of this geometry.
+
+    With speed an evolved decision (cruise ~12.7 < v*), corners whose cap
+    exceeds the cruise are free — ranking geometry by cap-riding cost
+    optimizes a dead objective. This coarse spatial-domain velocity DP
+    (rise-priced kinetic cost, free decel, calibrated e/m surrogate)
+    prices each candidate geometry by what the speed layer can actually
+    achieve on it. Used for topology ranking, CHOMP gradients, STOMP
+    weights and hop acceptance."""
     n = len(pts)
     if n < 2:
         return 0.0
@@ -72,19 +82,41 @@ def _proxy3d(pts):
             vcap[i - 1] = vt
         if vt < vcap[i]:
             vcap[i] = vt
-    J = 0.0
+    sin_th = []
     for i in range(n - 1):
-        if L[i] < 1e-9:
-            continue
-        v = max(0.5, vcap[i])
-        vz = -(segs[i][2] / L[i]) * v      # NED: dz<0 means climbing
-        P = PA - PB * v + PC * v * v
-        if vz > 0.0:
-            P += K_UP * WEIGHT * vz
-        else:
-            P = max(P_FLOOR, P + K_DN * WEIGHT * vz)
-        J += L[i] * P / v
-    return J
+        s = -segs[i][2] / L[i] if L[i] > 1e-9 else 0.0
+        sin_th.append(max(-1.0, min(1.0, float(s))))
+
+    def em_pm(v, s):
+        p = PA - PB * v + PC * v * v
+        return max(0.0, p / v + 16.8 * s)
+
+    NL = len(DP_LEVELS)
+    dp = [1e18] * NL
+    for j in range(NL):
+        v = DP_LEVELS[j]
+        if v <= vcap[0] + 1e-9:
+            dp[j] = 0.5 * M_EFF * v * v + L[0] * em_pm(v, sin_th[0])
+    for i in range(1, n - 1):
+        nd = [1e18] * NL
+        for j in range(NL):
+            v = DP_LEVELS[j]
+            if v > vcap[i] + 1e-9:
+                continue
+            seg_e = L[i] * em_pm(v, sin_th[i])
+            best = 1e18
+            for k in range(NL):
+                if dp[k] >= 1e18:
+                    continue
+                u = DP_LEVELS[k]
+                c = dp[k] + seg_e
+                if v > u:
+                    c += 0.5 * M_EFF * (v * v - u * u)
+                if c < best:
+                    best = c
+            nd[j] = best
+        dp = nd
+    return min(dp)
 
 
 def smooth_path(path, is_collision_free, config):
