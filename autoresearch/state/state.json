@@ -1,10 +1,10 @@
 {
   "phase": "s3a_speed",
-  "iteration": 39,
+  "iteration": 40,
   "episode": 6,
   "milestone": 6,
   "plateau_count": 0,
-  "bottleneck": "S3a 速度剖面:变速有加速代价,优化 speed_profile(平滑加减速/贴v*)压能耗",
+  "bottleneck": "S3a: DP speed profile landed (-9.1%). Next: iteration 40 = episode 7 EXPLORE boundary — speed-planning families (S-curve/time-optimal/energy-optimal control); also surrogate may misprice accel-BEMT coupling (DP assumes constant speed per segment; true accel happens WITHIN segments).",
   "best": {
     "config": {
       "step_size": 4.5,
@@ -17,8 +17,9 @@
       "use_rrt_connect": true
     },
     "smoother": "best_smoother.py (v24: v22 + grid-calibrated 3D surrogate)",
-    "score": 2821.7,
-    "min_success": 1.0
+    "score": 2565.8595483515633,
+    "min_success": 1.0,
+    "speed": "best_speed.py (v1: exact DP, calibrated surrogate + rise cost)"
   },
   "cadence": {
     "episode_cap": 10,

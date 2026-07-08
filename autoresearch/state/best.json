@@ -11,22 +11,23 @@
   },
   "smoother": "best_smoother.py (v24: v22 + grid-calibrated 3D surrogate)",
   "result": {
-    "score": 2046.4107216055302,
-    "energy_total": 2046.4107216055302,
+    "score": 2565.8595483515633,
+    "energy_total": 2565.8595483515633,
     "min_success": 1.0
   },
   "detail": {
     "A_straight": {
       "success": 1.0,
-      "energy_mean": 786.9992558909051
+      "energy_mean": 983.63248575203
     },
     "B_diag_up": {
       "success": 1.0,
-      "energy_mean": 621.5085072612807
+      "energy_mean": 781.6086326661739
     },
     "C_diag_down": {
       "success": 1.0,
-      "energy_mean": 637.9029584533444
+      "energy_mean": 800.6184299333596
     }
-  }
+  },
+  "speed": "best_speed.py (v1: exact DP, calibrated surrogate + rise cost)"
 }
