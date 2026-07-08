@@ -27,18 +27,6 @@
 
 **剩余瓶颈**(若继续):A 797J vs 长度下界 ~527J(爬升税+驼峰-v* 耦合,家族地板);B 634/C 648 转角税守恒。突破需要 Layer-1 之外的自由度(如采样器 z 解锁、kinodynamic 松绑——均属冻结层,不可动)。
 
-## Milestone 2(Ep6,iter 38,2026-07-08)
-
-**结果**:score 2078.4(MS1)→ **2046.4**(−1.5%,iter 22-37 共 16 轮:4 KEEP / 11 REVERT·no-op / 1 EXHAUSTED 判决);留出 seed_val=100 → **2043.8(比训练种子还低,零过拟合)**,三场景 100%。
-
-**本期 KEEP 账**:binormal 顶点搬移(−2.9,C)、basin hopping(−7.1,B)、**CHOMP 式联合梯度精修(−17.8,A/B/C 全降——EXPLORE 阶段换算法族的直接产出)**、网格标定 3D 代理(−3.4,全降)。REVERT 各有判据:RNG 流敏感性(basin-hop 不可扩量)、悲观代理优于精确代理(局部走法)、驼峰=v* 保全交易、free-dive 被 Row4 几何锁死。
-
-**横向对比(MS2)**:默认RRT* 11700 > RRT-Connect 3191 > 能量A* 2618 > 随机搜索(同预算15次)2805 > **LLM-loop 2046**——比随机搜索低 **27%**,差距=代码级研究能力(随机搜索写不出 CHOMP/probe/DP 平滑器)。**鲁棒性门:v* 扰动 0.6×–1.5× 下 loop 优势 +26%~+33% 全程稳健 → 真改进非 artifact。**
-
-**终局判决(iter 36 正式 EXHAUSTED)**:2046.4 是当前动作空间(Layer-1 参数+平滑器+采样器)的不动点——A 787J≈守恒地板(爬升 320J≈物理下界 + ~160J 转角 cap 锁定),B/C 转角税守恒,5 个算法族殊途同归,起点无关(4/5 点模板同定点)。**继续需 program.md 给新方向:选项 3(丰富场景,真 3D headroom)或 4(速度作为规划决策)。**
-
-图:`experiments/milestones/ms2/`(轨迹/瀑布/收敛)+ `experiments/fig_ms2_compare.png`。
-
 ## Exploration seeds(EXPLORE episode 记录,即使未超 best 也留)
 - **[Ep6 EXPLORE] 真实旋翼下降剖面佐证**:直升机/多旋翼以带前向速度的对角下降规避 VRS(涡环)并在 windmill-brake 边界附近功率最低(来源 https://arxiv.org/pdf/1909.09069 optimal descent avoiding VRS/WBS,置信度高,未验证-以评测器为准)——与冻结 BEMT '高速陡降免费' 一致。尝试:5 点模板预置下降膝点(polish 每次都重新发现的两段式下降形状),让 CHOMP 精修而非发现。
 - **[Ep5 EXPLORE] 冻结 BEMT 全网格标定**(来源=评测器自身 compute_energy_for_segment 实测 8v×9slope 网格,置信度高,已是 ground truth):e/m(v,θ) ≈ max(0, P_lvl(v)/v + 16.8·sinθ),P_lvl(v)=171.0−12.35v+0.525v²(W)。**要点:①爬降税对称 ±16.8·sinθ J/m(旧 proxy 爬升高估 10%、下降低估 12%);②高速陡降完全免费(v≥10、θ≤−24° 时 e/m=0.0,评测器 0 钳位——旧 proxy 的 15W 地板高估了陡降);③低速平飞旧 fit 高估 ~14%**。方法论=离线代理标定(arXiv:2303.17468 surrogate NN for trajectory planning;arXiv:2404.15570 air-taxi physics surrogates,置信度高,未验证-以评测器为准)。_proxy3d 用标定常数(排序+CHOMP梯度+STOMP权重);局部 sweep 保留悲观线性 proxy(v9 教训)。

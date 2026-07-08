@@ -1,10 +1,10 @@
 {
   "phase": "phase_c_explore",
-  "iteration": 39,
+  "iteration": 38,
   "episode": 6,
-  "milestone": 6,
+  "milestone": 3,
   "plateau_count": 1,
-  "bottleneck": "MILESTONE 2 DONE (held-out 2043.8, robustness gate passed, beats random search by 27%). Space EXHAUSTED at fixed point 2046.4. Loop stopped for review — needs program.md direction (option 3: richer scenarios, or 4: speed as decision).",
+  "bottleneck": "MILESTONE 2 DUE (episode 6): viz + horizontal comparison + robustness gate + summary + stop for review. Fixed point 2046.4 (A 787/B 622/C 638), space formally exhausted.",
   "best": {
     "config": {
       "step_size": 4.5,
