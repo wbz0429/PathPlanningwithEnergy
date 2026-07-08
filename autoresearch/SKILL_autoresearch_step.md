@@ -55,5 +55,6 @@ description: Run ONE iteration of the UAV energy+path-planning autoresearch loop
 - **别空转(引导,非硬禁)**:若某组件连续几次只有芝麻增益,**倾向**换个组件/算法族试点新的(硬周期的 Episode 探索本就会逼你这么做)。若感觉所有可动组件都榨干了,**如实报告"搜索空间耗尽,需人类在 program.md 给新方向/新场景"**即可——但探索方式、什么时候换、试什么,**你自己判断,不设死规矩**。
 - 每次**只改一个东西、只评一次**(归因清晰)。搜索用 seed0=0;**别碰 seed**。
 - **带上已接受的组件**:评测时始终传当前最优的已接受组件(`smoother_src`=读 `state/best_smoother.py` 若存在;S3a 阶段再传已接受的 speed profile 若有),**只让本轮提议的那个组件/参数变**——保住 M1/M2 累积的平滑器进展,别把它丢了。
+- **全流程可追溯(重要)**:任何**代码候选**,评测**前**先把源码写到 `experiments/candidates/iter<N>_<component>.py`——**KEEP 和 REVERT 都存**,这样每次尝试(包括被否的)都能重跑、可复现。参数候选写进 agent_log 的 `params` 已足够。
 - 代码候选先自查只 import numpy/math;`evaluate` 内部已过沙箱/契约,崩溃即当失败 REVERT。
 - 若某步不确定是否属于「冻结层」,**默认不碰**并在报告里说明。
