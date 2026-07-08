@@ -64,6 +64,9 @@
 图:`experiments/milestones/ms4/` + `experiments/fig_ms4_compare.png`。
 
 ## Exploration seeds(EXPLORE episode 记录,即使未超 best 也留)
+- **[S4a, iter57-58] 各向异性 informed 采样解决 cited 开放问题(核心证据)**:攻 Kyaw&Kelly 2026(非欧能量代价下 informed 采样)。`sample(ctx)` = informed 椭球(焦点=起终点),但**横向拉伸(r_lat=1.7×base)、纵向压扁(r_vert=0.30×base)**——因为冻结 BEMT 下平飞横向绕行便宜(各向同性 ~6.62 J/m)、垂直爬升贵(不回收)。**收敛评测(convergence_eval, B/C, budget=1500)结果**:均匀 baseline 1419.4;**对称欧氏-informed 椭球(消融:r_lat=r_vert=base)只 1311.5(−7.6%)**;**各向异性 810.3(−43%)**。→ **消融证明:informed 聚焦本身只贡献 ~1/6 增益,能量各向异性(横向拉伸)贡献 ~5/6**。机制:B/C 起终点直线穿墙,对称椭球焦点落在墙内→样本浪费;横向拉伸把样本推到绕墙走廊。留出种子(3,4)=804.6、(5,6,7)=801.5,零过拟合。
+- **[S4a, iter58] 各向异性比例的过拟合边界**:r_lat 1.7→2.5 在训练种子(0,1,2)把 810→801(−1%),但留出(3,4)炸到 1689(r_lat=2.5)/812(r_lat=2.1);r_lat=3.0 训练也炸(1026)。→ **r_lat=1.7/r_vert=0.30 是鲁棒最优,更激进的拉伸是种子过拟合**(留出门抓出);纵向 r_vert<0.25 反而伤(RRT* 需要一点 z 自由度做树连接/重连)。REVERT 比例微调,保 v1。
+
 - **[Ep11 EXPLORE, S3b] 分布漂移下的参数重标定 + 泛化中检**:一个实例分布上的最优参数换分布后很少最优(来源 https://arxiv.org/abs/2012.13315 portfolio-based algorithm selection;https://arxiv.org/pdf/2202.01651 AC survey,置信度高,未验证-以评测器为准)→ step_size=4.5 是 3 场景上调的,6 场景混合分布应重探。**泛化中检(iter53 实测)**:留出场景 gen400-402 全 100% 成功、能耗 955-1357J(与 train gen 同量级);留出 seed100 仅 +3.0% —— S3b 泛化主张已获证据。
 - **[Ep10 EXPLORE, S3b] taut-string/funnel 收紧**:同伦类内最短路=贴着(带 clearance 膨胀的)障碍角的绷紧弦(来源 https://jeffe.cs.illinois.edu/teaching/compgeom/notes/05-shortest-homotopic.pdf Erickson 讲义;https://medium.com/@reza.teshnizi/the-funnel-algorithm-explained-visually-41e374172d2d funnel 图解,置信度高,未验证-以评测器为准)。gen300/302 侧绕路摆到 y≈26-28 而墙缘只需 ~20.5 → ~15m 超摆;taut-shrink(顶点向 S-G 弦收缩 λ 阶梯+碰撞门控+polish)近似弦收紧。另:VRS 定律沉淀——冻结 BEMT 中低速陡降是惩罚不是奖励(v<7 时),hook 下降对贴墙目标真不划算(iter48/49 实证)。
 - **[Ep9 EXPLORE, S3a] 块坐标下降处理耦合速度**:rise-cost 链耦合相邻段速度,单坐标 golden-section 在'成对同升可摊销 rise'处卡住;成对块更新是标准解法(来源 https://epubs.siam.org/doi/10.1137/120887679 BCD 收敛性 SIAM;https://www.jmlr.org/papers/volume23/18-045/18-045.pdf 更快 BCD,置信度高,未验证-以评测器为准)。

@@ -1,10 +1,10 @@
 {
   "phase": "s4a_aniso_informed_sampling",
-  "iteration": 58,
+  "iteration": 59,
   "episode": 12,
   "milestone": 12,
-  "plateau_count": 0,
-  "bottleneck": "S4a: aniso-informed sampler v1=810.3 (vs uniform 1419.4, -43%; held-out seeds3,4=804.6 no overfit). Win concentrated on C (1618->814); B already easy (~810). Next: SOTA gate is Euclidean-informed (symmetric ellipsoid) — must beat THAT to prove the ANISOTROPY (not just focusing) is what helps. Also try ctx.edge_cost-based rejection to exploit anisotropy per-sample.",
+  "plateau_count": 1,
+  "bottleneck": "S4a best=810.3 (v1 aniso-informed, robust across seed sets). ABLATION DONE: symmetric Euclidean-informed=1311.5 (-7.6%) vs anisotropic=810.3 (-43%) => anisotropy carries ~5/6 of the gain (KEY open-problem evidence). Ratio-tuning overfits (r_lat=2.5: train 801 but heldout 1689) -> REVERT. Next: exploit ctx.edge_cost per-sample (oracle-based anisotropy, not just geometric) OR add bridge/gap sampling for narrower B-gap; also curvature-aware informed set (turn penalty is the real profile-energy driver).",
   "best": {
     "config": {
       "step_size": 4.5,
