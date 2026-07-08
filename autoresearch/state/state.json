@@ -1,10 +1,10 @@
 {
   "phase": "s3b_generalize",
-  "iteration": 51,
+  "iteration": 53,
   "episode": 10,
   "milestone": 9,
-  "plateau_count": 1,
-  "bottleneck": "S3b 6042.9 (gen300 1222/gen301 1010/gen302 1255). Wide lateral swings proven cap-optimal (taut-shrink rejected by own ranker). Remaining gen headroom unclear — candidates: per-seed topology variance? entry-leg geometry for offset starts? Milestone 4 at episode 12.",
+  "plateau_count": 3,
+  "bottleneck": "S3b 6030.1 (gen300 1227/gen301 991/gen302 1255). Iteration 53 = episode 11 boundary (EXPLORE). Honest residuals: gen302 polish variance ~90J (RNG), gen300 marginal topology. Milestone 4 at episode 12. Should also run held-out gen400-402 check soon (generalization is S3b's whole point).",
   "best": {
     "config": {
       "step_size": 4.5,
@@ -16,8 +16,8 @@
       "weight_time": 0.1,
       "use_rrt_connect": true
     },
-    "smoother": "best_smoother.py (v31: hybrid descent pricing + late-f2)",
-    "score": 6042.855889943083,
+    "smoother": "best_smoother.py (v34: dual-objective skeleton probe)",
+    "score": 6030.135522582911,
     "min_success": 1.0,
     "speed": "best_speed.py (v5: exact DP + continuous + pairwise polish)",
     "scenarios": "train(6): A/B/C + gen300-302"

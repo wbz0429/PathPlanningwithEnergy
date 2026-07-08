@@ -95,6 +95,90 @@ M_EFF = 1.5 / (0.85 * 0.95)   # mass / (motor_eff * esc_eff) for rise cost
 DP_LEVELS = (0.5, 2.0, 4.0, 6.0, 8.0, 10.0, 11.5, 12.7, 14.0, 16.0, 18.2)
 
 
+def _proxy3d_fine(pts):
+    """Fine-level variant of the DP-cost ranker (~40 speed levels) — used
+    ONLY for final adopt/reject comparisons between complete candidate
+    paths, where the coarse 11-level DP mis-prices marginal cases by
+    ~the topology-flap margin. Inner loops keep the coarse DP for speed."""
+    n = len(pts)
+    if n < 2:
+        return 0.0
+    segs = [pts[i + 1] - pts[i] for i in range(n - 1)]
+    L = [float(np.linalg.norm(s)) for s in segs]
+    d = [segs[i] / L[i] if L[i] > 1e-9 else segs[i] * 0.0 for i in range(n - 1)]
+    vcap = [V_STAR] * (n - 1)
+    for i in range(1, n - 1):
+        cosv = max(-1.0, min(1.0, float(np.dot(d[i - 1], d[i]))))
+        theta = math.acos(cosv)
+        R = max(0.3, min(L[i - 1], L[i]) / max(theta, 1e-3))
+        vt = min(V_STAR, math.sqrt(A_LAT * R))
+        if vt < vcap[i - 1]:
+            vcap[i - 1] = vt
+        if vt < vcap[i]:
+            vcap[i] = vt
+    sin_th = []
+    for i in range(n - 1):
+        s = -segs[i][2] / L[i] if L[i] > 1e-9 else 0.0
+        sin_th.append(max(-1.0, min(1.0, float(s))))
+
+    levels = set()
+    v = 0.5
+    while v < 18.2:
+        levels.add(round(v, 3))
+        v += 0.5
+    levels.add(18.2)
+    for c in vcap:
+        levels.add(round(max(0.5, min(c, 18.2)), 3))
+    levels = sorted(levels)
+    NL = len(levels)
+    M_EFF2 = 1.5 / (0.85 * 0.95)
+    dp = [1e18] * NL
+    # reuse the hybrid pricing from _proxy3d via a tiny local shim
+    def em_h(vv, ss):
+        if ss >= -0.17:
+            p = PA - PB * vv + PC * vv * vv
+            return max(0.0, p / vv + 16.8 * ss)
+        sd = math.degrees(math.asin(max(-1.0, min(1.0, ss))))
+        v2 = max(GV[0], min(vv, GV[-1]))
+        sdd = max(GS[0], min(GS[-1], sd))
+        iv = 0
+        while iv < len(GV) - 2 and GV[iv + 1] < v2:
+            iv += 1
+        js = 0
+        while js < len(GS) - 2 and GS[js + 1] < sdd:
+            js += 1
+        tv = (v2 - GV[iv]) / (GV[iv + 1] - GV[iv])
+        ts = (sdd - GS[js]) / (GS[js + 1] - GS[js])
+        a = GEM[iv][js] * (1 - ts) + GEM[iv][js + 1] * ts
+        b = GEM[iv + 1][js] * (1 - ts) + GEM[iv + 1][js + 1] * ts
+        return max(0.0, a * (1 - tv) + b * tv)
+
+    for j in range(NL):
+        vv = levels[j]
+        if vv <= vcap[0] + 1e-9:
+            dp[j] = 0.5 * M_EFF2 * vv * vv + L[0] * em_h(vv, sin_th[0])
+    for i in range(1, n - 1):
+        nd = [1e18] * NL
+        for j in range(NL):
+            vv = levels[j]
+            if vv > vcap[i] + 1e-9:
+                continue
+            seg_e = L[i] * em_h(vv, sin_th[i])
+            best = 1e18
+            for k2 in range(NL):
+                if dp[k2] >= 1e18:
+                    continue
+                u = levels[k2]
+                c = dp[k2] + seg_e
+                if vv > u:
+                    c += 0.5 * M_EFF2 * (vv * vv - u * u)
+                if c < best:
+                    best = c
+            nd[j] = best
+        dp = nd
+    return min(dp)
+
+
 def _proxy3d(pts):
     """S3a geometry cost = DP-optimal speed cost of this geometry.
 
@@ -473,9 +557,10 @@ def smooth_path(path, is_collision_free, config):
     if feasible:
         feasible.sort(key=lambda t: t[0])
         best_J = _proxy3d(pts)
+        best_J = _proxy3d_fine(pts)
         for _J_raw, cand in feasible[:3]:
             polished = _sweeps(cand)
-            Jp = _proxy3d(polished)
+            Jp = _proxy3d_fine(polished)
             if Jp < best_J - 1e-6:
                 best_J = Jp
                 pts = polished
@@ -504,60 +589,53 @@ def smooth_path(path, is_collision_free, config):
         def _elen(i, j):
             return float(np.linalg.norm(raw[j] - raw[i]))
 
-        # dual-objective skeleton extraction: cap-aware AND pure-shortest
-        # weightings sample two different topology basins deterministically
-        # (unlike RNG basin hops); polish both, adopt best by the ranker.
-        for mode in ("cap", "short"):
-            dp = {}
-            par = {}
-            for j in range(1, n_raw):
-                if vis[0][j]:
-                    dp[(0, j)] = 0.5 * _elen(0, j) * _em(V_STAR)
-                    par[(0, j)] = None
-            for j in range(1, n_raw - 1):
-                for i in range(j):
-                    if (i, j) not in dp:
+        dp = {}
+        par = {}
+        for j in range(1, n_raw):
+            if vis[0][j]:
+                dp[(0, j)] = 0.5 * _elen(0, j) * _em(V_STAR)
+                par[(0, j)] = None
+        for j in range(1, n_raw - 1):
+            for i in range(j):
+                if (i, j) not in dp:
+                    continue
+                base_c = dp[(i, j)]
+                v1 = raw[j] - raw[i]
+                L1 = _elen(i, j)
+                for k in range(j + 1, n_raw):
+                    if not vis[j][k]:
                         continue
-                    base_c = dp[(i, j)]
-                    v1 = raw[j] - raw[i]
-                    L1 = _elen(i, j)
-                    for k in range(j + 1, n_raw):
-                        if not vis[j][k]:
-                            continue
-                        v2 = raw[k] - raw[j]
-                        L2 = _elen(j, k)
-                        if L1 < 1e-9 or L2 < 1e-9:
-                            continue
-                        if mode == "cap":
-                            cosv = max(-1.0, min(1.0,
-                                       float(np.dot(v1 / L1, v2 / L2))))
-                            theta = math.acos(cosv)
-                            R = max(0.3, min(L1, L2) / max(theta, 1e-3))
-                            vt = min(V_STAR, math.sqrt(A_LAT * R))
-                            c = base_c + 0.5 * (L1 + L2) * _em(vt)
-                        else:
-                            c = base_c + 0.5 * (L1 + L2) * _em(V_STAR)
-                        if c < dp.get((j, k), 1e18):
-                            dp[(j, k)] = c
-                            par[(j, k)] = i
-            end = None
-            best_c = 1e18
-            for i in range(n_raw - 1):
-                if (i, n_raw - 1) in dp:
-                    c = dp[(i, n_raw - 1)] + 0.5 * _elen(i, n_raw - 1) * _em(V_STAR)
-                    if c < best_c:
-                        best_c = c
-                        end = i
-            if end is not None:
-                idxs = [n_raw - 1, end]
-                while par[(idxs[-1], idxs[-2])] is not None:
-                    idxs.append(par[(idxs[-1], idxs[-2])])
-                idxs.reverse()
-                skel = [raw[i].copy() for i in idxs]
-                if len(skel) >= 2:
-                    polished = _sweeps(skel)
-                    if _proxy3d(polished) < _proxy3d(pts) - 1e-6:
-                        pts = polished
+                    v2 = raw[k] - raw[j]
+                    L2 = _elen(j, k)
+                    if L1 < 1e-9 or L2 < 1e-9:
+                        continue
+                    cosv = max(-1.0, min(1.0,
+                               float(np.dot(v1 / L1, v2 / L2))))
+                    theta = math.acos(cosv)
+                    R = max(0.3, min(L1, L2) / max(theta, 1e-3))
+                    vt = min(V_STAR, math.sqrt(A_LAT * R))
+                    c = base_c + 0.5 * (L1 + L2) * _em(vt)
+                    if c < dp.get((j, k), 1e18):
+                        dp[(j, k)] = c
+                        par[(j, k)] = i
+        end = None
+        best_c = 1e18
+        for i in range(n_raw - 1):
+            if (i, n_raw - 1) in dp:
+                c = dp[(i, n_raw - 1)] + 0.5 * _elen(i, n_raw - 1) * _em(V_STAR)
+                if c < best_c:
+                    best_c = c
+                    end = i
+        if end is not None:
+            idxs = [n_raw - 1, end]
+            while par[(idxs[-1], idxs[-2])] is not None:
+                idxs.append(par[(idxs[-1], idxs[-2])])
+            idxs.reverse()
+            skel = [raw[i].copy() for i in idxs]
+            if len(skel) >= 2:
+                polished = _sweeps(skel)
+                if _proxy3d_fine(polished) < _proxy3d_fine(pts) - 1e-6:
+                    pts = polished
 
     # ---- basin hopping: perturb + re-polish, keep best by 3D ranking ----
     # Every polish above is deterministic from one start and lands in one
