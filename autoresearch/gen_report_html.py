@@ -32,6 +32,19 @@ def img_tag(fname):
     return f'<img src="data:image/png;base64,{b}" style="width:100%;border-radius:8px;">'
 
 
+GIFS = [("flight_A.gif", "场景A 翻墙", "agent 自主发现的翻墙拓扑:爬到 ~15m 越过实心墙再降落"),
+        ("flight_B.gif", "场景B 对角上", "保持 ~3m 高度、横向绕行"),
+        ("flight_C.gif", "场景C 对角下", "保持 ~3m 高度、横向绕行")]
+
+
+def gif_tag(fname):
+    p = os.path.join(EXP, fname)
+    if not os.path.exists(p):
+        return ""
+    b = base64.b64encode(open(p, "rb").read()).decode()
+    return f'<img src="data:image/gif;base64,{b}" style="width:100%;border-radius:8px;">'
+
+
 def load_log():
     p = os.path.join(SRC, "agent_log.jsonl")
     if not os.path.exists(p):
@@ -116,6 +129,9 @@ HTML = f"""<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8">
 
 <h2>过程图(科研留痕)</h2>
 {''.join(f'<div class="fig"><h3>{i+1}. {t}</h3><p>{d}</p>{img_tag(f)}</div>' for i,(f,t,d) in enumerate(FIGS))}
+
+<h2>飞行动画(优化后轨迹飞越,无需 AirSim)</h2>
+{''.join(f'<div class="fig"><h3>{t}</h3><p>{d}</p>{gif_tag(f)}</div>' for f,t,d in GIFS if gif_tag(f))}
 
 <h2>迭代账本(每步:假设 → 评测 → 采纳/回退)</h2>
 <table><tr><th>#</th><th>动作</th><th>score</th><th>成功率</th><th>决定</th><th>hypothesis(节选)</th></tr>
