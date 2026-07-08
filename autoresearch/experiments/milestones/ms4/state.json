@@ -1,10 +1,10 @@
 {
   "phase": "s3b_generalize",
-  "iteration": 57,
-  "episode": 12,
-  "milestone": 12,
+  "iteration": 56,
+  "episode": 11,
+  "milestone": 9,
   "plateau_count": 3,
-  "bottleneck": "MILESTONE 4 DONE: S3b complete (6029.7 train; gen400-402 held-out 3337.5 @100%; seed100 +3.0%). Loop stopped for review — awaiting S3c (terrain/wind) or S4 (researcher behaviors) in program.md.",
+  "bottleneck": "S3b CONVERGED at 6029.7 (A 981/B 780/C 795/gen300 1227/gen301 991/gen302 1255). Generalization pre-validated (gen400-402 100%, seed100 +3%). Iteration 56 = episode 12 boundary -> MILESTONE 4 (S3b wrap, full gate suite, stop for review).",
   "best": {
     "config": {
       "step_size": 4.5,

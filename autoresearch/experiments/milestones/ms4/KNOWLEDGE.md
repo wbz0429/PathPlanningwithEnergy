@@ -51,18 +51,6 @@
 
 图:`experiments/milestones/ms3/` + `experiments/fig_ms3_compare.png`。
 
-## Milestone 4(Ep12,iter 56,2026-07-08)——S3b 泛化阶段收官
-
-**结果**:S3b 基线 6066.1(6 train 场景,S3a 组件搬入)→ **6029.7**(iter 48-55 共 8 轮:3 KEEP / 5 REVERT);**泛化双验证:留出场景 gen400-402 全 100% 成功 @3337.5(能耗与 train gen 同量级);train@seed100 = 6207.8(+3.0%)**。
-
-**KEEP 账**:混合下降定价(解析爬升/平飞 + 实测网格陡降,−23J+防灾)、**双目标骨架 DP(cap-aware+最短,确定性双拓扑采样,−12.7J,修 gen301 卡种子翻墙)**、STOMP 后终局确定性 polish(−0.4J)。REVERT 判据链:**VRS 定律**(冻结 BEMT 中 v<7 陡降是惩罚——hook 下降对贴墙目标真不划算,iter48 误定价 +791J 教训);taut-shrink 被自家 ranker 否(宽摆是 cap-最优,funnel 直觉不迁移);**精确代理悖论第 4、5 例**(fine-DP 仲裁更差;top-4 审计放进误判模板)——**有偏估计器在本 loop 每个决策层都优于精确估计器**,已成体系性结论。
-
-**横向对比(MS4)**:人工 11814 > 随机搜索 3148 > **LLM-loop 2882(对比脚本口径,−8.4% vs 随机)**。**鲁棒性(与 MS3 同):几何 gain 稳健(0.6×-1.25× 优势 +2.5%~+23.8%),速度 DP gain 在 v*×1.5 失效(−6.3%,最优巡航本质依赖能量模型,如实标注)**。
-
-**S3b 判决**:泛化主张成立(未见场景/未见种子都不退化);train 收敛 6029.7,残余为 RNG polish 方差(~50-90J,v19 定律不可扩量)。**S3b 完成,等人类推进 S3c(地形/风)或 S4(研究员行为)。**
-
-图:`experiments/milestones/ms4/` + `experiments/fig_ms4_compare.png`。
-
 ## Exploration seeds(EXPLORE episode 记录,即使未超 best 也留)
 - **[Ep11 EXPLORE, S3b] 分布漂移下的参数重标定 + 泛化中检**:一个实例分布上的最优参数换分布后很少最优(来源 https://arxiv.org/abs/2012.13315 portfolio-based algorithm selection;https://arxiv.org/pdf/2202.01651 AC survey,置信度高,未验证-以评测器为准)→ step_size=4.5 是 3 场景上调的,6 场景混合分布应重探。**泛化中检(iter53 实测)**:留出场景 gen400-402 全 100% 成功、能耗 955-1357J(与 train gen 同量级);留出 seed100 仅 +3.0% —— S3b 泛化主张已获证据。
 - **[Ep10 EXPLORE, S3b] taut-string/funnel 收紧**:同伦类内最短路=贴着(带 clearance 膨胀的)障碍角的绷紧弦(来源 https://jeffe.cs.illinois.edu/teaching/compgeom/notes/05-shortest-homotopic.pdf Erickson 讲义;https://medium.com/@reza.teshnizi/the-funnel-algorithm-explained-visually-41e374172d2d funnel 图解,置信度高,未验证-以评测器为准)。gen300/302 侧绕路摆到 y≈26-28 而墙缘只需 ~20.5 → ~15m 超摆;taut-shrink(顶点向 S-G 弦收缩 λ 阶梯+碰撞门控+polish)近似弦收紧。另:VRS 定律沉淀——冻结 BEMT 中低速陡降是惩罚不是奖励(v<7 时),hook 下降对贴墙目标真不划算(iter48/49 实证)。
