@@ -1,10 +1,10 @@
 {
-  "phase": "s3b_generalize",
+  "phase": "s4a_aniso_informed_sampling",
   "iteration": 57,
   "episode": 12,
   "milestone": 12,
-  "plateau_count": 3,
-  "bottleneck": "MILESTONE 4 DONE: S3b complete (6029.7 train; gen400-402 held-out 3337.5 @100%; seed100 +3.0%). Loop stopped for review — awaiting S3c (terrain/wind) or S4 (researcher behaviors) in program.md.",
+  "plateau_count": 0,
+  "bottleneck": "开放问题(Kyaw&Kelly 2026):非欧能量代价下 informed 采样。用 convergence_eval 攻,采样器借 ctx.edge_cost 利用能量各向异性(降落/直线便宜)加速收敛,击败均匀 baseline 1419.4。注意朴素cost-greedy会0%成功,要平衡探索。",
   "best": {
     "config": {
       "step_size": 4.5,
@@ -17,10 +17,10 @@
       "use_rrt_connect": true
     },
     "smoother": "best_smoother.py (v35: + final deterministic polish)",
-    "score": 6029.700441641118,
+    "score": 1419.4,
     "min_success": 1.0,
     "speed": "best_speed.py (v5: exact DP + continuous + pairwise polish)",
-    "scenarios": "train(6): A/B/C + gen300-302"
+    "scenarios": "B/C convergence (budget=1500)"
   },
   "cadence": {
     "episode_cap": 10,
@@ -31,5 +31,5 @@
     "seed_val": 100,
     "explore_every_episodes": 1
   },
-  "notes": "S3b 程序化场景生成器(固定,agent不可改=出题权在生成器)。train=A/B/C+gen300-302,test=gen400-402(留出)。objective扩到6场景→重定基线6066。评测须带 scenarios=physics_eval.get_train() + 已接受的 smoother/speed。"
+  "notes": "S4a 攻 cited 开放问题:informed sampling under non-Euclidean energy cost。评测=physics_eval.convergence_eval(sampler_src=..., budget=1500),指标=固定样本预算下RRT*收敛到的剖面能耗(越低越好)。ctx.edge_cost(a,b)=冻结BEMT能量oracle(可查不可改)。baseline均匀=1419.4;真正SOTA门槛=Euclidean-informed(待加)。"
 }

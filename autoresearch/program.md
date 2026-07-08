@@ -7,9 +7,11 @@
 
 ## 🎯 研究指令(← 人类在此写方向,agent 每轮遵循)
 
-**当前指令(S3b 泛化,见 ROADMAP.md)**:场景从 3 个手工场景扩到 **6 个 train 场景**(A/B/C + 程序化生成 gen300-302,生成器固定、你改不了)。
-**评测必须**:`physics_eval.evaluate(overrides, ..., scenarios=physics_eval.get_train(), smoother_src=<state/best_smoother.py>, speed_src=<state/best_speed.py>)`——带上 S3a 累积的平滑器+速度剖面,只改本轮提议的那个。
-**目标**:让算法在**更多样的查询**上都省能(生成场景 gen300-302 现 1000-1277J 有空间)。**泛化验证**:留出 `physics_eval.get_test()`(gen400-402)+ seed100,best 必须在留出场景上也不退化。这测的是"解泛化到没见过的场景",比留出 seed 更强。榨干后我推进 S3c(地形/风)或 S4(研究员行为)。
+**当前指令(S4a 攻 cited 开放问题:非欧能量代价下的 informed 采样,见 OPEN_PROBLEMS.md / Kyaw & Kelly 2026 arXiv 2606.02879)**:
+**问题**:informed 采样(加速 RRT\*/BIT\* 收敛的核心)多为欧氏空间设计,在**能量这种非欧/各向异性代价**下,欧氏启发式**不可采纳/过保守**(标量界丢弃方向结构)。攻它 = **进化一个"能量各向异性感知"的 `sample(ctx)`**,利用能量代价的方向性(降落便宜、直线便宜、转弯/爬升贵)加速收敛。
+**评测(用这个,不是 evaluate)**:`physics_eval.convergence_eval(sampler_src=<你的sample源码>, seeds=(0,1,2), budget=1500)`——指标=**固定样本预算 1500 下 anytime RRT\* 收敛到的剖面能耗**(越低=收敛越快;成功率<100%重罚)。场景=B/C(RRT\*可靠求解、排除翻墙A)。
+**采样器可查** `ctx.edge_cost(a, b)`=冻结 BEMT 能量 oracle(只能查、不能改),据此做非欧 informed 采样。
+**目标**:击败**均匀 baseline 1419.4**(证明各向异性采样加速收敛)。**已验证**:朴素 cost-greedy(只挑起点到候选最便宜的)会**过度集中→0%成功**,必须平衡探索(如 informed 椭球 + 各向异性加权、桥测试、方向偏置)。留出 seed(如 3,4)验证不过拟合。真正 SOTA 门槛=Euclidean-informed(待我加)。榨干后回报。
 
 ---
 

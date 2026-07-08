@@ -102,11 +102,15 @@ class _DummyConfig:
 # 返回的点会被裁剪到全网格 bounds 内(防越界),但不裁到 local(允许翻墙)。
 class SampleCtx:
     __slots__ = ("rng", "bounds_min", "bounds_max", "local_bounds_min",
-                 "local_bounds_max", "start", "goal", "config", "iteration")
+                 "local_bounds_max", "start", "goal", "config", "iteration",
+                 "edge_cost", "c_best")
+    # edge_cost(a, b) -> float:冻结的 BEMT 能量代价 oracle(agent 只能查、不能改)
+    #   → 让采样器能利用能量代价的**各向异性/方向结构**(降落便宜、直线便宜)做非欧 informed 采样。
+    # c_best: 当前最优解代价(informed set 用;无解时 inf)。
 
     def __init__(self, **kw):
-        for k, v in kw.items():
-            setattr(self, k, v)
+        for k in self.__slots__:
+            setattr(self, k, kw.get(k))
 
 
 DEFAULT_SAMPLER_SRC = '''
@@ -146,7 +150,8 @@ def contract_test_sampler(fn) -> None:
                     bounds_min=np.array([-10., -30., -15.]), bounds_max=np.array([80., 30., 5.]),
                     local_bounds_min=np.array([0., -5., -6.]), local_bounds_max=np.array([70., 5., 0.]),
                     start=np.array([0., 0., -3.]), goal=np.array([70., 0., -3.]),
-                    config=_DummyConfig(), iteration=1)
+                    config=_DummyConfig(), iteration=1,
+                    edge_cost=lambda a, b: float(np.linalg.norm(np.asarray(b) - np.asarray(a))), c_best=None)
     for _ in range(5):
         p = np.asarray(fn(ctx), dtype=float).reshape(3)
         assert p.shape == (3,) and np.all(np.isfinite(p)), "sample must return finite 3D point"

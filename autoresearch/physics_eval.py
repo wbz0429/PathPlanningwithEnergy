@@ -203,6 +203,78 @@ def get_test():
     return _SCEN["test"]
 
 
+def convergence_eval(sampler_src=None, overrides=None, seeds=(0, 1, 2), budget=1500, scenarios=None):
+    """
+    [开放问题:非欧能量代价下的 informed 采样] 收敛指标 = **固定样本预算 budget 下,
+    anytime RRT*(能量感知代价)收敛到多低的剖面能耗**(越低=收敛越快)。
+    采样器候选可查 ctx.edge_cost(a,b)(冻结 BEMT 能量 oracle)利用能量各向异性做非欧 informed 采样。
+    baseline: sampler_src=None = 默认均匀/欧氏采样。
+    """
+    import random
+    from planning.config import PlanningConfig
+    from planning.rrt_star import RRTStar
+    import sandbox, candidate as cand
+    vg, esdf, em = get_grounded_map()
+    if "vstar" not in _GCACHE:
+        _GCACHE["vstar"] = optimal_cruise_speed(em)[0]
+    vstar = _GCACHE["vstar"]
+    # 收敛研究用 RRT* 可靠求解的横向场景(B/C),排除翻墙的 A(那是可行性问题,会污染收敛指标)
+    scs = scenarios or ev.SCENARIOS[1:3]
+    sm = ev.BASE["safety_margin"]
+    ck = dict(ev.BASE); ck.update(overrides or {})
+    ck.update(dict(use_rrt_connect=False, max_iterations=budget, planning_timeout=30.0,
+                   energy_aware=True, flight_velocity=2.0))
+
+    sfn = None
+    if sampler_src is not None:
+        ok, reason = sandbox.check_code(sampler_src)
+        if not ok:
+            return {"score": 9e9, "_bad": f"INVALID:{reason}"}
+        try:
+            sfn = cand.load_sampler(sampler_src); cand.contract_test_sampler(sfn)
+        except Exception as e:
+            return {"score": 9e9, "_bad": f"CONTRACT:{type(e).__name__}:{e}"}
+
+    def _edge_cost(a, b):
+        return em.compute_energy_for_segment(np.asarray(a, float), np.asarray(b, float), vstar)[0]
+
+    o_ss, o_rs, o_cb = RRTStar._smart_sample, RRTStar._random_sample, RRTStar._compute_sampling_bounds
+    if sfn is not None:
+        def _mk(self):
+            return cand.SampleCtx(rng=np.random, bounds_min=self.bounds_min, bounds_max=self.bounds_max,
+                                  local_bounds_min=self.local_bounds_min, local_bounds_max=self.local_bounds_max,
+                                  start=getattr(self, "_ss", None), goal=getattr(self, "_sg", None),
+                                  config=self.config, iteration=getattr(self, "_si", 0),
+                                  edge_cost=_edge_cost, c_best=None)
+        def _rs(self):
+            return np.clip(np.asarray(sfn(_mk(self)), float).reshape(3), self.bounds_min, self.bounds_max)
+        def _cb(self, s, g, _o=o_cb):
+            self._ss = s; self._sg = g; return _o(self, s, g)
+        def _ssp(self, start, goal, nodes, it, _r=_rs):
+            self._ss = start; self._sg = goal; self._si = it; return _r(self)
+        RRTStar._random_sample = _rs; RRTStar._smart_sample = _ssp; RRTStar._compute_sampling_bounds = _cb
+
+    Es = []; succ = 0; n = 0
+    try:
+        with sandbox.time_limit(400) if sfn is not None else __import__("contextlib").nullcontext():
+            for sc in scs:
+                for sd in seeds:
+                    n += 1
+                    random.seed(sd); np.random.seed(sd)
+                    p = RRTStar(vg, esdf, PlanningConfig(**ck), energy_model=em).plan(sc["start"], sc["goal"])
+                    if p and len(p) >= 2 and _path_collision_free(p, esdf, sm):
+                        succ += 1; Es.append(energy_with_profile(p, em, vstar))
+    except Exception as e:
+        RRTStar._smart_sample, RRTStar._random_sample, RRTStar._compute_sampling_bounds = o_ss, o_rs, o_cb
+        return {"score": 9e9, "_bad": f"CRASH:{type(e).__name__}:{e}"}
+    finally:
+        RRTStar._smart_sample, RRTStar._random_sample, RRTStar._compute_sampling_bounds = o_ss, o_rs, o_cb
+
+    sr = succ / max(1, n)
+    score = float(np.mean(Es)) if Es and sr >= 0.99 else 3000.0 * (2 - sr)
+    return {"score": score, "success": sr, "energy_mean": float(np.mean(Es)) if Es else None, "budget": budget}
+
+
 def _path_collision_free(path, esdf, safety_margin, step=0.25):
     """独立碰撞复核:沿每段密采样,任一点 ESDF < margin 即判碰(不信任 planner 自报成功)。"""
     for i in range(len(path) - 1):

@@ -1,0 +1,1364 @@
+# 先行工作调研(prior art)
+
+## 摘要
+The core methodology of the proposed thesis — an LLM-agent that iteratively rewrites algorithm code, graded by a cheat-proof measurable evaluator in a closed loop — is well-established prior art (FunSearch/Eureka/AlphaEvolve/ReEvo/EoH/TrajEvo), but every one of these systems targets a different artifact: reward functions (Eureka), combinatorial-optimization heuristics (ReEvo), math/scheduling/hardware algorithms (AlphaEvolve), or trajectory PREDICTION heuristics (TrajEvo). None of them automate the design of a continuous-space, energy-aware UAV motion/path-PLANNER component (sampler/smoother/velocity profile), which is the defensible differentiation seam. Likewise, the project's in-loop "discoveries" in energy-aware UAV planning are all pre-existing, named results in the aerospace/robotics literature: the U-shaped power-speed curve and a distinct steady-state energy-optimal cruise v* (Di Franco & Buttazzo 2015), the fact that acceleration cost pushes the finite-segment optimal speed BELOW v* for short distances (Di Franco & Buttazzo; NASA lift+cruise 2024), measured climb-vs-descent power asymmetry (Liu 2017: +9.8% climb / -8.5% descent vs hover), acceleration-dependent nonlinear power models (Tseng/Alyassi 2017), energy-optimal rest-to-rest speed profiles via optimal control (Bianchi et al. 2024), and the curvature-speed-reduction / minimum-curvature-vs-shortest-path tradeoff (TUMFTM racetrajectory; Xue et al. 2023). The honest positioning is therefore: methodology validation transferred to a new application domain (energy-aware UAV planner components) — NOT algorithmic or physical novelty. Two research sub-questions were only partially answered: the meta-observation about biased/pessimistic surrogate estimators beating exact ones (Q4) and the partial-observation/regret-baseline literature (Q3) surfaced no confirmed claims and remain open.
+
+## 逐条(带引用)
+
+### The 'LLM closed-loop + cheat-proof measurable evaluator + code-level rewrite of an algorithm' paradigm is established prior art across multiple canonical systems (Eureka, AlphaEvolve, ReEvo, TrajEvo). Each writes/rewrites executable algorithm code and selects candidates using an external automated evaluator (physics/RL simulator, programmatic metric, or task-fitness), not LLM self-judgment.
+**置信度**:high
+Eureka 'perform[s] evolutionary optimization over reward code' with GPU-accelerated Isaac Gym RL as the non-gameable evaluator and 'reward reflection' feeding training statistics back (claims 4,5,11,12). AlphaEvolve 'orchestrates an autonomous pipeline of LLMs, whose task is to improve an algorithm by making direct changes to the code' while 'continuously receiving feedback from one or more evaluators' that are automated/programmatic, not LLM self-judgment (claims 6,7). ReEvo integrates 'evolutionary search... and LLM reflections to provide verbal gradients' generating heuristic code (claims 2
+**来源**:https://arxiv.org/abs/2310.12931; https://eureka-research.github.io/; https://arxiv.org/abs/2506.13131; https://openreview.net/forum?id=483IPG0HWL
+
+### None of these LLM-driven code-design systems target a continuous-space motion/path PLANNER component (sampler, smoother, velocity profile) or UAV energy-aware planning — this is the differentiation seam for the thesis. The closest structural analog is Eureka (LLM + physics-simulator evaluator + code rewrite), but it evolves RL reward functions, not planner code.
+**置信度**:high
+Eureka evolves REWARD functions for RL, not planner components (claims 4,11,13 caveats). AlphaEvolve was applied to data-center scheduling, hardware circuit design, LLM-training kernels, and math/CS problems, but 'makes NO mention of motion planning, path planning, robotics, or UAV/drone energy-aware planning' — a targeted search connecting AlphaEvolve to planning/robotics returned zero credible sources (claim 8). ReEvo's targets are strictly discrete COPs (TSP, CVRP, OP, MKP, BPP, DPP); the repo explicitly states it 'does NOT address continuous-space motion planning, sampling-based path plann
+**来源**:https://arxiv.org/abs/2310.12931; https://arxiv.org/abs/2506.13131; https://openreview.net/forum?id=483IPG0HWL; https://arxiv.org/pdf/2508.05616
+
+### The project's in-loop 'discovery' #1 — a distinct energy-optimal cruise speed v* exists — is classic prior art: the multi-rotor power-vs-speed curve is U-shaped with a minimum (v*~=12 m/s for their quad), because induced power falls and profile/parasite power rises with speed.
+**置信度**:high
+Di Franco & Buttazzo 2015: 'the curve has a minimum for a speed v* ~= 12 m/s, which can be computed as v* = min_v P(v) d / v' (claim 15). Independently confirmed as textbook aerodynamics (the classical fixed-wing power-required curve predates it); U-shape mechanism corroborated in arXiv 2209.04128 and biomechanics literature. Claim is modest (asserts only that energy-optimal cruise speed is a pre-existing concept).
+**来源**:https://www.researchgate.net/publication/319033289_A_power_consumption_model_for_multi-rotor_small_unmanned_aircraft_systems
+
+### The project's in-loop 'discovery' #2 — under acceleration cost the energy-optimal cruise speed is BELOW the steady-state v* — is prior art. The finite-segment optimal speed depends on distance d and only converges to the constant-speed steady-state optimum for long distances (d > 1 km); for shorter segments the acceleration-aware optimum is lower.
+**置信度**:high
+Di Franco & Buttazzo 2015: 'for long distances (d > 1 Km) v* tends to the optimal value computed assuming constant speed... compute the optimal speed that minimizes energy consumption for each straight line of length d' (their model explicitly includes accel/decel from/to zero speed). The specific 'lower for shorter segments' direction is confirmed by NASA lift+cruise 'Energy Optimal Traversal Between Hover Waypoints' (arXiv 2411.08661): 'critical points exist at cruise speeds LOWER than the best steady-state cruise speed due to the trade-off between increased energy cost to accelerate... vers
+**来源**:https://www.researchgate.net/publication/319033289_A_power_consumption_model_for_multi-rotor_small_unmanned_aircraft_systems; https://arxiv.org/abs/2411.08661
+
+### The project's in-loop 'discovery' #3 — climb/descent energy asymmetry (descent near-free, climb expensive) — is measured, quantified prior art. Multi-rotor field tests report ascending consumes ~9.8% MORE power than hovering and descending ~8.5% LESS than hovering, and models use separate climb/descent power equations.
+**置信度**:high
+Liu, Sengupta & Kurzhanskiy 2017 (ICUAS, IRIS+ quadrotor) plots measured climb/descent/hover power as distinct points with separate energy equations (claim 17). Beigi et al. survey (arXiv 2206.10775, Sec 3.7): 'Field tests in (Liu et al. 2017, Di Franco & Buttazzo 2015) showed that ascending takes 9.8% more power than hovering, and descending takes 8.5% less power than hovering' — explicit measured asymmetry in exactly the cited papers. Note: one variant claim asserting this same asymmetry was refuted 1-2 due to sourcing/attribution phrasing, but the underlying measured asymmetry itself is con
+**来源**:https://www.researchgate.net/publication/319033289_A_power_consumption_model_for_multi-rotor_small_unmanned_aircraft_systems; https://arxiv.org/pdf/2206.10775
+
+### The project's in-loop 'discovery' #3b/#4 — time-energy-optimal speed-profile / velocity-profile optimization (including acceleration-dependent nonlinear power models and curvature-driven speed reduction) — is established prior art, not novel.
+**置信度**:high
+Acceleration-dependent nonlinear power model: Tseng/Alyassi 2017 nine-term nonlinear regression of drone power on horizontal+vertical speed AND acceleration (plus payload, wind) — acceleration cost is a known modeling ingredient (claim 18). Energy-optimal rest-to-rest speed profile via optimal control: Bianchi et al. 2024 (Drones 8(1):29) extract rules to 'compute the optimal mission time and generate energetic trajectories' from an energy-minimizing optimal-control problem, with optimal mission time approximately linear in distance d, enabling near-optimal trajectories without re-solving the 
+**来源**:https://arxiv.org/pdf/2206.10775; https://www.mdpi.com/2504-446X/8/1/29; https://arxiv.org/pdf/2108.04537
+
+### The project's in-loop 'discovery' #4 — minimum-curvature vs shortest-path tradeoff and turn-induced speed reduction — is established prior art in trajectory optimization / racing literature.
+**置信度**:high
+Xue, Yue & Dolan 2023 (CMU, arXiv 2309.09186) formulate 'a minimum-curvature optimization problem with only the spline control points as optimization variables,' distinct from a shortest/geometric path (claim 21). TUMFTM/global_racetrajectory_optimization outputs a velocity profile (vx_mps target velocity, ax_mps2 acceleration per point) computed by a forward-backward solver enforcing velocity-dependent lateral acceleration limits via a GGV diagram — i.e. high curvature forces lower speed, the curvature-speed-reduction tradeoff; its minimum-curvature line is 'quite near to a minimum time line 
+**来源**:https://arxiv.org/pdf/2309.09186; https://github.com/TUMFTM/global_racetrajectory_optimization
+
+## 未决/开放(Q3部分观测 & Q4 meta 未坐实)
+- T
+- i
+- m
+- e
+- -
+- s
+- e
+- n
+- s
+- i
+- t
+- i
+- v
+- i
+- t
+- y
+-  
+- /
+-  
+- s
+- o
+- u
+- r
+- c
+- e
+-  
+- q
+- u
+- a
+- l
+- i
+- t
+- y
+- :
+-  
+- (
+- a
+- )
+-  
+- T
+- h
+- e
+-  
+- L
+- L
+- M
+- -
+- a
+- g
+- e
+- n
+- t
+-  
+- c
+- o
+- d
+- e
+- -
+- d
+- e
+- s
+- i
+- g
+- n
+-  
+- f
+- i
+- e
+- l
+- d
+-  
+- (
+- A
+- l
+- p
+- h
+- a
+- E
+- v
+- o
+- l
+- v
+- e
+-  
+- J
+- u
+- n
+- e
+-  
+- 2
+- 0
+- 2
+- 5
+- ,
+-  
+- T
+- r
+- a
+- j
+- E
+- v
+- o
+-  
+- A
+- u
+- g
+-  
+- 2
+- 0
+- 2
+- 5
+- ,
+-  
+- R
+- e
+- E
+- v
+- o
+-  
+- N
+- e
+- u
+- r
+- I
+- P
+- S
+-  
+- 2
+- 0
+- 2
+- 4
+- ,
+-  
+- E
+- u
+- r
+- e
+- k
+- a
+-  
+- I
+- C
+- L
+- R
+-  
+- 2
+- 0
+- 2
+- 4
+- )
+-  
+- i
+- s
+-  
+- f
+- a
+- s
+- t
+- -
+- m
+- o
+- v
+- i
+- n
+- g
+- ;
+-  
+- t
+- h
+- e
+-  
+- n
+- e
+- g
+- a
+- t
+- i
+- v
+- e
+-  
+- a
+- s
+- s
+- e
+- r
+- t
+- i
+- o
+- n
+-  
+- '
+- n
+- o
+- b
+- o
+- d
+- y
+-  
+- h
+- a
+- s
+-  
+- a
+- p
+- p
+- l
+- i
+- e
+- d
+-  
+- t
+- h
+- i
+- s
+-  
+- m
+- e
+- t
+- h
+- o
+- d
+- o
+- l
+- o
+- g
+- y
+-  
+- t
+- o
+-  
+- e
+- n
+- e
+- r
+- g
+- y
+- -
+- a
+- w
+- a
+- r
+- e
+-  
+- U
+- A
+- V
+-  
+- p
+- l
+- a
+- n
+- n
+- e
+- r
+-  
+- c
+- o
+- m
+- p
+- o
+- n
+- e
+- n
+- t
+- s
+- '
+-  
+- i
+- s
+-  
+- d
+- e
+- f
+- e
+- n
+- s
+- i
+- b
+- l
+- e
+-  
+- a
+- g
+- a
+- i
+- n
+- s
+- t
+-  
+- t
+- h
+- e
+-  
+- s
+- p
+- e
+- c
+- i
+- f
+- i
+- c
+-  
+- s
+- y
+- s
+- t
+- e
+- m
+- s
+-  
+- s
+- u
+- r
+- v
+- e
+- y
+- e
+- d
+-  
+- h
+- e
+- r
+- e
+-  
+- b
+- u
+- t
+-  
+- i
+- s
+-  
+- N
+- O
+- T
+-  
+- a
+-  
+- p
+- r
+- o
+- v
+- e
+- n
+-  
+- l
+- i
+- t
+- e
+- r
+- a
+- t
+- u
+- r
+- e
+- -
+- w
+- i
+- d
+- e
+-  
+- n
+- e
+- g
+- a
+- t
+- i
+- v
+- e
+-  
+- —
+-  
+- a
+-  
+- b
+- r
+- o
+- a
+- d
+- e
+- r
+-  
+- s
+- w
+- e
+- e
+- p
+-  
+- o
+- f
+-  
+- E
+- u
+- r
+- e
+- k
+- a
+- /
+- E
+- o
+- H
+- /
+- F
+- u
+- n
+- S
+- e
+- a
+- r
+- c
+- h
+-  
+- d
+- e
+- r
+- i
+- v
+- a
+- t
+- i
+- v
+- e
+- s
+-  
+- a
+- n
+- d
+-  
+- 2
+- 0
+- 2
+- 5
+- -
+- 2
+- 0
+- 2
+- 6
+-  
+- r
+- o
+- b
+- o
+- t
+- i
+- c
+- s
+- -
+- p
+- l
+- a
+- n
+- n
+- i
+- n
+- g
+-  
+- p
+- r
+- e
+- p
+- r
+- i
+- n
+- t
+- s
+-  
+- i
+- s
+-  
+- n
+- e
+- e
+- d
+- e
+- d
+-  
+- t
+- o
+-  
+- f
+- u
+- l
+- l
+- y
+-  
+- d
+- e
+- f
+- e
+- n
+- d
+-  
+- t
+- h
+- e
+-  
+- d
+- i
+- f
+- f
+- e
+- r
+- e
+- n
+- t
+- i
+- a
+- t
+- i
+- o
+- n
+-  
+- o
+- n
+- e
+- -
+- l
+- i
+- n
+- e
+- r
+- .
+-  
+- (
+- b
+- )
+-  
+- S
+- e
+- v
+- e
+- r
+- a
+- l
+-  
+- p
+- r
+- i
+- m
+- a
+- r
+- y
+-  
+- e
+- n
+- e
+- r
+- g
+- y
+- -
+- m
+- o
+- d
+- e
+- l
+-  
+- s
+- o
+- u
+- r
+- c
+- e
+- s
+-  
+- (
+- D
+- i
+-  
+- F
+- r
+- a
+- n
+- c
+- o
+-  
+- &
+-  
+- B
+- u
+- t
+- t
+- a
+- z
+- z
+- o
+- ,
+-  
+- L
+- i
+- u
+-  
+- 2
+- 0
+- 1
+- 7
+- )
+-  
+- a
+- r
+- e
+-  
+- 2
+- 0
+- 1
+- 5
+- -
+- 2
+- 0
+- 1
+- 7
+- ;
+-  
+- t
+- h
+- i
+- s
+-  
+- i
+- s
+-  
+- a
+-  
+- s
+- t
+- r
+- e
+- n
+- g
+- t
+- h
+-  
+- f
+- o
+- r
+-  
+- p
+- r
+- i
+- o
+- r
+- -
+- a
+- r
+- t
+-  
+- c
+- l
+- a
+- i
+- m
+- s
+-  
+- (
+- s
+- e
+- t
+- t
+- l
+- e
+- d
+-  
+- p
+- h
+- y
+- s
+- i
+- c
+- s
+- )
+- ,
+-  
+- n
+- o
+- t
+-  
+- a
+-  
+- w
+- e
+- a
+- k
+- n
+- e
+- s
+- s
+- .
+-  
+- (
+- c
+- )
+-  
+- T
+- h
+- e
+-  
+- 9
+- .
+- 8
+- %
+- /
+- -
+- 8
+- .
+- 5
+- %
+-  
+- c
+- l
+- i
+- m
+- b
+- /
+- d
+- e
+- s
+- c
+- e
+- n
+- t
+-  
+- n
+- u
+- m
+- b
+- e
+- r
+- s
+-  
+- c
+- o
+- m
+- e
+-  
+- p
+- a
+- r
+- t
+- l
+- y
+-  
+- t
+- h
+- r
+- o
+- u
+- g
+- h
+-  
+- a
+-  
+- s
+- u
+- r
+- v
+- e
+- y
+-  
+- (
+- a
+- r
+- X
+- i
+- v
+-  
+- 2
+- 2
+- 0
+- 6
+- .
+- 1
+- 0
+- 7
+- 7
+- 5
+- )
+-  
+- a
+- n
+- d
+-  
+- o
+- n
+- e
+-  
+- p
+- h
+- r
+- a
+- s
+- i
+- n
+- g
+-  
+- v
+- a
+- r
+- i
+- a
+- n
+- t
+-  
+- w
+- a
+- s
+-  
+- r
+- e
+- f
+- u
+- t
+- e
+- d
+-  
+- o
+- n
+-  
+- a
+- t
+- t
+- r
+- i
+- b
+- u
+- t
+- i
+- o
+- n
+-  
+- g
+- r
+- o
+- u
+- n
+- d
+- s
+-  
+- —
+-  
+- c
+- i
+- t
+- e
+-  
+- t
+- h
+- e
+-  
+- p
+- r
+- i
+- m
+- a
+- r
+- y
+-  
+- m
+- e
+- a
+- s
+- u
+- r
+- e
+- d
+-  
+- p
+- a
+- p
+- e
+- r
+- s
+- ,
+-  
+- a
+- n
+- d
+-  
+- n
+- o
+- t
+- e
+-  
+- v
+- *
+- ~
+- 1
+- 2
+-  
+- m
+- /
+- s
+-  
+- i
+- s
+-  
+- q
+- u
+- a
+- d
+- -
+- s
+- p
+- e
+- c
+- i
+- f
+- i
+- c
+-  
+- n
+- o
+- t
+-  
+- u
+- n
+- i
+- v
+- e
+- r
+- s
+- a
+- l
+- .
+-  
+- (
+- d
+- )
+-  
+- T
+- w
+- o
+-  
+- c
+- l
+- a
+- i
+- m
+- s
+-  
+- w
+- e
+- r
+- e
+-  
+- o
+- u
+- t
+- r
+- i
+- g
+- h
+- t
+-  
+- r
+- e
+- f
+- u
+- t
+- e
+- d
+- :
+-  
+- a
+-  
+- r
+- e
+- d
+- u
+- n
+- d
+- a
+- n
+- t
+-  
+- s
+- u
+- r
+- v
+- e
+- y
+- -
+- p
+- h
+- r
+- a
+- s
+- i
+- n
+- g
+-  
+- c
+- l
+- i
+- m
+- b
+- /
+- d
+- e
+- s
+- c
+- e
+- n
+- t
+-  
+- v
+- a
+- r
+- i
+- a
+- n
+- t
+-  
+- (
+- 1
+- -
+- 2
+- )
+-  
+- a
+- n
+- d
+-  
+- a
+-  
+- s
+- p
+- e
+- c
+- i
+- f
+- i
+- c
+-  
+- '
+- m
+- i
+- n
+- -
+- t
+- i
+- m
+- e
+-  
+- Q
+- P
+-  
+- v
+- i
+- a
+-  
+- q
+- u
+- a
+- d
+- p
+- r
+- o
+- g
+-  
+- i
+- n
+-  
+- T
+- U
+- M
+- F
+- T
+- M
+- '
+-  
+- m
+- e
+- t
+- h
+- o
+- d
+-  
+- (
+- 0
+- -
+- 3
+- )
+-  
+- —
+-  
+- d
+- o
+-  
+- n
+- o
+- t
+-  
+- r
+- e
+- l
+- y
+-  
+- o
+- n
+-  
+- t
+- h
+- o
+- s
+- e
+-  
+- e
+- x
+- a
+- c
+- t
+-  
+- f
+- r
+- a
+- m
+- i
+- n
+- g
+- s
+- .
+-  
+- (
+- e
+- )
+-  
+- T
+- h
+- e
+-  
+- s
+- t
+- r
+- u
+- c
+- t
+- u
+- r
+- a
+- l
+-  
+- a
+- n
+- a
+- l
+- o
+- g
+- y
+-  
+- '
+- E
+- u
+- r
+- e
+- k
+- a
+-  
+- ~
+- =
+-  
+- o
+- u
+- r
+-  
+- s
+- e
+- t
+- u
+- p
+- '
+-  
+- i
+- s
+-  
+- a
+- t
+-  
+- t
+- h
+- e
+-  
+- m
+- e
+- c
+- h
+- a
+- n
+- i
+- s
+- m
+-  
+- l
+- e
+- v
+- e
+- l
+-  
+- o
+- n
+- l
+- y
+- ;
+-  
+- E
+- u
+- r
+- e
+- k
+- a
+-  
+- r
+- e
+- w
+- r
+- i
+- t
+- e
+- s
+-  
+- r
+- e
+- w
+- a
+- r
+- d
+-  
+- f
+- u
+- n
+- c
+- t
+- i
+- o
+- n
+- s
+- ,
+-  
+- n
+- o
+- t
+-  
+- p
+- l
+- a
+- n
+- n
+- e
+- r
+-  
+- c
+- o
+- d
+- e
+- ,
+-  
+- s
+- o
+-  
+- i
+- t
+-  
+- i
+- s
+-  
+- p
+- r
+- i
+- o
+- r
+-  
+- a
+- r
+- t
+-  
+- f
+- o
+- r
+-  
+- t
+- h
+- e
+-  
+- M
+- E
+- T
+- H
+- O
+- D
+- O
+- L
+- O
+- G
+- Y
+- ,
+-  
+- n
+- o
+- t
+-  
+- f
+- o
+- r
+-  
+- t
+- h
+- e
+-  
+- t
+- a
+- r
+- g
+- e
+- t
+-  
+- a
+- r
+- t
+- i
+- f
+- a
+- c
+- t
+- .
