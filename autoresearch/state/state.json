@@ -1,10 +1,10 @@
 {
   "phase": "s3b_generalize",
-  "iteration": 48,
+  "iteration": 50,
   "episode": 9,
   "milestone": 9,
-  "plateau_count": 0,
-  "bottleneck": "S3b 泛化:在6个train场景(含3个程序化生成)上优化,生成场景能耗1000-1277J有空间;留出gen400-402+seed100验证泛化",
+  "plateau_count": 2,
+  "bottleneck": "S3b 6042.9: gen scenarios 1010-1255J each. Iteration 50 = episode 10 boundary (EXPLORE). Angles: gen301 got slightly worse (1009.6) — check topology flapping; entry-corner geometry for offset starts; or lateral-route corner optimization for diagonal queries.",
   "best": {
     "config": {
       "step_size": 4.5,
@@ -16,8 +16,8 @@
       "weight_time": 0.1,
       "use_rrt_connect": true
     },
-    "smoother": "best_smoother.py (v27: DP-cost topology ranker)",
-    "score": 6066.1,
+    "smoother": "best_smoother.py (v31: hybrid descent pricing + late-f2)",
+    "score": 6042.855889943083,
     "min_success": 1.0,
     "speed": "best_speed.py (v5: exact DP + continuous + pairwise polish)",
     "scenarios": "train(6): A/B/C + gen300-302"
