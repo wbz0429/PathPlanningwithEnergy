@@ -11,23 +11,23 @@
   },
   "smoother": "best_smoother.py (v27: DP-cost topology ranker)",
   "result": {
-    "score": 2565.4675483190354,
-    "energy_total": 2565.4675483190354,
+    "score": 2557.4933601409607,
+    "energy_total": 2557.4933601409607,
     "min_success": 1.0
   },
   "detail": {
     "A_straight": {
       "success": 1.0,
-      "energy_mean": 986.4961232886035
+      "energy_mean": 981.2471459193006
     },
     "B_diag_up": {
       "success": 1.0,
-      "energy_mean": 780.7806715548804
+      "energy_mean": 780.7783036253604
     },
     "C_diag_down": {
       "success": 1.0,
-      "energy_mean": 798.1907534755516
+      "energy_mean": 795.4679105962995
     }
   },
-  "speed": "best_speed.py (v1: exact DP, calibrated surrogate + rise cost)"
+  "speed": "best_speed.py (v4: exact DP + continuous polish)"
 }

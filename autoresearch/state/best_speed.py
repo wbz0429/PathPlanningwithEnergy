@@ -69,4 +69,55 @@ def speed_profile(path, v_star, vcap):
     for i in range(n - 1, -1, -1):
         out[i] = levels[j]
         j = par[i][j] if i > 0 else j
+
+    # continuous polish: coordinate descent on speeds between DP levels
+    # (recovers discretization error; rise-cost coupling handled by
+    # evaluating the full profile cost at each trial value)
+    def total_cost(sp):
+        c = 0.0
+        vp = 0.0
+        for i in range(n):
+            v = sp[i]
+            c += L[i] * em_of(v, sin_th[i])
+            if v > vp:
+                c += 0.5 * M_EFF * (v * v - vp * vp)
+            vp = v
+        return c
+
+    def em_of(v, s):
+        p = 171.0 - 12.35 * v + 0.525 * v * v
+        return max(0.0, p / max(0.5, v) + 16.8 * s)
+
+    for _sweep in range(4):
+        moved = False
+        for i in range(n):
+            lo = max(0.5, out[i] - 0.5)
+            hi = min(vcap[i], out[i] + 0.5)
+            if hi <= lo + 1e-6:
+                continue
+            base_c = total_cost(out)
+            best_v = out[i]
+            best_c = base_c
+            for _it in range(18):
+                m1 = lo + 0.382 * (hi - lo)
+                m2 = lo + 0.618 * (hi - lo)
+                out[i] = m1
+                c1 = total_cost(out)
+                out[i] = m2
+                c2 = total_cost(out)
+                if c1 < c2:
+                    hi = m2
+                    if c1 < best_c:
+                        best_c = c1
+                        best_v = m1
+                else:
+                    lo = m1
+                    if c2 < best_c:
+                        best_c = c2
+                        best_v = m2
+            out[i] = best_v
+            if best_c < base_c - 1e-6:
+                moved = True
+        if not moved:
+            break
     return out
