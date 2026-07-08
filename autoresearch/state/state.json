@@ -1,10 +1,10 @@
 {
   "phase": "s4a_aniso_informed_sampling",
-  "iteration": 61,
+  "iteration": 62,
   "episode": 13,
   "milestone": 12,
-  "plateau_count": 1,
-  "bottleneck": "S4a best=810.3 (v1). Ep13 EXPLORE findings: (1) ATTRIBUTION CORRECTED — vertical squash (planar concentration) is the lever (squash-only=816), lateral stretch marginal (+6J); (2) principled sub-level-set rejection sampler (lit SOTA) =1107, WORSE — energy metric barely penalizes gentle in-band slopes, so hand-tuned squash encodes a stronger correct 'optimal is planar' prior. v1 robust optimum. Next EXPLOIT episodes: v1 likely near ceiling for static sampler; consider consolidating S4a open-problem writeup or await program.md S4b/SOTA gate.",
+  "plateau_count": 2,
+  "bottleneck": "S4a STATIC-SAMPLER SPACE EXHAUSTED (consolidated). v1=810.3 robust optimum: 4 straight attempts (ratio/schedule/sub-level-set/goal-cone) all overfit train or score worse; metric is seed-fragile, v1 uniquely robust (810/804/801). Core result solid: -43% vs uniform, beats uniform@any-budget(1216), beats lit sub-level-set(1107), ablation shows planar-concentration is the lever. AWAITING HUMAN: add Euclidean-informed SOTA gate (promised in program.md) to formally close the open-problem comparison, or advance to S4b.",
   "best": {
     "config": {
       "step_size": 4.5,
