@@ -28,7 +28,7 @@ description: Run ONE iteration of the UAV energy+path-planning autoresearch loop
 1. **读状态**:读 `program.md`(**人类的研究指令频道——最高优先,先看它的「研究指令」区**)、`state.json`、`KNOWLEDGE.md`、`tail -8 agent_log.jsonl`。记下 `iteration, best, cadence, bottleneck, plateau_count, episode`。**若 `program.md` 的「研究指令」给了新方向,本轮就照它做**(而非只盯 bottleneck)。
 2. **若 `best.score` 为 null(首次)** → 本次只建**基线**:`physics_eval.evaluate(best.config, runs=cadence.runs, seed0=0)`,把结果写进 best(score/min_success),写 best.json,append 一行 baseline 到 agent_log,`iteration=1`,报告基线,**结束**。
 3. **否则按 cadence 决定**:
-   - **Episode 边界**(`iteration % episode_cap == 0` 或 `plateau_count >= plateau_k`):`plateau_count=0`、`episode+=1`,**必做一次文献检索**(下限),并遵守:
+   - **Episode 边界 = 硬周期规则**(`iteration % episode_cap == 0` → **到点就触发,不管上一轮有没有增益、有没有卡住**;`plateau_count >= plateau_k` 只是卡住时的提前触发):`plateau_count=0`、`episode+=1`,**必做一次外部文献检索 + 一次探索性尝试**,并遵守:
      * **知识落库纪律(防乱构建/防幻觉)**:检索到的每条知识写进 `KNOWLEDGE.md` 时,**必须带 来源URL + 置信度(高/中/低) + 标"未验证(以评测器为准)"**;没来源的断言不许当事实写。**你只能查、只能提议;场景/baseline/物理是冻结的,不许编造。**
      * **判断 EXPLORE vs EXPLOIT**:若 `episode % explore_every_episodes == 0` → **EXPLORE(探索/创新)阶段**;否则 **EXPLOIT(精修)阶段**。
      * **EXPLORE 阶段**:检索该问题的**不同算法族**(informed-RRT*/BIT*/FMT*/trajectory-optimization/potential-field 等),提**一个结构性新方法**(不是局部微调)。即使没立刻超 best,也把结果 + "为何可能有潜力" 作为 **exploration seed** 记进 `KNOWLEDGE.md`(别只 REVERT 就忘),供后续 episode 接着发展。
@@ -49,7 +49,7 @@ description: Run ONE iteration of the UAV energy+path-planning autoresearch loop
 8. **报告(2-3 句,显式亮出思考)**:① **这轮的假设/为什么试它**(先讲推理,别只报结果)② 具体改了什么 ③ score/success + KEEP/REVERT + 一句归因。目的:让人一眼看到"在想什么、为什么",而非"又跑了个脚本"。
 
 ## 纪律
-- **反空转/升级(重要,防机械微调)**:提议前先看 `agent_log` 近 4 条——若**同一组件(如平滑器)连续 ≥3 次 no-op 或 <1% 微增**,判定该组件**已榨干**:本轮**禁止再微调它**,必须切到**别的组件/算法族**(采样器 / steer / 代价公式 / RRT-Connect→其他规划器族)做一次**结构性**尝试。若**所有可动组件都榨干**,**停下、如实报告"搜索空间已耗尽,需人类在 program.md 给新方向或新场景"**——**不要继续空转微调**。
+- **别空转(引导,非硬禁)**:若某组件连续几次只有芝麻增益,**倾向**换个组件/算法族试点新的(硬周期的 Episode 探索本就会逼你这么做)。若感觉所有可动组件都榨干了,**如实报告"搜索空间耗尽,需人类在 program.md 给新方向/新场景"**即可——但探索方式、什么时候换、试什么,**你自己判断,不设死规矩**。
 - 每次**只改一个东西、只评一次**(归因清晰)。搜索用 seed0=0;**别碰 seed**。
 - 代码候选先自查只 import numpy/math;`evaluate` 内部已过沙箱/契约,崩溃即当失败 REVERT。
 - 若某步不确定是否属于「冻结层」,**默认不碰**并在报告里说明。

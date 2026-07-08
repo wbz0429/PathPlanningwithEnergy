@@ -27,7 +27,7 @@
     "runs": 3,
     "seed_train": 0,
     "seed_val": 100,
-    "explore_every_episodes": 2
+    "explore_every_episodes": 1
   },
   "notes": "Phase B: 采样器注入点已开(sample(ctx)可逃z-clamp)。iter22-25 四候选全REVERT,best仍2078.4——扩动作空间到采样器未带来算法改进,瓶颈是物理家族地板(A≈797J爬升税)非采样能力。"
 }
