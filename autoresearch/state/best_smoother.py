@@ -6,13 +6,17 @@ P0 = 150.0         # local-sweep proxy: e/m(v) ~ P0/v - PSLOPE (pessimistic at
 PSLOPE = 1.6       # mid speeds — empirically steers moves toward higher vcap)
 # 3D ranking proxy (template comparison only): parabolic level-power fit of
 # the frozen BEMT plus climb charge / conservative floored descent credit.
-PA = 164.8
-PB = 11.39
-PC = 0.492
+# Calibrated against the frozen BEMT on an 8x9 (v, slope) grid:
+# e/m(v,th) ~ max(0, P_lvl(v)/v + 16.8*sin(th)); symmetric climb/descent
+# surcharge; the evaluator clamps segment energy at 0 (steep fast descent
+# is literally free), so the floor is 0, not a positive power floor.
+PA = 171.0
+PB = 12.35
+PC = 0.525
 WEIGHT = 14.7      # m*g (1.5 kg quad)
-K_UP = 1.26
-K_DN = 1.00
-P_FLOOR = 15.0
+K_UP = 1.143       # 16.8 / 14.7 — measured, symmetric
+K_DN = 1.143
+P_FLOOR = 0.0
 MAX_WP = 64
 
 

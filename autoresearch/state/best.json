@@ -9,24 +9,24 @@
     "weight_time": 0.1,
     "use_rrt_connect": true
   },
-  "smoother": "best_smoother.py (v22: v21 + STOMP-style refinement)",
+  "smoother": "best_smoother.py (v24: v22 + grid-calibrated 3D surrogate)",
   "result": {
-    "score": 2049.7841636894586,
-    "energy_total": 2049.7841636894586,
+    "score": 2046.4107216055302,
+    "energy_total": 2046.4107216055302,
     "min_success": 1.0
   },
   "detail": {
     "A_straight": {
       "success": 1.0,
-      "energy_mean": 789.4840756845756
+      "energy_mean": 786.9992558909051
     },
     "B_diag_up": {
       "success": 1.0,
-      "energy_mean": 621.550594871531
+      "energy_mean": 621.5085072612807
     },
     "C_diag_down": {
       "success": 1.0,
-      "energy_mean": 638.7494931333521
+      "energy_mean": 637.9029584533444
     }
   }
 }

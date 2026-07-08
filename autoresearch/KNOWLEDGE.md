@@ -28,6 +28,7 @@
 **剩余瓶颈**(若继续):A 797J vs 长度下界 ~527J(爬升税+驼峰-v* 耦合,家族地板);B 634/C 648 转角税守恒。突破需要 Layer-1 之外的自由度(如采样器 z 解锁、kinodynamic 松绑——均属冻结层,不可动)。
 
 ## Exploration seeds(EXPLORE episode 记录,即使未超 best 也留)
+- **[Ep5 EXPLORE] 冻结 BEMT 全网格标定**(来源=评测器自身 compute_energy_for_segment 实测 8v×9slope 网格,置信度高,已是 ground truth):e/m(v,θ) ≈ max(0, P_lvl(v)/v + 16.8·sinθ),P_lvl(v)=171.0−12.35v+0.525v²(W)。**要点:①爬降税对称 ±16.8·sinθ J/m(旧 proxy 爬升高估 10%、下降低估 12%);②高速陡降完全免费(v≥10、θ≤−24° 时 e/m=0.0,评测器 0 钳位——旧 proxy 的 15W 地板高估了陡降);③低速平飞旧 fit 高估 ~14%**。方法论=离线代理标定(arXiv:2303.17468 surrogate NN for trajectory planning;arXiv:2404.15570 air-taxi physics surrogates,置信度高,未验证-以评测器为准)。_proxy3d 用标定常数(排序+CHOMP梯度+STOMP权重);局部 sweep 保留悲观线性 proxy(v9 教训)。
 - **[Ep4 EXPLORE] 轨迹优化族(CHOMP/STOMP)作为平滑器**:CHOMP=对整条轨迹做协变梯度下降精修采样路径(来源 https://www.ri.cmu.edu/pub_files/2013/5/CHOMP_IJRR.pdf,置信度高,未验证-以评测器为准);STOMP=无梯度采样更新(来源 https://www.researchgate.net/publication/221078155_STOMP_Stochastic_trajectory_optimization_for_motion_planning,置信度高,未验证)。我们的适配:代价=3D 剖面能量 proxy(数值梯度),障碍约束只有布尔 is_collision_free(无 ESDF 距离→无法做 CHOMP 的光滑障碍代价梯度),改用「碰撞门控回溯线搜索」投影。潜力:联合多顶点连续优化直击离散单步走法过不去的多顶点耦合脊(如驼峰-apex-cap)。
 
 ## Insights(loop 追加)
