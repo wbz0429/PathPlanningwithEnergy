@@ -1,10 +1,10 @@
 {
   "phase": "s3b_generalize",
-  "iteration": 50,
-  "episode": 9,
+  "iteration": 51,
+  "episode": 10,
   "milestone": 9,
-  "plateau_count": 2,
-  "bottleneck": "S3b 6042.9: gen scenarios 1010-1255J each. Iteration 50 = episode 10 boundary (EXPLORE). Angles: gen301 got slightly worse (1009.6) — check topology flapping; entry-corner geometry for offset starts; or lateral-route corner optimization for diagonal queries.",
+  "plateau_count": 1,
+  "bottleneck": "S3b 6042.9 (gen300 1222/gen301 1010/gen302 1255). Wide lateral swings proven cap-optimal (taut-shrink rejected by own ranker). Remaining gen headroom unclear — candidates: per-seed topology variance? entry-leg geometry for offset starts? Milestone 4 at episode 12.",
   "best": {
     "config": {
       "step_size": 4.5,

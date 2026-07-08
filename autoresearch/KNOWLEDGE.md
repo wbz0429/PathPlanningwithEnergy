@@ -52,6 +52,7 @@
 图:`experiments/milestones/ms3/` + `experiments/fig_ms3_compare.png`。
 
 ## Exploration seeds(EXPLORE episode 记录,即使未超 best 也留)
+- **[Ep10 EXPLORE, S3b] taut-string/funnel 收紧**:同伦类内最短路=贴着(带 clearance 膨胀的)障碍角的绷紧弦(来源 https://jeffe.cs.illinois.edu/teaching/compgeom/notes/05-shortest-homotopic.pdf Erickson 讲义;https://medium.com/@reza.teshnizi/the-funnel-algorithm-explained-visually-41e374172d2d funnel 图解,置信度高,未验证-以评测器为准)。gen300/302 侧绕路摆到 y≈26-28 而墙缘只需 ~20.5 → ~15m 超摆;taut-shrink(顶点向 S-G 弦收缩 λ 阶梯+碰撞门控+polish)近似弦收紧。另:VRS 定律沉淀——冻结 BEMT 中低速陡降是惩罚不是奖励(v<7 时),hook 下降对贴墙目标真不划算(iter48/49 实证)。
 - **[Ep9 EXPLORE, S3a] 块坐标下降处理耦合速度**:rise-cost 链耦合相邻段速度,单坐标 golden-section 在'成对同升可摊销 rise'处卡住;成对块更新是标准解法(来源 https://epubs.siam.org/doi/10.1137/120887679 BCD 收敛性 SIAM;https://www.jmlr.org/papers/volume23/18-045/18-045.pdf 更快 BCD,置信度高,未验证-以评测器为准)。
 - **[Ep8 EXPLORE, S3a] 速度分段插点**:corner cap 罩住整条相邻 segment,共线插点(同线、零碰撞风险、不生新角)把 cap 圈进短尾巴,长段交给速度 DP 跑快——文献同型:在区域边界插 waypoint 标记加减速分段(来源 https://www.mdpi.com/2504-446X/5/4/143 Acceleration-Aware Path Planning with Waypoints,置信度高,未验证-以评测器为准)。另:L-非线性假设已被诊断否证(e/m 严格与段长无关);解析 parabola+sin 代理在真实坡度上误差 ~0.06 J/m,优于任何实用 lookup——速度层已在真最优 ~3J 内。
 - **[Ep7 EXPLORE, S3a] 空间域速度 DP + 几何-速度耦合**:沿定路径的能量最优速度剖面=空间域 DP(地铁/EV 文献标准做法,来源 https://www.researchgate.net/publication/340156753_On_the_Optimal_Speed_Profile_for_Electric_Vehicles 置信度高,未验证-以评测器为准)。S3a 关键推论:**DP 巡航 ≈12.7 < v* → vcap≥12.7 的转角已免费,平滑器旧目标(抬 cap 到 18)过时**——几何最优随速度层变化(path-velocity decomposition 的耦合项),平滑器的拓扑排序 proxy 应改为'该几何的 DP 最优速度成本'。
