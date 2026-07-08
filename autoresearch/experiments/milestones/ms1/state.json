@@ -1,0 +1,32 @@
+{
+  "phase": "loop",
+  "iteration": 22,
+  "episode": 3,
+  "milestone": 3,
+  "plateau_count": 1,
+  "bottleneck": "MILESTONE 1 DONE (validated on seed_val=100: 2079.2, no overfitting). Awaiting user review. If continued: remaining headroom requires unfreezing Layer-2 (sampler z-clamp, kinodynamic) — a scope decision for the user.",
+  "best": {
+    "config": {
+      "step_size": 4.5,
+      "max_iterations": 5000,
+      "goal_sample_rate": 0.4,
+      "search_radius": 4.0,
+      "weight_energy": 0.6,
+      "weight_distance": 0.3,
+      "weight_time": 0.1,
+      "use_rrt_connect": true
+    },
+    "smoother": "best_smoother.py (v13: v11 + skeleton-DP probe)",
+    "score": 2078.4468619035383,
+    "min_success": 1.0
+  },
+  "cadence": {
+    "episode_cap": 10,
+    "plateau_k": 3,
+    "milestone_every_episodes": 3,
+    "runs": 3,
+    "seed_train": 0,
+    "seed_val": 100
+  },
+  "notes": "Phase A honest evaluator (physics_eval.evaluate): grounded map (no underground) + speed-profile energy (v*=18.2 m/s, turn-limited) + independent collision recheck. Objective is now NON-degenerate: path smoothness matters, not just length."
+}

@@ -148,9 +148,64 @@ def fig_energy():
     print(f"  基线 seed0 score={rb0['score']:.0f} | 调优 seed0={rt0['score']:.0f} | 调优 seed100={rt1['score']:.0f}")
 
 
+# ---------- 4. 三场景侧视轨迹 ----------
+def fig_trajectory_all():
+    _, _, em = pe.get_grounded_map()
+    vstar = pe._GCACHE.get("vstar", 18.2)
+    scns = [("A 直穿", np.array([0., 0., -3.]), np.array([70., 0., -3.])),
+            ("B 对角上", np.array([0., 0., -3.]), np.array([70., 20., -3.])),
+            ("C 对角下", np.array([0., 0., -3.]), np.array([70., -25., -3.]))]
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+    for ax, (nm, s, g) in zip(axes, scns):
+        for o in bp.BLOCKS_OBSTACLES:
+            x0, x1 = o["x_range"]; a0, a1 = -o["z_range"][1], -o["z_range"][0]
+            ax.add_patch(Rectangle((x0, a0), x1-x0, a1-a0, alpha=0.28, color="gray"))
+        for ov, tuned, c, lab in [(DEFAULT, False, "#ff7f0e", "基线"), (TUNED, True, "#1f77b4", "调优")]:
+            p = _plan(ov, tuned, s, g)
+            if not p: continue
+            P = np.array(p); Ep = pe.energy_with_profile(p, em, vstar)
+            ax.plot(P[:, 0], -P[:, 2], "-", c=c, lw=2.2, label=f"{lab} {Ep:.0f}J")
+        ax.axhline(0, color="saddlebrown", lw=1.3)
+        ax.set_title(nm); ax.set_xlabel("X(m)"); ax.set_ylabel("高度(m)"); ax.legend(fontsize=8); ax.grid(alpha=0.3)
+    fig.suptitle("Milestone 1 · 三场景侧视轨迹(基线 vs 调优)", fontsize=13, weight="bold")
+    fig.tight_layout(); out = os.path.join(EXP, "fig_ms1_trajectory_all.png")
+    fig.savefig(out, dpi=140); plt.close(fig); print("[saved]", out)
+
+
+# ---------- 5. KEEP 贡献瀑布 ----------
+def fig_waterfall():
+    rows = [json.loads(l) for l in open(os.path.join(EXP, "agent_log.jsonl"))]
+    keeps = [(r["iter"], r.get("name", ""), r.get("score")) for r in rows
+             if r.get("decision") == "KEEP" and r.get("score")]
+    labels = [f"#{i}\n{n[:16]}" for i, n, _ in keeps]; scores = [s for _, _, s in keeps]
+    fig, ax = plt.subplots(figsize=(12, 5.5))
+    ax.step(range(len(scores)), scores, where="mid", color="#1f77b4", lw=2)
+    ax.scatter(range(len(scores)), scores, color="#2ca02c", zorder=3, s=55)
+    for i in range(1, len(scores)):
+        ax.annotate(f"{scores[i]-scores[i-1]:+.0f}", (i, scores[i]), textcoords="offset points",
+                    xytext=(0, -15), ha="center", fontsize=8, color="#d62728")
+    ax.set_xticks(range(len(labels))); ax.set_xticklabels(labels, fontsize=7, rotation=15)
+    ax.set_yscale("log"); ax.set_ylabel("至今最优 score(log)")
+    ax.set_title("Milestone 1 · 每个 KEEP 对 score 的贡献", fontsize=12, weight="bold")
+    ax.grid(alpha=0.3, which="both")
+    fig.tight_layout(); out = os.path.join(EXP, "fig_ms1_waterfall.png")
+    fig.savefig(out, dpi=140); plt.close(fig); print("[saved]", out)
+
+
 if __name__ == "__main__":
-    for f in (fig_convergence, fig_overwall, fig_energy):
+    import glob, shutil
+    ms = sys.argv[1] if len(sys.argv) > 1 else None   # 传里程碑号则归档
+    for f in (fig_convergence, fig_overwall, fig_energy, fig_trajectory_all, fig_waterfall):
         try:
             f()
         except Exception as ex:
             import traceback; print(f"[FAIL] {f.__name__}: {ex}"); traceback.print_exc()
+    if ms:
+        d = os.path.join(EXP, "milestones", f"ms{ms}"); os.makedirs(d, exist_ok=True)
+        for png in glob.glob(os.path.join(EXP, "fig_ms1_*.png")):
+            shutil.copy(png, d)
+        for rel in ("state/state.json", "KNOWLEDGE.md"):
+            src = os.path.join(_HERE, rel)
+            if os.path.exists(src):
+                shutil.copy(src, os.path.join(d, os.path.basename(rel)))
+        print(f"[archived] milestone {ms} -> {d}(图 + state 快照 + KNOWLEDGE 快照)")
