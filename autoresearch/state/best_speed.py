@@ -118,6 +118,44 @@ def speed_profile(path, v_star, vcap):
             out[i] = best_v
             if best_c < base_c - 1e-6:
                 moved = True
+        # pairwise block updates: shift adjacent pairs by a common delta
+        # (rise cost couples consecutive speeds; a pair raised together
+        # amortizes one rise where single-coordinate moves stall)
+        for i in range(n - 1):
+            lo_d = max(0.5 - out[i], 0.5 - out[i + 1], -1.5)
+            hi_d = min(vcap[i] - out[i], vcap[i + 1] - out[i + 1], 1.5)
+            if hi_d <= lo_d + 1e-6:
+                continue
+            base_c = total_cost(out)
+            v0 = out[i]
+            v1 = out[i + 1]
+            best_d = 0.0
+            best_c = base_c
+            lo = lo_d
+            hi = hi_d
+            for _it in range(16):
+                m1 = lo + 0.382 * (hi - lo)
+                m2 = lo + 0.618 * (hi - lo)
+                out[i] = v0 + m1
+                out[i + 1] = v1 + m1
+                c1 = total_cost(out)
+                out[i] = v0 + m2
+                out[i + 1] = v1 + m2
+                c2 = total_cost(out)
+                if c1 < c2:
+                    hi = m2
+                    if c1 < best_c:
+                        best_c = c1
+                        best_d = m1
+                else:
+                    lo = m1
+                    if c2 < best_c:
+                        best_c = c2
+                        best_d = m2
+            out[i] = v0 + best_d
+            out[i + 1] = v1 + best_d
+            if best_c < base_c - 1e-6:
+                moved = True
         if not moved:
             break
     return out

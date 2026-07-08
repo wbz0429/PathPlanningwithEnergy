@@ -1,10 +1,10 @@
 {
   "phase": "s3a_speed",
-  "iteration": 46,
-  "episode": 8,
+  "iteration": 47,
+  "episode": 9,
   "milestone": 6,
-  "plateau_count": 3,
-  "bottleneck": "S3a FINAL: 2557.5 (A 981/B 781/C 795), from 2821.7 cap-riding baseline = -9.4%. Plateau 3 -> iteration 46 = episode 9 boundary -> MILESTONE 3 (S3a summary + comparisons + robustness + held-out + stop for review).",
+  "plateau_count": 1,
+  "bottleneck": "MILESTONE 3 DUE (episode 9): S3a final 2556.5 (A 981/B 780/C 795) from 2821.7 baseline = -9.4%. Full gate suite + summary + stop for review.",
   "best": {
     "config": {
       "step_size": 4.5,
@@ -17,9 +17,9 @@
       "use_rrt_connect": true
     },
     "smoother": "best_smoother.py (v27: DP-cost topology ranker)",
-    "score": 2557.4933601409607,
+    "score": 2556.466903109831,
     "min_success": 1.0,
-    "speed": "best_speed.py (v4: exact DP + continuous polish)"
+    "speed": "best_speed.py (v5: exact DP + continuous + pairwise polish)"
   },
   "cadence": {
     "episode_cap": 10,
