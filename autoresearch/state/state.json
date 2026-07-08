@@ -1,10 +1,10 @@
 {
   "phase": "phase_b_sampler",
-  "iteration": 29,
+  "iteration": 30,
   "episode": 3,
   "milestone": 3,
-  "plateau_count": 0,
-  "bottleneck": "floor ~2068 (A 797/B 626/C 645). Basin hopping opened a new lever family (stochastic restarts) — worth one more probe (more trials/larger perturbation) before episode 4 EXPLORE.",
+  "plateau_count": 1,
+  "bottleneck": "floor ~2068 (A 797/B 626/C 645). Basin-hop gains are RNG-draw-dependent (~5J noise scale), not scalable. Iteration 30 = episode boundary -> episode 4 = EXPLORE phase (different algorithm family, structural proposal).",
   "best": {
     "config": {
       "step_size": 4.5,

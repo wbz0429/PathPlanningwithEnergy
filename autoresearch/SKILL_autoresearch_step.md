@@ -46,9 +46,10 @@ description: Run ONE iteration of the UAV energy+path-planning autoresearch loop
 5. **评测**:写一小段 python 调 `physics_eval.evaluate(overrides, runs=cadence.runs, seed0=0[, smoother_src=<源码字符串>])`,拿 `score / min_success / detail`。（overrides = best.config 合并你的参数改动。）
 6. **keep/revert**:**KEEP 当且仅当** `score < best.score` 且 `min_success >= best.min_success`(硬约束不降)。KEEP→更新 best.json(+代码则写 best_smoother.py),`git add -A && git commit -m "autoresearch iter <N>: <name> score=<X> KEEP"`。否则 REVERT(不动 best,不 commit)。
 7. **写回状态**:append 一行到 `agent_log.jsonl`(`{iter, kind, name, hypothesis, score, min_success, decision}`);更新 `state.json`(`iteration+=1`;KEEP→`plateau_count=0` 否则 `+=1`;把 `bottleneck` 更新为 detail 里最差的场景)。
-8. **报告一句话**:这次改了什么、score/success、KEEP 还是 REVERT。
+8. **报告(2-3 句,显式亮出思考)**:① **这轮的假设/为什么试它**(先讲推理,别只报结果)② 具体改了什么 ③ score/success + KEEP/REVERT + 一句归因。目的:让人一眼看到"在想什么、为什么",而非"又跑了个脚本"。
 
 ## 纪律
+- **反空转/升级(重要,防机械微调)**:提议前先看 `agent_log` 近 4 条——若**同一组件(如平滑器)连续 ≥3 次 no-op 或 <1% 微增**,判定该组件**已榨干**:本轮**禁止再微调它**,必须切到**别的组件/算法族**(采样器 / steer / 代价公式 / RRT-Connect→其他规划器族)做一次**结构性**尝试。若**所有可动组件都榨干**,**停下、如实报告"搜索空间已耗尽,需人类在 program.md 给新方向或新场景"**——**不要继续空转微调**。
 - 每次**只改一个东西、只评一次**(归因清晰)。搜索用 seed0=0;**别碰 seed**。
 - 代码候选先自查只 import numpy/math;`evaluate` 内部已过沙箱/契约,崩溃即当失败 REVERT。
 - 若某步不确定是否属于「冻结层」,**默认不碰**并在报告里说明。
