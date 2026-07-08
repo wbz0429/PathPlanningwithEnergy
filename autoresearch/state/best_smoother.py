@@ -164,9 +164,12 @@ def smooth_path(path, is_collision_free, config):
                 diag2 = tang - norm
                 nd = float(np.linalg.norm(diag2))
                 diag2 = diag2 / nd if nd > 1e-9 else tang
+                binorm = np.cross(u1, u2)
+                nb = float(np.linalg.norm(binorm))
+                binorm = binorm / nb if nb > 1e-9 else np.array([0.0, 1.0, 0.0])
                 best = None
                 for direc in (tang, -tang, norm, -norm, diag1, -diag1,
-                              diag2, -diag2, zax, -zax):
+                              diag2, -diag2, zax, -zax, binorm, -binorm):
                     for step in (16.0, 8.0, 4.0, 2.0):
                         Q = P + direc * step
                         cand = pts[:k] + [Q] + pts[k + 1:]
