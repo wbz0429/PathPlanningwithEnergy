@@ -1,10 +1,10 @@
 {
   "phase": "s3b_generalize",
-  "iteration": 54,
+  "iteration": 55,
   "episode": 11,
   "milestone": 9,
-  "plateau_count": 1,
-  "bottleneck": "S3b 6030.1; generalization VALIDATED mid-flight (gen400-402 100% @955-1357J; seed100 +3.0%). step_size robust across distribution. Residuals: gen300/302 polish variance. Milestone 4 at episode 12 (next boundary).",
+  "plateau_count": 2,
+  "bottleneck": "S3b 6029.7, converging. One more non-gain -> episode 12 boundary -> MILESTONE 4 (S3b wrap: generalization evidence already gathered).",
   "best": {
     "config": {
       "step_size": 4.5,
@@ -16,8 +16,8 @@
       "weight_time": 0.1,
       "use_rrt_connect": true
     },
-    "smoother": "best_smoother.py (v34: dual-objective skeleton probe)",
-    "score": 6030.135522582911,
+    "smoother": "best_smoother.py (v35: + final deterministic polish)",
+    "score": 6029.700441641118,
     "min_success": 1.0,
     "speed": "best_speed.py (v5: exact DP + continuous + pairwise polish)",
     "scenarios": "train(6): A/B/C + gen300-302"
