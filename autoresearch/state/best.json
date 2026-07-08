@@ -11,35 +11,19 @@
   },
   "smoother": "best_smoother.py (v35: + final deterministic polish)",
   "result": {
-    "score": 6029.700441641118,
-    "energy_total": 6029.700441641118,
+    "score": 810.251748768885,
+    "energy_total": null,
     "min_success": 1.0
   },
   "detail": {
-    "A_straight": {
-      "success": 1.0,
-      "energy_mean": 981.3378941534611
+    "B_conv": {
+      "score": 806.4
     },
-    "B_diag_up": {
-      "success": 1.0,
-      "energy_mean": 779.8988537232555
+    "C_conv": {
+      "score": 814.2
     },
-    "C_diag_down": {
-      "success": 1.0,
-      "energy_mean": 795.1554938083187
-    },
-    "gen300": {
-      "success": 1.0,
-      "energy_mean": 1227.401336980547
-    },
-    "gen301": {
-      "success": 1.0,
-      "energy_mean": 991.2892737318056
-    },
-    "gen302": {
-      "success": 1.0,
-      "energy_mean": 1254.6175892437307
-    }
+    "heldout_seeds_3_4": 804.6195696214231
   },
-  "speed": "best_speed.py (v5: exact DP + continuous + pairwise polish)"
+  "speed": "best_speed.py (v5: exact DP + continuous + pairwise polish)",
+  "sampler": "best_sampler.py (v1: energy-anisotropic informed ellipsoid, lateral-stretch/vertical-squash, iteration-annealed)"
 }

@@ -1,10 +1,10 @@
 {
   "phase": "s4a_aniso_informed_sampling",
-  "iteration": 57,
+  "iteration": 58,
   "episode": 12,
   "milestone": 12,
   "plateau_count": 0,
-  "bottleneck": "开放问题(Kyaw&Kelly 2026):非欧能量代价下 informed 采样。用 convergence_eval 攻,采样器借 ctx.edge_cost 利用能量各向异性(降落/直线便宜)加速收敛,击败均匀 baseline 1419.4。注意朴素cost-greedy会0%成功,要平衡探索。",
+  "bottleneck": "S4a: aniso-informed sampler v1=810.3 (vs uniform 1419.4, -43%; held-out seeds3,4=804.6 no overfit). Win concentrated on C (1618->814); B already easy (~810). Next: SOTA gate is Euclidean-informed (symmetric ellipsoid) — must beat THAT to prove the ANISOTROPY (not just focusing) is what helps. Also try ctx.edge_cost-based rejection to exploit anisotropy per-sample.",
   "best": {
     "config": {
       "step_size": 4.5,
@@ -17,10 +17,11 @@
       "use_rrt_connect": true
     },
     "smoother": "best_smoother.py (v35: + final deterministic polish)",
-    "score": 1419.4,
+    "score": 810.251748768885,
     "min_success": 1.0,
     "speed": "best_speed.py (v5: exact DP + continuous + pairwise polish)",
-    "scenarios": "B/C convergence (budget=1500)"
+    "scenarios": "B/C convergence (budget=1500)",
+    "sampler": "best_sampler.py (v1: aniso-informed ellipsoid)"
   },
   "cadence": {
     "episode_cap": 10,
