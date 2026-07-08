@@ -166,6 +166,43 @@ def energy_with_profile(path, em, v_star, a_lat=3.0, speed_fn=None, accel=True):
     return E
 
 
+def gen_scenarios(seeds):
+    """
+    [S3b] 程序化场景生成器(固定、agent 不可改 = 出题权在生成器,不作弊)。
+    每个 seed 生成一对 起点(左)/终点(右) —— 随机 y 与高度,强制跨越 Blocks 墙群、无碰、A* 可解。
+    返回 [{name, start, goal}]。seeds 固定 → 可复现;train/test 用不同 seed 池 → 留出泛化测试。
+    """
+    from planning.config import PlanningConfig
+    vg, esdf, em = get_grounded_map()
+    cfg = PlanningConfig(**dict(ev.BASE, planning_timeout=15.0))
+    out = []
+    for sd in seeds:
+        rng = np.random.default_rng(int(sd))
+        for _ in range(60):
+            s = np.array([rng.uniform(-5, 12), rng.uniform(-20, 20), rng.uniform(-4, -2)])
+            g = np.array([rng.uniform(58, 72), rng.uniform(-20, 20), rng.uniform(-4, -2)])
+            if esdf.get_distance(s) < 1.2 or esdf.get_distance(g) < 1.2:
+                continue
+            p = bp.AStarPlanner(vg, esdf, cfg).plan(s, g)
+            if p and len(p) >= 2:
+                out.append({"name": f"gen{sd}", "start": s, "goal": g})
+                break
+    return out
+
+
+_SCEN = {}
+def get_train():
+    """训练场景 = 原 A/B/C + 3 个生成场景(loop 在这上面优化)。"""
+    if "train" not in _SCEN:
+        _SCEN["train"] = list(ev.SCENARIOS) + gen_scenarios([300, 301, 302])
+    return _SCEN["train"]
+def get_test():
+    """留出测试场景 = 3 个不同 seed 的生成场景(只验证泛化,不参与优化)。"""
+    if "test" not in _SCEN:
+        _SCEN["test"] = gen_scenarios([400, 401, 402])
+    return _SCEN["test"]
+
+
 def _path_collision_free(path, esdf, safety_margin, step=0.25):
     """独立碰撞复核:沿每段密采样,任一点 ESDF < margin 即判碰(不信任 planner 自报成功)。"""
     for i in range(len(path) - 1):

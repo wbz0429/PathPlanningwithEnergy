@@ -7,8 +7,9 @@
 
 ## 🎯 研究指令(← 人类在此写方向,agent 每轮遵循)
 
-**当前指令(S3a 解冻速度,见 ROADMAP.md)**:objective 已扩——每段速度成为可进化组件 `speed_profile(path, v_star, vcap)`,且**能量计入提速的动能代价**(减速不回收),速度上限由转弯可行性 `vcap` 冻结(不许超=不许作弊)。
-**去优化速度剖面**:直觉是"平滑加减速、少急提速、直线段贴近 v*、转弯前预降速"能压总能耗(默认走可行上限=2822,平滑候选已到 2638,还有空间)。这是**全新维度**,先在这上面做 EXPLOIT + EXPLORE(试不同速度规划族:梯形/S曲线/时间最优/能量最优控制)。榨干后我(人类)再推进 S3b/S3c。
+**当前指令(S3b 泛化,见 ROADMAP.md)**:场景从 3 个手工场景扩到 **6 个 train 场景**(A/B/C + 程序化生成 gen300-302,生成器固定、你改不了)。
+**评测必须**:`physics_eval.evaluate(overrides, ..., scenarios=physics_eval.get_train(), smoother_src=<state/best_smoother.py>, speed_src=<state/best_speed.py>)`——带上 S3a 累积的平滑器+速度剖面,只改本轮提议的那个。
+**目标**:让算法在**更多样的查询**上都省能(生成场景 gen300-302 现 1000-1277J 有空间)。**泛化验证**:留出 `physics_eval.get_test()`(gen400-402)+ seed100,best 必须在留出场景上也不退化。这测的是"解泛化到没见过的场景",比留出 seed 更强。榨干后我推进 S3c(地形/风)或 S4(研究员行为)。
 
 ---
 

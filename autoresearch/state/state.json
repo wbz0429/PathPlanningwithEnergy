@@ -1,10 +1,10 @@
 {
-  "phase": "s3a_speed",
+  "phase": "s3b_generalize",
   "iteration": 48,
   "episode": 9,
   "milestone": 9,
-  "plateau_count": 1,
-  "bottleneck": "MILESTONE 3 DONE: S3a final 2556.5 (held-out 2566.8, +0.4%). Robustness: geometry gains robust; speed-DP gain model-sensitive at v* 1.5x (flagged honestly). S3a complete — awaiting human S3b/S3c advance in program.md. Loop stopped for review.",
+  "plateau_count": 0,
+  "bottleneck": "S3b 泛化:在6个train场景(含3个程序化生成)上优化,生成场景能耗1000-1277J有空间;留出gen400-402+seed100验证泛化",
   "best": {
     "config": {
       "step_size": 4.5,
@@ -17,9 +17,10 @@
       "use_rrt_connect": true
     },
     "smoother": "best_smoother.py (v27: DP-cost topology ranker)",
-    "score": 2556.466903109831,
+    "score": 6066.1,
     "min_success": 1.0,
-    "speed": "best_speed.py (v5: exact DP + continuous + pairwise polish)"
+    "speed": "best_speed.py (v5: exact DP + continuous + pairwise polish)",
+    "scenarios": "train(6): A/B/C + gen300-302"
   },
   "cadence": {
     "episode_cap": 10,
@@ -30,5 +31,5 @@
     "seed_val": 100,
     "explore_every_episodes": 1
   },
-  "notes": "S3a 解冻速度:speed_profile 为可进化Layer-1组件,能量计入提速动能代价(减速不回收),速度上限由转弯可行性冻结(防作弊)。objective 扩了→已重定基线(旧2046是旧objective)。"
+  "notes": "S3b 程序化场景生成器(固定,agent不可改=出题权在生成器)。train=A/B/C+gen300-302,test=gen400-402(留出)。objective扩到6场景→重定基线6066。评测须带 scenarios=physics_eval.get_train() + 已接受的 smoother/speed。"
 }
