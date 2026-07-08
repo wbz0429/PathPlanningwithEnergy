@@ -1,10 +1,10 @@
 {
   "phase": "phase_c_explore",
-  "iteration": 35,
-  "episode": 5,
+  "iteration": 38,
+  "episode": 6,
   "milestone": 3,
   "plateau_count": 1,
-  "bottleneck": "floor 2046.4 (A 787/B 622/C 638). Surrogate now calibrated to the frozen BEMT (climb/descent symmetric 16.8 sin, zero floor, refit parabola). Steep-fast-descent-is-FREE insight may enable a dive-shaped A descent — worth one targeted probe. Milestone 2 at episode 6.",
+  "bottleneck": "MILESTONE 2 DUE (episode 6): viz + horizontal comparison + robustness gate + summary + stop for review. Fixed point 2046.4 (A 787/B 622/C 638), space formally exhausted.",
   "best": {
     "config": {
       "step_size": 4.5,
