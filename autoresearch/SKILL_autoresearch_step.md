@@ -25,7 +25,7 @@ description: Run ONE iteration of the UAV energy+path-planning autoresearch loop
 🔍 **探索无限制(重要)**:你可以**随时、任意多次** WebSearch / WebFetch / Read 代码 / 分析,去查文献、找 idea、看实现——**全开放、鼓励**。边界只管「你能**改**什么」(Layer-1),完全不管「你能**查/想**什么」。下面第 3 步的 Episode 检索只是**保证下限**(至少每 N 轮把一次检索蒸馏进 KNOWLEDGE.md),**不是上限**——任何一步你觉得该查文献,就查。
 
 ## 一次迭代的步骤(严格照做)
-1. **读状态**:读 `state.json`、`KNOWLEDGE.md`、`tail -8 agent_log.jsonl`。记下 `iteration, best, cadence, bottleneck, plateau_count, episode`。
+1. **读状态**:读 `program.md`(**人类的研究指令频道——最高优先,先看它的「研究指令」区**)、`state.json`、`KNOWLEDGE.md`、`tail -8 agent_log.jsonl`。记下 `iteration, best, cadence, bottleneck, plateau_count, episode`。**若 `program.md` 的「研究指令」给了新方向,本轮就照它做**(而非只盯 bottleneck)。
 2. **若 `best.score` 为 null(首次)** → 本次只建**基线**:`physics_eval.evaluate(best.config, runs=cadence.runs, seed0=0)`,把结果写进 best(score/min_success),写 best.json,append 一行 baseline 到 agent_log,`iteration=1`,报告基线,**结束**。
 3. **否则按 cadence 决定**:
    - **Episode 边界**(`iteration % episode_cap == 0` 或 `plateau_count >= plateau_k`):此时**必须至少做一次**针对 `bottleneck` 的文献检索(轻量 3-5 条,如 "energy optimal UAV path smoothing sampling narrow passage"),把有用的招/公式蒸馏 3-5 行追加到 `KNOWLEDGE.md`,`plateau_count=0`、`episode+=1`。然后继续到第 4 步提一个改动。(注:这只是**保证下限**——你在任何一步都可以自由多搜。)
