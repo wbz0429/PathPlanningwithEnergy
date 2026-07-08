@@ -547,4 +547,54 @@ def smooth_path(path, is_collision_free, config):
     if _proxy3d(cand) < _proxy3d(pts) - 1e-6:
         pts = cand
 
+    # ---- STOMP-style stochastic refinement ----
+    # The proxy is kinked (min(), cap saturations) where gradient descent
+    # stalls; cost-weighted averaging of sampled noisy variants descends
+    # through kinks without gradients (Kalakrishnan et al., STOMP).
+    n = len(pts)
+    if n > 2:
+        X = np.array([p for p in pts], dtype=float)
+        bestX = X.copy()
+        bestJ = _proxy3d([X[i] for i in range(n)])
+        sigma = 1.5
+        for _it in range(30):
+            noises = []
+            costs = []
+            for _k in range(8):
+                N = np.zeros_like(X)
+                N[1:-1] = np.random.randn(n - 2, 3) * sigma
+                cand = X + N
+                noises.append(N)
+                costs.append(_proxy3d([cand[i] for i in range(n)]))
+            c = np.array(costs)
+            spread = max(1e-9, (float(c.max()) - float(c.min())) / 10.0)
+            w = np.exp(-(c - float(c.min())) / spread)
+            w = w / float(w.sum())
+            delta = np.zeros_like(X)
+            for _k in range(8):
+                delta += w[_k] * noises[_k]
+            Xn = X + delta
+            Jn = _proxy3d([Xn[i] for i in range(n)])
+            if Jn < _proxy3d([X[i] for i in range(n)]) - 1e-9:
+                ok = True
+                for i in range(n - 1):
+                    if not is_collision_free(Xn[i], Xn[i + 1]):
+                        ok = False
+                        break
+                if ok:
+                    X = Xn
+                    if Jn < bestJ:
+                        bestJ = Jn
+                        bestX = X.copy()
+            sigma *= 0.93
+        cand = [bestX[i].copy() for i in range(n)]
+        if _proxy3d(cand) < _proxy3d(pts) - 1e-6:
+            ok = True
+            for i in range(n - 1):
+                if not is_collision_free(cand[i], cand[i + 1]):
+                    ok = False
+                    break
+            if ok:
+                pts = cand
+
     return pts

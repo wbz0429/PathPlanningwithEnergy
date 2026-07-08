@@ -1,10 +1,10 @@
 {
   "phase": "phase_c_explore",
-  "iteration": 32,
+  "iteration": 33,
   "episode": 4,
   "milestone": 3,
-  "plateau_count": 1,
-  "bottleneck": "floor ~2050 (A 789/B 622/C 639). Alternation converged — trajectory-optimization family near-exhausted at this action space. Consider STOMP-style stochastic updates as last family member, else report space exhausted.",
+  "plateau_count": 2,
+  "bottleneck": "floor ~2049.8 (A 789/B 622/C 639). Trajectory-optimization family fully harvested (CHOMP -17.8; alternation/STOMP sesame). All algorithm families within Layer-1 action space now converge to the same joint floor — genuine exhaustion; needs new direction/scenario from program.md.",
   "best": {
     "config": {
       "step_size": 4.5,
@@ -16,8 +16,8 @@
       "weight_time": 0.1,
       "use_rrt_connect": true
     },
-    "smoother": "best_smoother.py (v21: v20 + discrete-continuous alternation)",
-    "score": 2049.911732610864,
+    "smoother": "best_smoother.py (v22: v21 + STOMP-style refinement)",
+    "score": 2049.7841636894586,
     "min_success": 1.0
   },
   "cadence": {
