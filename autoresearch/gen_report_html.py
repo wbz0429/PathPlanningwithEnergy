@@ -18,6 +18,7 @@ FIGS = [
     ("fig_ms1_trajectory_all.png", "三场景侧视轨迹", "基线 vs 调优;A 翻墙大幅优化,B/C 已近最优"),
     ("fig_ms1_waterfall.png", "每个 KEEP 的贡献", "RRT-Connect 压倒性(−11809),其后为平滑器/步长/翻墙探针"),
     ("fig_ms1_energy.png", "能耗 + 留出验证", "调优(seed0)与留出(seed100)几乎重合 → 无种子过拟合"),
+    ("fig_ms1_compare.png", "横向对比(答辩生死线)", "① loop-best 赢过 A*/RRT-Connect/默认RRT*;② LLM-loop(2078) 明显赢随机搜索(2805)→ 差距=代码级能力,不是评测器形式化"),
 ]
 
 

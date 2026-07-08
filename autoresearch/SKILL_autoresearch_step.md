@@ -31,7 +31,8 @@ description: Run ONE iteration of the UAV energy+path-planning autoresearch loop
    - **Episode 边界**(`iteration % episode_cap == 0` 或 `plateau_count >= plateau_k`):此时**必须至少做一次**针对 `bottleneck` 的文献检索(轻量 3-5 条,如 "energy optimal UAV path smoothing sampling narrow passage"),把有用的招/公式蒸馏 3-5 行追加到 `KNOWLEDGE.md`,`plateau_count=0`、`episode+=1`。然后继续到第 4 步提一个改动。(注:这只是**保证下限**——你在任何一步都可以自由多搜。)
    - **Milestone**(`episode>0 且 episode % milestone_every_episodes == 0` 且尚未为该 episode 出过 milestone):
      (a) **自动出图+归档**(科研过程留痕):跑 `.venv/bin/python autoresearch/viz_milestone.py <里程碑号N>`——生成收敛曲线/翻墙轨迹/三场景轨迹/能耗留出验证/KEEP瀑布,并**归档到 `experiments/milestones/ms<N>/`**(图+state快照+KNOWLEDGE快照);
-     (b) 写一段里程碑小结到 `KNOWLEDGE.md`(结果、KEEP/REVERT 账、剩余瓶颈、留出验证);
+     (a2) **横向对比**(答辩生死线,必做):跑 `.venv/bin/python autoresearch/compare_milestone.py <N>`——① loop-best vs 业界规划器(A*/能量A*/默认RRT*/RRT-Connect);② LLM-loop vs 随机搜索(同预算,证明是 loop 的代码级能力在干活)。出 `fig_ms<N>_compare.png`;
+     (b) 写一段里程碑小结到 `KNOWLEDGE.md`(结果、KEEP/REVERT 账、**横向对比结论**、剩余瓶颈、留出验证);
      (c) `git add -A && git commit -m "Milestone <N>: ..."`;
      (d) **输出小结 + 图路径,停下等用户 review**(本次不提议)。
    - 否则 → 第 4 步。
