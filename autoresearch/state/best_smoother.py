@@ -496,8 +496,10 @@ def smooth_path(path, is_collision_free, config):
     # oracle replaces CHOMP's smooth obstacle gradient with a collision-
     # gated backtracking line search). Targets multi-vertex couplings the
     # discrete coordinate moves cannot cross (e.g. hump/apex-cap ridges).
-    n = len(pts)
-    if n > 2:
+    def _chomp(pts):
+        n = len(pts)
+        if n <= 2:
+            return pts
         X = np.array([p for p in pts], dtype=float)
         alpha = 1.0
         for _it in range(60):
@@ -533,6 +535,16 @@ def smooth_path(path, is_collision_free, config):
                 break
         cand = [X[i].copy() for i in range(n)]
         if _proxy3d(cand) < _proxy3d(pts) - 1e-6:
-            pts = cand
+            return cand
+        return pts
+
+    pts = _chomp(pts)
+
+    # alternate discrete + continuous once more: each family unlocks the
+    # other's local minimum (topology moves vs coupled joint adjustments)
+    cand = _sweeps([p.copy() for p in pts])
+    cand = _chomp(cand)
+    if _proxy3d(cand) < _proxy3d(pts) - 1e-6:
+        pts = cand
 
     return pts

@@ -9,10 +9,10 @@
     "weight_time": 0.1,
     "use_rrt_connect": true
   },
-  "smoother": "best_smoother.py (v20: v18 + CHOMP-style joint gradient refinement)",
+  "smoother": "best_smoother.py (v21: v20 + discrete-continuous alternation)",
   "result": {
-    "score": 2050.500730660374,
-    "energy_total": 2050.500730660374,
+    "score": 2049.911732610864,
+    "energy_total": 2049.911732610864,
     "min_success": 1.0
   },
   "detail": {
@@ -22,7 +22,7 @@
     },
     "B_diag_up": {
       "success": 1.0,
-      "energy_mean": 622.1395929210407
+      "energy_mean": 621.550594871531
     },
     "C_diag_down": {
       "success": 1.0,
