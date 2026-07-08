@@ -1,10 +1,10 @@
 {
   "phase": "s3b_generalize",
-  "iteration": 53,
-  "episode": 10,
+  "iteration": 54,
+  "episode": 11,
   "milestone": 9,
-  "plateau_count": 3,
-  "bottleneck": "S3b 6030.1 (gen300 1227/gen301 991/gen302 1255). Iteration 53 = episode 11 boundary (EXPLORE). Honest residuals: gen302 polish variance ~90J (RNG), gen300 marginal topology. Milestone 4 at episode 12. Should also run held-out gen400-402 check soon (generalization is S3b's whole point).",
+  "plateau_count": 1,
+  "bottleneck": "S3b 6030.1; generalization VALIDATED mid-flight (gen400-402 100% @955-1357J; seed100 +3.0%). step_size robust across distribution. Residuals: gen300/302 polish variance. Milestone 4 at episode 12 (next boundary).",
   "best": {
     "config": {
       "step_size": 4.5,
