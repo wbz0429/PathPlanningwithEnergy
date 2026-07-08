@@ -39,18 +39,6 @@
 
 图:`experiments/milestones/ms2/`(轨迹/瀑布/收敛)+ `experiments/fig_ms2_compare.png`。
 
-## Milestone 3(Ep9,iter 47,2026-07-08)——S3a 速度解冻阶段收官
-
-**结果**:S3a 基线 2821.7(走可行上限)→ **2556.5**(−9.4%,iter 39-46 共 8 轮:4 KEEP / 4 REVERT);留出 seed_val=100 → **2566.8**(+0.4%,零过拟合),三场景 100%。
-
-**KEEP 账**:①**速度 DP(−9.1%,主体)**——空间域离散速度 DP,巡航 ≈12.7 < v*(动能边际 m·v/eff 压过 v* 附近平坦的 e/m 曲线),单次加速单调降速形;②DP-cost 拓扑排序(几何-速度耦合,+0.015% 半否定:旧几何在新目标下已近优);③连续 golden-section 精修(−8J);④成对块精修(−1J)。REVERT 判据:**解析 parabola+sin 代理 > 任何 lookup**(网格点精确但插值弦高估凸区,稠密网格也救不回);L-非线性假设被诊断否证;**悲观代理原则跨目标成立**(DP-cost 驱动局部 sweep → A 爆到 1153,精确代理在最优点附近太平→噪声信号)。
-
-**横向对比(MS3,S3a 口径)**:人工默认 11814 > 随机搜索(同预算)3148 > **LLM-loop 2882**(对比脚本口径)——比随机搜索低 8.4%。**⚠️ 鲁棒性门部分失败(必须如实标注)**:v* 扰动 0.6×-1.25× 下 loop 优势 +2.5%~+23.8% 保持,但 **1.5× 时 −6.3% 优势消失**——速度 DP 的巡航速度标定在冻结 BEMT 的 v*=18.2 上,物理假设大幅偏移时剖面欠速。**几何层的 gain 稳健(MS2 已证),速度层的 gain 对 v* 模型敏感**——这是 speed-profile 优化的本质属性(最优巡航依赖能量模型),不是作弊,但报告须区分两类 gain 的稳健性。
-
-**S3a 判决**:速度层在解析代理下已达可证明最优 ~3J 内、连续+成对精修收敛;几何-速度耦合实测极小;结构(cap 圈护)耗尽。**S3a 完成,等人类推进 S3b/S3c(ROADMAP)。**
-
-图:`experiments/milestones/ms3/` + `experiments/fig_ms3_compare.png`。
-
 ## Exploration seeds(EXPLORE episode 记录,即使未超 best 也留)
 - **[Ep9 EXPLORE, S3a] 块坐标下降处理耦合速度**:rise-cost 链耦合相邻段速度,单坐标 golden-section 在'成对同升可摊销 rise'处卡住;成对块更新是标准解法(来源 https://epubs.siam.org/doi/10.1137/120887679 BCD 收敛性 SIAM;https://www.jmlr.org/papers/volume23/18-045/18-045.pdf 更快 BCD,置信度高,未验证-以评测器为准)。
 - **[Ep8 EXPLORE, S3a] 速度分段插点**:corner cap 罩住整条相邻 segment,共线插点(同线、零碰撞风险、不生新角)把 cap 圈进短尾巴,长段交给速度 DP 跑快——文献同型:在区域边界插 waypoint 标记加减速分段(来源 https://www.mdpi.com/2504-446X/5/4/143 Acceleration-Aware Path Planning with Waypoints,置信度高,未验证-以评测器为准)。另:L-非线性假设已被诊断否证(e/m 严格与段长无关);解析 parabola+sin 代理在真实坡度上误差 ~0.06 J/m,优于任何实用 lookup——速度层已在真最优 ~3J 内。
