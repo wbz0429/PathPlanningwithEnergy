@@ -1,10 +1,10 @@
 {
   "phase": "s4a_aniso_informed_sampling",
-  "iteration": 62,
+  "iteration": 63,
   "episode": 13,
   "milestone": 12,
-  "plateau_count": 2,
-  "bottleneck": "S4a STATIC-SAMPLER SPACE EXHAUSTED (consolidated). v1=810.3 robust optimum: 4 straight attempts (ratio/schedule/sub-level-set/goal-cone) all overfit train or score worse; metric is seed-fragile, v1 uniquely robust (810/804/801). Core result solid: -43% vs uniform, beats uniform@any-budget(1216), beats lit sub-level-set(1107), ablation shows planar-concentration is the lever. AWAITING HUMAN: add Euclidean-informed SOTA gate (promised in program.md) to formally close the open-problem comparison, or advance to S4b.",
+  "plateau_count": 3,
+  "bottleneck": "S4a EXHAUSTED & consolidated (5 attempts now: ratio/schedule/sub-level-set/goal-cone/low-dispersion all fail to robustly beat v1=810.3). Metric is seed-fragile; v1 uniquely robust on ALL seed sets. Open-problem result complete: energy-anisotropic informed (810) beats uniform (1419), Euclidean-informed ablation (1311), and lit sub-level-set (1107). AWAITING HUMAN program.md: SOTA gate or S4b. Not proposing further static samplers (would be spinning) until redirected.",
   "best": {
     "config": {
       "step_size": 4.5,
