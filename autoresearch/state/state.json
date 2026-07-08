@@ -1,10 +1,10 @@
 {
   "phase": "s4a_aniso_informed_sampling",
-  "iteration": 59,
+  "iteration": 60,
   "episode": 12,
   "milestone": 12,
-  "plateau_count": 1,
-  "bottleneck": "S4a best=810.3 (v1 aniso-informed, robust across seed sets). ABLATION DONE: symmetric Euclidean-informed=1311.5 (-7.6%) vs anisotropic=810.3 (-43%) => anisotropy carries ~5/6 of the gain (KEY open-problem evidence). Ratio-tuning overfits (r_lat=2.5: train 801 but heldout 1689) -> REVERT. Next: exploit ctx.edge_cost per-sample (oracle-based anisotropy, not just geometric) OR add bridge/gap sampling for narrower B-gap; also curvature-aware informed set (turn penalty is the real profile-energy driver).",
+  "plateau_count": 2,
+  "bottleneck": "S4a best=810.3 (v1, robust optimum doubly-confirmed: ratio+schedule scans both overfit/destabilize). HEADLINE: v1@1500=810 < uniform@ANY-budget=1216 (uniform budget-flat: RRT* breaks on first goal-connection, so metric=first-solution-quality, not anytime). iter60=episode boundary(EXPLORE): try a STRUCTURALLY different sampler family (e.g. path-biased/waypoint-cone toward the detour) OR declare S4a parametric optimum + write the open-problem result. Note: oracle edge_cost isotropic in-plane for level B/C; no tree/obstacle access in ctx.",
   "best": {
     "config": {
       "step_size": 4.5,
