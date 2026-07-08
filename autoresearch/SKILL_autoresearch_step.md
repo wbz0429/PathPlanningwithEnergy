@@ -45,7 +45,7 @@ description: Run ONE iteration of the UAV energy+path-planning autoresearch loop
 4. **提议一个改动**(只一个):读 best + 近期 history + KNOWLEDGE,先写一句 `hypothesis`(当前瓶颈 + 为何这改动可能降 score)。参数改动→给 `{键:值}`(只用 Layer-1 键);代码改动→写完整 `smooth_path` 源码。**别重复已 REVERT 过的相同改动**(查 agent_log)。
 5. **评测**:写一小段 python 调 `physics_eval.evaluate(overrides, runs=cadence.runs, seed0=0[, smoother_src=<源码字符串>])`,拿 `score / min_success / detail`。（overrides = best.config 合并你的参数改动。）
 6. **keep/revert**:**KEEP 当且仅当** `score < best.score` 且 `min_success >= best.min_success`(硬约束不降)。KEEP→更新 best.json(+代码则写 best_smoother.py),`git add -A && git commit -m "autoresearch iter <N>: <name> score=<X> KEEP"`。否则 REVERT(不动 best,不 commit)。
-7. **写回状态**:append 一行到 `agent_log.jsonl`(`{iter, kind, name, hypothesis, score, min_success, decision}`);更新 `state.json`(`iteration+=1`;KEEP→`plateau_count=0` 否则 `+=1`;把 `bottleneck` 更新为 detail 里最差的场景)。
+7. **写回状态**:append 一行到 `agent_log.jsonl`(`{iter, kind, name, hypothesis, score, min_success, decision}`);更新 `state.json`(`iteration+=1`;**plateau 计数:只有 KEEP 且相对增益 >1% 才 `plateau_count=0`;否则(REVERT 或 <1% 芝麻 KEEP)一律 `+=1`**——微增益不算进步,否则永远不 plateau、永远不跳去探索;把 `bottleneck` 更新为 detail 里最差的场景)。
 8. **报告(2-3 句,显式亮出思考)**:① **这轮的假设/为什么试它**(先讲推理,别只报结果)② 具体改了什么 ③ score/success + KEEP/REVERT + 一句归因。目的:让人一眼看到"在想什么、为什么",而非"又跑了个脚本"。
 
 ## 纪律

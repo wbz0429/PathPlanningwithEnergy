@@ -3,7 +3,7 @@
   "iteration": 30,
   "episode": 3,
   "milestone": 3,
-  "plateau_count": 1,
+  "plateau_count": 3,
   "bottleneck": "floor ~2068 (A 797/B 626/C 645). Basin-hop gains are RNG-draw-dependent (~5J noise scale), not scalable. Iteration 30 = episode boundary -> episode 4 = EXPLORE phase (different algorithm family, structural proposal).",
   "best": {
     "config": {
