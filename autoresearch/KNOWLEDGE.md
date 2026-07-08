@@ -27,6 +27,9 @@
 
 **剩余瓶颈**(若继续):A 797J vs 长度下界 ~527J(爬升税+驼峰-v* 耦合,家族地板);B 634/C 648 转角税守恒。突破需要 Layer-1 之外的自由度(如采样器 z 解锁、kinodynamic 松绑——均属冻结层,不可动)。
 
+## Exploration seeds(EXPLORE episode 记录,即使未超 best 也留)
+- **[Ep4 EXPLORE] 轨迹优化族(CHOMP/STOMP)作为平滑器**:CHOMP=对整条轨迹做协变梯度下降精修采样路径(来源 https://www.ri.cmu.edu/pub_files/2013/5/CHOMP_IJRR.pdf,置信度高,未验证-以评测器为准);STOMP=无梯度采样更新(来源 https://www.researchgate.net/publication/221078155_STOMP_Stochastic_trajectory_optimization_for_motion_planning,置信度高,未验证)。我们的适配:代价=3D 剖面能量 proxy(数值梯度),障碍约束只有布尔 is_collision_free(无 ESDF 距离→无法做 CHOMP 的光滑障碍代价梯度),改用「碰撞门控回溯线搜索」投影。潜力:联合多顶点连续优化直击离散单步走法过不去的多顶点耦合脊(如驼峰-apex-cap)。
+
 ## Insights(loop 追加)
 - **[Ep1] 度量的 phantom-R 特性**:评测器 R=min(L1,L2)/θ——两条长腿夹一个锐角会被解读成"大半径"(快),细分成短弦反而变慢。最优形状=**少顶点、长而均衡的腿、小角度**,不是密集圆弧。平滑器要用"顶点搬移/粗 chamfer/共线分割隔离慢区/split+bend 复合步"这一族走法(iter2-4,score 3191→2538)。
 - **[Ep1] 冻结 BEMT 的垂直不对称**(实测 compute_energy_for_segment):12 m/s 时 爬升(24°)=16.0 J/m,平飞=8.2,**下降=1.6 J/m(近乎免费)**;高度往返净成本≈+3 J/m·爬升米。文献同向:min-distance≠min-energy、爬/降不对称 TSP 代价(arXiv:2410.17585;对角下降 +16.6% 能量换 +88% 水平距离)。

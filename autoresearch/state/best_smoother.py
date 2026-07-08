@@ -490,4 +490,49 @@ def smooth_path(path, is_collision_free, config):
                 best_J = J
                 pts = cand
 
+    # ---- CHOMP-style joint gradient refinement (EXPLORE ep4) ----
+    # Continuous descent over ALL interior vertices simultaneously on the
+    # climb-aware proxy (numerical gradient; the boolean-only collision
+    # oracle replaces CHOMP's smooth obstacle gradient with a collision-
+    # gated backtracking line search). Targets multi-vertex couplings the
+    # discrete coordinate moves cannot cross (e.g. hump/apex-cap ridges).
+    n = len(pts)
+    if n > 2:
+        X = np.array([p for p in pts], dtype=float)
+        alpha = 1.0
+        for _it in range(60):
+            base = _proxy3d([X[i] for i in range(n)])
+            grad = np.zeros_like(X)
+            eps = 0.05
+            for i in range(1, n - 1):
+                for d in range(3):
+                    Xp = X.copy()
+                    Xp[i, d] += eps
+                    grad[i, d] = (_proxy3d([Xp[j] for j in range(n)]) - base) / eps
+            gn = float(np.linalg.norm(grad))
+            if gn < 1e-6:
+                break
+            step = grad / gn
+            accepted = False
+            while alpha > 0.05:
+                Xn = X - step * alpha
+                Jn = _proxy3d([Xn[i] for i in range(n)])
+                if Jn < base - 1e-9:
+                    ok = True
+                    for i in range(n - 1):
+                        if not is_collision_free(Xn[i], Xn[i + 1]):
+                            ok = False
+                            break
+                    if ok:
+                        X = Xn
+                        accepted = True
+                        alpha = min(alpha * 1.5, 2.0)
+                        break
+                alpha *= 0.5
+            if not accepted:
+                break
+        cand = [X[i].copy() for i in range(n)]
+        if _proxy3d(cand) < _proxy3d(pts) - 1e-6:
+            pts = cand
+
     return pts

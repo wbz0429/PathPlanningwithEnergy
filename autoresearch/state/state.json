@@ -1,10 +1,10 @@
 {
-  "phase": "phase_b_sampler",
-  "iteration": 30,
-  "episode": 3,
+  "phase": "phase_c_explore",
+  "iteration": 31,
+  "episode": 4,
   "milestone": 3,
-  "plateau_count": 3,
-  "bottleneck": "floor ~2068 (A 797/B 626/C 645). Basin-hop gains are RNG-draw-dependent (~5J noise scale), not scalable. Iteration 30 = episode boundary -> episode 4 = EXPLORE phase (different algorithm family, structural proposal).",
+  "plateau_count": 0,
+  "bottleneck": "floor moved: 2050.5 (A 789/B 622/C 639) — joint gradient descent broke the discrete-move floor. Next: tune the gradient pass (iterations/eps/alpha schedule) or STOMP-style stochastic updates; the trajectory-optimization family has more to give.",
   "best": {
     "config": {
       "step_size": 4.5,
@@ -16,8 +16,8 @@
       "weight_time": 0.1,
       "use_rrt_connect": true
     },
-    "smoother": "best_smoother.py (v18: v16 + basin hopping)",
-    "score": 2068.284154261574,
+    "smoother": "best_smoother.py (v20: v18 + CHOMP-style joint gradient refinement)",
+    "score": 2050.500730660374,
     "min_success": 1.0
   },
   "cadence": {

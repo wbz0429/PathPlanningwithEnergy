@@ -9,24 +9,24 @@
     "weight_time": 0.1,
     "use_rrt_connect": true
   },
-  "smoother": "best_smoother.py (v18: v16 + basin hopping)",
+  "smoother": "best_smoother.py (v20: v18 + CHOMP-style joint gradient refinement)",
   "result": {
-    "score": 2068.284154261574,
-    "energy_total": 2068.284154261574,
+    "score": 2050.500730660374,
+    "energy_total": 2050.500730660374,
     "min_success": 1.0
   },
   "detail": {
     "A_straight": {
       "success": 1.0,
-      "energy_mean": 796.5821176596437
+      "energy_mean": 789.4840756845756
     },
     "B_diag_up": {
       "success": 1.0,
-      "energy_mean": 626.4719543168064
+      "energy_mean": 622.1395929210407
     },
     "C_diag_down": {
       "success": 1.0,
-      "energy_mean": 645.2300822851238
+      "energy_mean": 638.8770620547576
     }
   }
 }
