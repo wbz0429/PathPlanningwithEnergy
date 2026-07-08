@@ -1,10 +1,10 @@
 {
   "phase": "s4a_aniso_informed_sampling",
-  "iteration": 60,
-  "episode": 12,
+  "iteration": 61,
+  "episode": 13,
   "milestone": 12,
-  "plateau_count": 2,
-  "bottleneck": "S4a best=810.3 (v1, robust optimum doubly-confirmed: ratio+schedule scans both overfit/destabilize). HEADLINE: v1@1500=810 < uniform@ANY-budget=1216 (uniform budget-flat: RRT* breaks on first goal-connection, so metric=first-solution-quality, not anytime). iter60=episode boundary(EXPLORE): try a STRUCTURALLY different sampler family (e.g. path-biased/waypoint-cone toward the detour) OR declare S4a parametric optimum + write the open-problem result. Note: oracle edge_cost isotropic in-plane for level B/C; no tree/obstacle access in ctx.",
+  "plateau_count": 1,
+  "bottleneck": "S4a best=810.3 (v1). Ep13 EXPLORE findings: (1) ATTRIBUTION CORRECTED — vertical squash (planar concentration) is the lever (squash-only=816), lateral stretch marginal (+6J); (2) principled sub-level-set rejection sampler (lit SOTA) =1107, WORSE — energy metric barely penalizes gentle in-band slopes, so hand-tuned squash encodes a stronger correct 'optimal is planar' prior. v1 robust optimum. Next EXPLOIT episodes: v1 likely near ceiling for static sampler; consider consolidating S4a open-problem writeup or await program.md S4b/SOTA gate.",
   "best": {
     "config": {
       "step_size": 4.5,
