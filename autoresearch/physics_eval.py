@@ -163,7 +163,7 @@ def _path_collision_free(path, esdf, safety_margin, step=0.25):
 
 
 def evaluate(overrides: dict, runs: int = 3, seed0: int = 0, smoother_src=None,
-             scenarios=None, verbose=False):
+             sampler_src=None, scenarios=None, verbose=False):
     """
     Phase A 诚实评测器:地面约束地图 + 速度剖面能量(转弯限速,v*) + 独立碰撞复核。
     仍冻结 BEMT/kinodynamic/尺子;overrides 只应含 Layer-1 可动键。
@@ -190,20 +190,43 @@ def evaluate(overrides: dict, runs: int = 3, seed0: int = 0, smoother_src=None,
                 "detail": {}, "vstar": vstar, "_bad": reason}
 
     # 代码候选:AST 沙箱 + 契约测试 + 崩溃/超时守卫(机械强制,不靠自觉)
-    orig = RRTStar._smooth_path
+    orig_smooth = RRTStar._smooth_path
+    orig_rs = RRTStar._random_sample
+    orig_ss = RRTStar._smart_sample
+    orig_cb = RRTStar._compute_sampling_bounds
+    has_code = (smoother_src is not None) or (sampler_src is not None)
+
     if smoother_src is not None:
         ok, reason = sandbox.check_code(smoother_src)
         if not ok:
-            return _bad(f"INVALID:{reason}")
+            return _bad(f"INVALID(smoother):{reason}")
         try:
-            fn = cand.load_smoother(smoother_src)
-            cand.contract_test(fn)
+            fn = cand.load_smoother(smoother_src); cand.contract_test(fn)
         except Exception as e:
-            return _bad(f"CONTRACT:{type(e).__name__}:{e}")
+            return _bad(f"CONTRACT(smoother):{type(e).__name__}:{e}")
         RRTStar._smooth_path = cand.make_patch_method(fn)
 
+    if sampler_src is not None:
+        ok, reason = sandbox.check_code(sampler_src)
+        if not ok:
+            return _bad(f"INVALID(sampler):{reason}")
+        try:
+            sfn = cand.load_sampler(sampler_src); cand.contract_test_sampler(sfn)
+        except Exception as e:
+            return _bad(f"CONTRACT(sampler):{type(e).__name__}:{e}")
+        rs_patch = cand.sampler_random_patch(sfn)
+        def _cb_wrap(self, s, g, _orig=orig_cb):
+            self._samp_start = s; self._samp_goal = g
+            return _orig(self, s, g)
+        def _ss_patch(self, start, goal, nodes, iteration, _rs=rs_patch):
+            self._samp_start = start; self._samp_goal = goal; self._samp_iter = iteration
+            return _rs(self)
+        RRTStar._random_sample = rs_patch
+        RRTStar._smart_sample = _ss_patch
+        RRTStar._compute_sampling_bounds = _cb_wrap
+
     detail = {}
-    guard = sandbox.time_limit(300) if smoother_src is not None else contextlib.nullcontext()
+    guard = sandbox.time_limit(300) if has_code else contextlib.nullcontext()
     try:
         with guard:
             for sc in scs:
@@ -222,7 +245,10 @@ def evaluate(overrides: dict, runs: int = 3, seed0: int = 0, smoother_src=None,
     except Exception as e:
         return _bad(f"CRASH:{type(e).__name__}:{e}")
     finally:
-        RRTStar._smooth_path = orig
+        RRTStar._smooth_path = orig_smooth
+        RRTStar._random_sample = orig_rs
+        RRTStar._smart_sample = orig_ss
+        RRTStar._compute_sampling_bounds = orig_cb
 
     PENALTY = 3000.0
     contribs, all_ok, min_s = [], True, 1.0

@@ -89,3 +89,64 @@ def contract_test(smoother_fn) -> None:
 class _DummyConfig:
     safety_margin = 1.0
     dubins_turning_radius = 1.5
+
+
+# ============================================================
+# Phase B: 采样器进化目标 sample(ctx)
+# ============================================================
+# 契约:def sample(ctx) -> np.ndarray[3]
+#   ctx.rng               : np.random(已按 seed 播种,保持确定性)
+#   ctx.bounds_min/max    : 全网格边界(可用来逃出 z-clamp 实现翻墙采样)
+#   ctx.local_bounds_min/max : 现有局部采样框(z 被夹在起终点±3m —— 禁翻墙的根源)
+#   ctx.start/goal/config/iteration
+# 返回的点会被裁剪到全网格 bounds 内(防越界),但不裁到 local(允许翻墙)。
+class SampleCtx:
+    __slots__ = ("rng", "bounds_min", "bounds_max", "local_bounds_min",
+                 "local_bounds_max", "start", "goal", "config", "iteration")
+
+    def __init__(self, **kw):
+        for k, v in kw.items():
+            setattr(self, k, v)
+
+
+DEFAULT_SAMPLER_SRC = '''
+def sample(ctx):
+    """默认:局部框内均匀采样(= 现有 _random_sample,含 z-clamp)。"""
+    return ctx.rng.uniform(ctx.local_bounds_min, ctx.local_bounds_max)
+'''
+
+
+def load_sampler(src: str):
+    ns = {"np": np, "numpy": np}
+    exec(compile(src, "<candidate_sampler>", "exec"), ns)
+    fn = ns.get("sample")
+    if fn is None or not callable(fn):
+        raise ValueError("candidate code must define a callable `sample(ctx)`")
+    return fn
+
+
+def sampler_random_patch(fn):
+    """把 sample(ctx) 包成 RRTStar._random_sample(self)。"""
+    def _patched(self):
+        ctx = SampleCtx(
+            rng=np.random,
+            bounds_min=self.bounds_min, bounds_max=self.bounds_max,
+            local_bounds_min=self.local_bounds_min, local_bounds_max=self.local_bounds_max,
+            start=getattr(self, "_samp_start", None), goal=getattr(self, "_samp_goal", None),
+            config=self.config, iteration=getattr(self, "_samp_iter", 0),
+        )
+        p = np.asarray(fn(ctx), dtype=float).reshape(3)
+        return np.clip(p, self.bounds_min, self.bounds_max)   # 只裁全网格,不裁 local
+    return _patched
+
+
+def contract_test_sampler(fn) -> None:
+    """契约测试:返回 3D 有限点。"""
+    ctx = SampleCtx(rng=np.random,
+                    bounds_min=np.array([-10., -30., -15.]), bounds_max=np.array([80., 30., 5.]),
+                    local_bounds_min=np.array([0., -5., -6.]), local_bounds_max=np.array([70., 5., 0.]),
+                    start=np.array([0., 0., -3.]), goal=np.array([70., 0., -3.]),
+                    config=_DummyConfig(), iteration=1)
+    for _ in range(5):
+        p = np.asarray(fn(ctx), dtype=float).reshape(3)
+        assert p.shape == (3,) and np.all(np.isfinite(p)), "sample must return finite 3D point"

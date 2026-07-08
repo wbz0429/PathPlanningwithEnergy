@@ -1,6 +1,6 @@
 {
-  "phase": "loop",
-  "iteration": 22,
+  "phase": "phase_b_sampler",
+  "iteration": 26,
   "episode": 3,
   "milestone": 3,
   "plateau_count": 1,
@@ -28,5 +28,5 @@
     "seed_train": 0,
     "seed_val": 100
   },
-  "notes": "Phase A honest evaluator (physics_eval.evaluate): grounded map (no underground) + speed-profile energy (v*=18.2 m/s, turn-limited) + independent collision recheck. Objective is now NON-degenerate: path smoothness matters, not just length."
+  "notes": "Phase B: 采样器注入点已开(sample(ctx)可逃z-clamp)。iter22-25 四候选全REVERT,best仍2078.4——扩动作空间到采样器未带来算法改进,瓶颈是物理家族地板(A≈797J爬升税)非采样能力。"
 }
