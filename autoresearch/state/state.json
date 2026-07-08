@@ -1,10 +1,10 @@
 {
   "phase": "s4a_aniso_informed_sampling",
-  "iteration": 63,
+  "iteration": 64,
   "episode": 13,
   "milestone": 12,
-  "plateau_count": 3,
-  "bottleneck": "S4a EXHAUSTED & consolidated (5 attempts now: ratio/schedule/sub-level-set/goal-cone/low-dispersion all fail to robustly beat v1=810.3). Metric is seed-fragile; v1 uniquely robust on ALL seed sets. Open-problem result complete: energy-anisotropic informed (810) beats uniform (1419), Euclidean-informed ablation (1311), and lit sub-level-set (1107). AWAITING HUMAN program.md: SOTA gate or S4b. Not proposing further static samplers (would be spinning) until redirected.",
+  "plateau_count": 4,
+  "bottleneck": "S4a EXHAUSTED (6 distinct mechanisms now: ratio/schedule/sub-level-set/goal-cone/low-dispersion/annealed-goal-bias -- all fail to robustly beat v1=810.3). v1 is a genuinely special robust point; seed-fragile metric punishes every deviation. Open-problem result complete: 810 vs uniform 1419, Euclidean-informed 1311, sub-level-set 1107. GENUINELY AWAITING HUMAN program.md (SOTA gate / S4b). Will hold on long heartbeat; not proposing further until redirected.",
   "best": {
     "config": {
       "step_size": 4.5,
