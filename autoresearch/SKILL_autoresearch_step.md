@@ -20,7 +20,10 @@ description: Run ONE iteration of the UAV energy+path-planning autoresearch loop
 🧊 **冻结,永不可碰**:BEMT 物理参数、kinodynamic(dubins_turning_radius/max_climb_angle)、评测器/度量/能量模型代码、safety_margin、场景/地图/seed、能量锚点。**绝不编辑 `physics_eval.py`、`evaluator.py`、`drone_sim/energy/`、`drone_sim/planning/config.py` 的冻结字段。**
 🔧 **只可动 Layer-1**:
 - 参数:`step_size, max_iterations, goal_sample_rate, search_radius, weight_energy, weight_distance, weight_time, use_rrt_connect`
-- 代码组件:平滑器 `smooth_path(path, is_collision_free, config)`(只 import numpy/math;禁 os/sys/open/eval/exec)
+- 代码组件(只 import numpy/math;禁 os/sys/open/eval/exec;评测经对应 `*_src` 注入):
+  - 平滑器 `smooth_path(path, is_collision_free, config)` → `evaluate(smoother_src=...)`
+  - 采样器 `sample(ctx)` → `evaluate(sampler_src=...)`
+  - **[S3a] 速度剖面 `speed_profile(path, v_star, vcap)`** → `evaluate(speed_src=...)`(每段选速,裁到 [0.5,vcap];**当前阶段主攻这个**)
 
 🔍 **探索无限制(重要)**:你可以**随时、任意多次** WebSearch / WebFetch / Read 代码 / 分析,去查文献、找 idea、看实现——**全开放、鼓励**。边界只管「你能**改**什么」(Layer-1),完全不管「你能**查/想**什么」。下面第 3 步的 Episode 检索只是**保证下限**(至少每 N 轮把一次检索蒸馏进 KNOWLEDGE.md),**不是上限**——任何一步你觉得该查文献,就查。
 
@@ -42,7 +45,7 @@ description: Run ONE iteration of the UAV energy+path-planning autoresearch loop
      (c) `git add -A && git commit -m "Milestone <N>: ..."`;
      (d) **输出小结 + 图路径,停下等用户 review**(本次不提议)。
    - 否则 → 第 4 步。
-4. **提议一个改动**(只一个):读 best + 近期 history + KNOWLEDGE,先写一句 `hypothesis`(当前瓶颈 + 为何这改动可能降 score)。参数改动→给 `{键:值}`(只用 Layer-1 键);代码改动→写完整 `smooth_path` 源码。**别重复已 REVERT 过的相同改动**(查 agent_log)。
+4. **提议一个改动**(只一个):读 best + 近期 history + KNOWLEDGE,先写一句 `hypothesis`(当前瓶颈 + 为何这改动可能降 score)。参数改动→给 `{键:值}`(只用 Layer-1 键);代码改动→写完整组件源码(`smooth_path` / `sample` / `speed_profile`,当前 S3a 阶段主攻 `speed_profile`,用 `evaluate(speed_src=...)`)。**别重复已 REVERT 过的相同改动**(查 agent_log)。
 5. **评测**:写一小段 python 调 `physics_eval.evaluate(overrides, runs=cadence.runs, seed0=0[, smoother_src=<源码字符串>])`,拿 `score / min_success / detail`。（overrides = best.config 合并你的参数改动。）
 6. **keep/revert**:**KEEP 当且仅当** `score < best.score` 且 `min_success >= best.min_success`(硬约束不降)。KEEP→更新 best.json(+代码则写 best_smoother.py),`git add -A && git commit -m "autoresearch iter <N>: <name> score=<X> KEEP"`。否则 REVERT(不动 best,不 commit)。
 7. **写回状态**:append 一行到 `agent_log.jsonl`(`{iter, kind, name, hypothesis, score, min_success, decision}`);更新 `state.json`(`iteration+=1`;**plateau 计数:只有 KEEP 且相对增益 >1% 才 `plateau_count=0`;否则(REVERT 或 <1% 芝麻 KEEP)一律 `+=1`**——微增益不算进步,否则永远不 plateau、永远不跳去探索;把 `bottleneck` 更新为 detail 里最差的场景)。

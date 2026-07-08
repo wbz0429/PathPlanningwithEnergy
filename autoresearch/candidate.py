@@ -150,3 +150,34 @@ def contract_test_sampler(fn) -> None:
     for _ in range(5):
         p = np.asarray(fn(ctx), dtype=float).reshape(3)
         assert p.shape == (3,) and np.all(np.isfinite(p)), "sample must return finite 3D point"
+
+
+# ============================================================
+# S3a: 速度剖面进化目标 speed_profile(path, v_star, vcap)
+# ============================================================
+# 契约:def speed_profile(path, v_star, vcap) -> list[float](每段目标速度)
+#   path: list[np.ndarray(3,)];v_star: 能量最优巡航速度;vcap: 每段转弯可行速度上限(冻结约束)
+#   返回值会被裁到 [0.5, vcap](不许超上限);目标=让加速平滑、贴近 v*,压总能耗(含提速动能代价)。
+DEFAULT_SPEED_SRC = '''
+def speed_profile(path, v_star, vcap):
+    """默认:每段走可行上限(最快)。"""
+    return list(vcap)
+'''
+
+
+def load_speed(src: str):
+    ns = {"np": np, "numpy": np}
+    exec(compile(src, "<candidate_speed>", "exec"), ns)
+    fn = ns.get("speed_profile")
+    if fn is None or not callable(fn):
+        raise ValueError("candidate code must define a callable `speed_profile(path, v_star, vcap)`")
+    return fn
+
+
+def contract_test_speed(fn) -> None:
+    path = [np.array([0., 0., -3.]), np.array([5., 0., -3.]), np.array([10., 2., -3.])]
+    vcap = [18.0, 9.0]
+    out = fn([p.copy() for p in path], 18.2, list(vcap))
+    assert len(out) == len(vcap), "speed_profile must return one speed per segment"
+    for v in out:
+        assert np.isfinite(float(v)), "speeds must be finite"

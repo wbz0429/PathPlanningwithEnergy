@@ -1,10 +1,10 @@
 {
-  "phase": "phase_c_explore",
+  "phase": "s3a_speed",
   "iteration": 39,
   "episode": 6,
   "milestone": 6,
-  "plateau_count": 1,
-  "bottleneck": "MILESTONE 2 DONE (held-out 2043.8, robustness gate passed, beats random search by 27%). Space EXHAUSTED at fixed point 2046.4. Loop stopped for review — needs program.md direction (option 3: richer scenarios, or 4: speed as decision).",
+  "plateau_count": 0,
+  "bottleneck": "S3a 速度剖面:变速有加速代价,优化 speed_profile(平滑加减速/贴v*)压能耗",
   "best": {
     "config": {
       "step_size": 4.5,
@@ -17,7 +17,7 @@
       "use_rrt_connect": true
     },
     "smoother": "best_smoother.py (v24: v22 + grid-calibrated 3D surrogate)",
-    "score": 2046.4107216055302,
+    "score": null,
     "min_success": 1.0
   },
   "cadence": {
@@ -29,5 +29,5 @@
     "seed_val": 100,
     "explore_every_episodes": 1
   },
-  "notes": "Phase B: 采样器注入点已开(sample(ctx)可逃z-clamp)。iter22-25 四候选全REVERT,best仍2078.4——扩动作空间到采样器未带来算法改进,瓶颈是物理家族地板(A≈797J爬升税)非采样能力。"
+  "notes": "S3a 解冻速度:speed_profile 为可进化Layer-1组件,能量计入提速动能代价(减速不回收),速度上限由转弯可行性冻结(防作弊)。objective 扩了→已重定基线(旧2046是旧objective)。"
 }

@@ -124,11 +124,12 @@ def optimal_cruise_speed(em, vmin=0.5, vmax=25.0, n=250):
     return float(vsw[int(np.argmin(epm))]), float(min(epm))
 
 
-def energy_with_profile(path, em, v_star, a_lat=3.0):
+def energy_with_profile(path, em, v_star, a_lat=3.0, speed_fn=None, accel=True):
     """
-    转弯限速的速度剖面能量:直线跑 v*,急转弯按侧向加速度上限降速(偏离 v* → 每米能耗升高)。
-    这让路径形状真正影响能量(短而急转 vs 长而平滑),打破固定速度下的能耗∝长度退化。
-    仍用冻结的 BEMT 计价 → 作弊不了。
+    速度剖面能量。转弯按侧向加速度上限限速(kinodynamic 可行性,冻结约束)。
+    [S3a 解冻速度] speed_fn 给定时,用 agent 进化的速度剖面,但**裁到 [0.5, vcap]**(可行性冻结,防作弊:
+    不许超转弯上限);accel=True 时对**提速计入动能代价**(减速不回收)→ 频繁变速费能,平滑速度剖面才省。
+    仍全用冻结 BEMT 计价。
     """
     if not path or len(path) < 2:
         return None
@@ -138,14 +139,30 @@ def energy_with_profile(path, em, v_star, a_lat=3.0):
     d = [seg[i]/L[i] if L[i] > 1e-9 else seg[i] for i in range(len(seg))]
     vcap = [v_star] * len(seg)
     for i in range(1, len(seg)):
-        theta = np.arccos(np.clip(np.dot(d[i-1], d[i]), -1, 1))   # 转角
-        R = max(0.3, min(L[i-1], L[i]) / max(theta, 1e-3))        # 局部转弯半径近似
-        vturn = min(v_star, np.sqrt(a_lat * R))                   # 侧向加速度限速
+        theta = np.arccos(np.clip(np.dot(d[i-1], d[i]), -1, 1))
+        R = max(0.3, min(L[i-1], L[i]) / max(theta, 1e-3))
+        vturn = min(v_star, np.sqrt(a_lat * R))
         vcap[i-1] = min(vcap[i-1], vturn); vcap[i] = min(vcap[i], vturn)
+    # 速度剖面:默认走可行上限;agent 进化的 speed_fn 被裁到 [0.5, vcap](不许超上限=不许作弊)
+    if speed_fn is not None:
+        try:
+            sp = speed_fn([p.copy() for p in P], float(v_star), list(vcap))
+            speeds = [float(np.clip(sp[i], 0.5, vcap[i])) for i in range(len(seg))]
+        except Exception:
+            speeds = [max(0.5, v) for v in vcap]
+    else:
+        speeds = [max(0.5, v) for v in vcap]
     E = 0.0
     for i in range(len(seg)):
-        e, _ = em.compute_energy_for_segment(P[i], P[i+1], max(0.5, vcap[i]))
+        e, _ = em.compute_energy_for_segment(P[i], P[i+1], speeds[i])
         E += e
+    if accel:   # 提速的动能代价(从静止起飞;减速不回收)→ 鼓励平滑速度剖面
+        m = em.params.mass; eff = max(0.1, em.params.motor_efficiency * em.params.esc_efficiency)
+        v_prev = 0.0
+        for v in speeds:
+            if v > v_prev:
+                E += 0.5 * m * (v**2 - v_prev**2) / eff
+            v_prev = v
     return E
 
 
@@ -163,7 +180,7 @@ def _path_collision_free(path, esdf, safety_margin, step=0.25):
 
 
 def evaluate(overrides: dict, runs: int = 3, seed0: int = 0, smoother_src=None,
-             sampler_src=None, scenarios=None, verbose=False):
+             sampler_src=None, speed_src=None, scenarios=None, verbose=False):
     """
     Phase A 诚实评测器:地面约束地图 + 速度剖面能量(转弯限速,v*) + 独立碰撞复核。
     仍冻结 BEMT/kinodynamic/尺子;overrides 只应含 Layer-1 可动键。
@@ -194,7 +211,16 @@ def evaluate(overrides: dict, runs: int = 3, seed0: int = 0, smoother_src=None,
     orig_rs = RRTStar._random_sample
     orig_ss = RRTStar._smart_sample
     orig_cb = RRTStar._compute_sampling_bounds
-    has_code = (smoother_src is not None) or (sampler_src is not None)
+    has_code = (smoother_src is not None) or (sampler_src is not None) or (speed_src is not None)
+    speed_fn = None
+    if speed_src is not None:
+        ok, reason = sandbox.check_code(speed_src)
+        if not ok:
+            return _bad(f"INVALID(speed):{reason}")
+        try:
+            speed_fn = cand.load_speed(speed_src); cand.contract_test_speed(speed_fn)
+        except Exception as e:
+            return _bad(f"CONTRACT(speed):{type(e).__name__}:{e}")
 
     if smoother_src is not None:
         ok, reason = sandbox.check_code(smoother_src)
@@ -236,7 +262,7 @@ def evaluate(overrides: dict, runs: int = 3, seed0: int = 0, smoother_src=None,
                     path = RRTStar(vg, esdf, PlanningConfig(**ck), energy_model=em).plan(sc["start"], sc["goal"])
                     if path and len(path) >= 2 and _path_collision_free(path, esdf, sm):
                         succ += 1
-                        Es.append(energy_with_profile(path, em, vstar))
+                        Es.append(energy_with_profile(path, em, vstar, speed_fn=speed_fn))
                 sr = succ / runs
                 detail[sc["name"]] = {"success": sr,
                                       "energy_mean": float(np.mean(Es)) if Es else None}
