@@ -51,3 +51,8 @@
 **① 算法横向对比(剖面能耗 score,越低越好)**:默认RRT* 11700 > RRT-Connect 3191 > A*最短/能量加权A* 2618 > **LLM-loop best 2078**。→ loop-best **赢过所有业界算法,连 A* 都赢**(A* 最小化栅格长度,其锯齿路径在剖面能耗下付转弯税)。
 **② 优化方法对比(生死线)**:人工默认 11700 > 随机搜索(15次同预算,仅调参+默认平滑器)best 2805 > **LLM-loop 2078**。→ **loop 明显赢随机搜索(~26%)**;随机搜索下不去 2805 因为它**写不出 v13 平滑器代码**。**这个差距 = LLM 代码级研究能力的净价值**,正面回答 "Simple Baselines 2602.16805" 的质疑——这里不是评测器形式化在干活,是 loop 真在干活。
 图:`experiments/fig_ms1_compare.png`。
+
+## 鲁棒性门 + 探索阶段(2026-07-08,回应"优化是否有意义/需探索创新阶段")
+- **鲁棒性门**(`robustness_check.py`):loop-best vs RRT-Connect 在扰动巡航速度 v*(0.6x~1.5x)下,优势稳定 +26%~+32%,**跨扰动稳健 → 真改进(平滑路径省能),非钻 v* 模型 artifact**。翻墙那类依赖降落不对称的 gain 才需警惕;平滑器的 gain 是稳健的。
+- **cadence 加 EXPLORE 阶段**:`explore_every_episodes=2`——每2个episode有1个是探索阶段,agent 检索**不同算法族**(BIT*/FMT*/traj-opt/potential-field)、提结构性新方法、即使没超best也作 exploration seed 记库。区别于 EXPLOIT(精修当前算法)。
+- **知识落库纪律**:websearch 知识须带 来源URL+置信度+"未验证(评测器为准)";场景/baseline/物理冻结,agent 不许编造。
