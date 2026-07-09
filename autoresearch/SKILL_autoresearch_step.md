@@ -7,7 +7,11 @@ description: Run ONE iteration of the UAV energy+path-planning autoresearch loop
 
 你是无人机「能量 + 路径规划最优算法」自动化研究的**研究智能体**。本次调用你做**恰好一次迭代**。你没有记忆——所有状态在文件里,**先读状态**。
 
-工作根目录:`/Users/steven/PathPlanningwithEnergy`(下称 ROOT)。Python 用 `ROOT/.venv/bin/python`。
+工作根目录 ROOT = `git rev-parse --show-toplevel` 的输出(**别写死路径**——这样同一个 skill 在主线目录和创新 worktree 都能用)。Python 用 `ROOT/.venv/bin/python`。
+
+**模式按分支自动判定**(step 1 先跑 `git -C ROOT rev-parse --abbrev-ref HEAD`):
+- 分支 = `agent-autoresearch`(主线)→ **VALIDATED 模式**:稳扎稳打,精修 + 换已知算法族,每个 KEEP 都要能过三道门。这是可答辩的成果线,**别塞投机垃圾**。
+- 分支 = `agent-innovation`(创新 worktree,在 `/Users/steven/PathPlanning-innovation`)→ **INNOVATION 模式**:见下方「## 创新模式」节。放开手脚做投机实验,污染只留在本分支。
 
 ## 文件
 - 状态:`autoresearch/state/state.json`(iteration/best/cadence/bottleneck)
@@ -27,6 +31,16 @@ description: Run ONE iteration of the UAV energy+path-planning autoresearch loop
 
 🔍 **探索无限制(重要)**:你可以**随时、任意多次** WebSearch / WebFetch / Read 代码 / 分析,去查文献、找 idea、看实现——**全开放、鼓励**。边界只管「你能**改**什么」(Layer-1),完全不管「你能**查/想**什么」。下面第 3 步的 Episode 检索只是**保证下限**(至少每 N 轮把一次检索蒸馏进 KNOWLEDGE.md),**不是上限**——任何一步你觉得该查文献,就查。
 
+## 创新模式(仅当分支 = agent-innovation)
+目标不是"再降一点 score",而是**在开放缺口上尝试真正新的东西**,并诚实判定它到底新不新。
+1. **靶向开放缺口(不是套已知算法族)**:读 `autoresearch/OPEN_PROBLEMS.md` + 现搜"当前 SOTA 的 limitations / open challenges",EXPLORE 冲**未解缺口**;明确提**一个不是现成标准答案**的方法。
+2. **验 novelty(KEEP 像创新就必做)**:任何看起来是新贡献的 KEEP,**先 WebSearch 查它是不是已发表**;查到→诚实标"已知/复现(引用URL)";查不到→记为"候选新观察(未证已知)"进 KNOWLEDGE.md。**绝不把已知说成自创。**
+3. **对标真 SOTA**:benchmark 加"最好已知方法"(不只 uniform/默认),赢了才算数。
+4. **放开手脚**:投机、churn、连续负结果都 OK——这是沙盒。但**依然守冻结层铁律**(sandbox/LOCKED_FIELDS 照旧),别碰物理/评测器/场景/seed。
+5. **诚实负结果也是产出**:此路不通→记"在缺口X上系统尝试了A/B/C,均不 work,原因…"进 KNOWLEDGE.md——这就是 S4 研究员行为的证据。
+
+**合并纪律(风险控制,铁律)**:创新实验**只提交在 agent-innovation**。一个结果**只有同时**①过三道门(留出+横向对比+鲁棒性)+②novelty 检查确认没人做过,才允许合并回主线(切到主线目录 `git merge`/`cherry-pick`)。否则整分支弃掉(`git branch -D agent-innovation` 大不了重开)——**主线永远干净可答辩**。
+
 ## 一次迭代的步骤(严格照做)
 1. **读状态**:读 `program.md`(**人类的研究指令频道——最高优先,先看它的「研究指令」区**)、`state.json`、`KNOWLEDGE.md`、`tail -8 agent_log.jsonl`。记下 `iteration, best, cadence, bottleneck, plateau_count, episode`。**若 `program.md` 的「研究指令」给了新方向,本轮就照它做**(而非只盯 bottleneck)。
 2. **若 `best.score` 为 null(首次)** → 本次只建**基线**:`physics_eval.evaluate(best.config, runs=cadence.runs, seed0=0)`,把结果写进 best(score/min_success),写 best.json,append 一行 baseline 到 agent_log,`iteration=1`,报告基线,**结束**。
@@ -34,7 +48,7 @@ description: Run ONE iteration of the UAV energy+path-planning autoresearch loop
    - **Episode 边界 = 硬周期规则**(`iteration % episode_cap == 0` → **到点就触发,不管上一轮有没有增益、有没有卡住**;`plateau_count >= plateau_k` 只是卡住时的提前触发):`plateau_count=0`、`episode+=1`,**必做一次外部文献检索 + 一次探索性尝试**,并遵守:
      * **知识落库纪律(防乱构建/防幻觉)**:检索到的每条知识写进 `KNOWLEDGE.md` 时,**必须带 来源URL + 置信度(高/中/低) + 标"未验证(以评测器为准)"**;没来源的断言不许当事实写。**你只能查、只能提议;场景/baseline/物理是冻结的,不许编造。**
      * **判断 EXPLORE vs EXPLOIT**:若 `episode % explore_every_episodes == 0` → **EXPLORE(探索/创新)阶段**;否则 **EXPLOIT(精修)阶段**。
-     * **EXPLORE 阶段**:检索该问题的**不同算法族**(informed-RRT*/BIT*/FMT*/trajectory-optimization/potential-field 等),提**一个结构性新方法**(不是局部微调)。即使没立刻超 best,也把结果 + "为何可能有潜力" 作为 **exploration seed** 记进 `KNOWLEDGE.md`(别只 REVERT 就忘),供后续 episode 接着发展。
+     * **EXPLORE 阶段**:**VALIDATED 模式**=检索该问题的**不同算法族**(informed-RRT*/BIT*/FMT*/trajectory-optimization/potential-field 等),提一个结构性新方法(不是局部微调)。**INNOVATION 模式**=按上方「## 创新模式」节做(靶向开放缺口 + 验 novelty + 对标 SOTA)。两种模式都把结果 + "为何可能有潜力" 作为 **exploration seed** 记进 `KNOWLEDGE.md`(别只 REVERT 就忘),供后续 episode 接着发展。
      * **EXPLOIT 阶段**:在当前 best 附近精修(参数/局部代码)。
      然后到第 4 步。(注:检索是**下限**,任何一步想搜就搜。)
    - **Milestone**(`episode>0 且 episode % milestone_every_episodes == 0` 且尚未为该 episode 出过 milestone):
