@@ -64,6 +64,15 @@ def cluster_centroids(points_xy, eps, min_samples):
     return np.array(cents) if cents else np.empty((0, 2))
 
 
+def default_associate(track_pos, det_pos, params):
+    """默认关联:门控匈牙利。返回 [(track_idx, det_idx), ...](门外/无解丢弃)。"""
+    D = np.linalg.norm(track_pos[:, None, :] - det_pos[None, :, :], axis=2)
+    BIG = 1e6
+    Dc = np.where(D <= params.gate, D, BIG)
+    ri, ci = linear_sum_assignment(Dc)
+    return [(int(r), int(c)) for r, c in zip(ri, ci) if Dc[r, c] < BIG]
+
+
 class _Track:
     __slots__ = ("id", "x", "P", "hits", "miss", "confirmed")
 
@@ -97,12 +106,14 @@ class _Track:
 
 class MultiTargetTracker:
     """逐帧流式跟踪器。内存 = 活跃航迹数(小)。"""
-    def __init__(self, params: PipelineParams, cluster_fn=None):
+    def __init__(self, params: PipelineParams, cluster_fn=None, associate_fn=None):
         self.p = params
         self.tracks = []
         self._next_id = 1
-        # 可插拔聚类组件(默认=固定eps DBSCAN);baseline 用它换自适应DBSCAN等
+        # 可插拔算法组件(默认=固定eps DBSCAN聚类 + 门控匈牙利关联);
+        # baseline 换自适应DBSCAN、autoresearch 让 LLM 进化这两个组件(经沙箱注入)。
         self.cluster_fn = cluster_fn or (lambda pts, pr: cluster_centroids(pts, pr.eps, pr.min_samples))
+        self.associate_fn = associate_fn or default_associate
 
     def step(self, points_xy, dt):
         p = self.p
@@ -111,17 +122,13 @@ class MultiTargetTracker:
             t.predict(dt, p.q)
         # 2) 聚类 → 检测(经可插拔组件)
         dets = self.cluster_fn(np.asarray(points_xy, float).reshape(-1, 2), p)
-        # 3) 门控匈牙利关联(预测航迹 vs 检测)
+        # 3) 关联(预测航迹 vs 检测)——经可插拔组件,返回 [(track_idx, det_idx), ...]
         matched_tr, matched_de = set(), set()
         if self.tracks and len(dets):
             TP = np.array([t.pos for t in self.tracks])
-            D = np.linalg.norm(TP[:, None, :] - dets[None, :, :], axis=2)
-            BIG = 1e6
-            Dc = np.where(D <= p.gate, D, BIG)
-            ri, ci = linear_sum_assignment(Dc)
-            for r_, c_ in zip(ri, ci):
-                if Dc[r_, c_] >= BIG:
-                    continue
+            for r_, c_ in self.associate_fn(TP, dets, p):
+                if r_ in matched_tr or c_ in matched_de:
+                    continue                    # 防组件返回重复/非法配对
                 self.tracks[r_].update(dets[c_], p.r)
                 self.tracks[r_].hits += 1; self.tracks[r_].miss = 0
                 if self.tracks[r_].hits >= p.n_confirm:
