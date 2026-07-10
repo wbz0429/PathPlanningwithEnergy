@@ -1,93 +1,130 @@
 """
-radar_adapter.py — RadarScenes 真实数据 → evaluate_sequence 的流式适配器。【v0,待数据+h5py 落地后验证】
+radar_adapter.py — RadarScenes 真实数据 → evaluate_sequence 的流式适配器。
+【API 已对 radar_scenes 包校验;逻辑用迷你假序列自测通过。真数据到后仅需校准 window/ROI。】
 
-设计:输出与合成 gen_scene 完全同契约 —— 逐帧 yield (points_xy, gt_ids, gt_pos),
-于是 smoke_test.evaluate_sequence / autoresearch_radar 一行不改就能换到真数据上。
-内存安全:用 h5py 惰性读、逐 scene 流式;绝不把整条序列/4GB 读进内存。
+输出契约与合成 gen_scene 完全一致 —— 逐帧 yield (points_xy, gt_ids, gt_pos),
+于是 smoke_test.evaluate_sequence / autoresearch_radar 一行不改就能换到真数据。
 
-RadarScenes 格式(radar-scenes.com 文档):
-  data/sequence_XXX/
-    scenes.json    —— {"scenes": {ts: {"radar_indices":[start,end], "sensor_id":k, ...}}, ...}
-    radar_data.h5  —— dataset "radar_data" = 结构化数组,字段含:
-        timestamp, sensor_id, x_cc, y_cc(车体系位置 m), vr_compensated(补偿径向速度),
-        rcs, track_id(目标实例 id,静态/杂波为空), label_id(类别; 11=STATIC)
-类别 label_id: 0 CAR,1 LARGE_VEHICLE,2 TRUCK,3 BUS,4 TRAIN,5 BICYCLE,
-              6 MOTORIZED_TWO_WHEELER,7 PEDESTRIAN,8 PEDESTRIAN_GROUP,9 ANIMAL,10 OTHER,11 STATIC
+内存安全:一次只开一条 sequence 的 radar_data.h5,按 scene 惰性切片读(不整读),
+一次只留 window 个 scene 的点。跨 158 序列 = 逐序列处理、处理完即释放,绝不整读 4GB。
 
-关键设计决定(v0,数据到后需实测校准):
-  - 管线输入 points_xy = 该帧【全部】检测的 (x_cc, y_cc)(含杂波/静态,让 DBSCAN 去滤)。
-  - GT = 该帧【动态】目标(label_id != 11 且 track_id 非空)按 track_id 聚合的质心。
-  - "帧" = 累积最近 `window` 个 sensor 测量(RadarScenes 4 传感器轮流,单测量点太稀)。
-  - 只保留 ego 前方 ROI(如 x∈[0,60], |y|<=40)减少远处噪声——阈值待实测调。
+RadarScenes 格式(已核验 radar_scenes 包源码):
+  sequence_XXX/scenes.json  = {"sequence_name","first_timestamp","last_timestamp",
+                               "scenes": {ts: {"radar_indices":[a,b], "sensor_id":k, ...}}}
+  sequence_XXX/radar_data.h5 = dataset "radar_data"(结构化),字段含
+      x_cc,y_cc(车体系 m)、track_id(bytes,目标id;杂波/静态为空)、label_id(u1;11=STATIC)、vr_compensated
 """
 import os, json
 import numpy as np
+from collections import deque
 
-STATIC_LABEL = 11
-DEFAULT_ROI = (0.0, 60.0, -40.0, 40.0)   # x_min,x_max,y_min,y_max (m)
+STATIC_LABEL = 11                          # 已核验 radar_scenes.labels.Label.STATIC == 11
+DEFAULT_ROI = (0.0, 60.0, -40.0, 40.0)     # x_min,x_max,y_min,y_max (m);待真数据校准
 
 
-def _load_h5(seq_dir):
-    import h5py                                  # 延迟导入:仅用真数据时才需要
-    h5 = h5py.File(os.path.join(seq_dir, "radar_data.h5"), "r")
-    return h5["radar_data"]                       # 结构化数组 dataset(惰性)
+def _decode(t):
+    return t.decode() if isinstance(t, (bytes, bytearray)) else str(t)
 
 
 def stream_sequence(seq_dir, window=4, roi=DEFAULT_ROI, dynamic_only_gt=True):
     """
-    流式 yield (points_xy, gt_ids, gt_pos)。seq_dir = .../data/sequence_XXX/。
-    window: 累积最近 window 个 sensor 测量当一"帧"(点云去稀疏)。内存 = window 个测量的点。
+    逐帧 yield (points_xy, gt_ids, gt_pos)。seq_dir 含 scenes.json + radar_data.h5。
+    window:累积最近 window 个 scene(4 传感器轮流,单 scene 太稀)当一帧。
+    points_xy = 该帧全部检测 (x_cc,y_cc)(含杂波,交给 DBSCAN 去滤);
+    gt = 动态目标(label!=STATIC 且 track_id 非空)按 track_id 聚合质心。
     """
+    import h5py
+    xmin, xmax, ymin, ymax = roi
     with open(os.path.join(seq_dir, "scenes.json")) as f:
         meta = json.load(f)
     scenes = meta["scenes"]
-    data = _load_h5(seq_dir)
-    xmin, xmax, ymin, ymax = roi
-    from collections import deque
-    buf = deque(maxlen=window)
-    for ts in sorted(scenes, key=lambda t: int(t)):
-        s = scenes[ts]
-        a, b = s["radar_indices"]
-        rec = data[a:b]                            # 只读这一小段(惰性)
-        buf.append(rec)
-        # 拼当前窗口
-        recs = np.concatenate(list(buf)) if len(buf) > 1 else buf[0]
-        x = np.asarray(recs["x_cc"], float); y = np.asarray(recs["y_cc"], float)
-        roi_m = (x >= xmin) & (x <= xmax) & (y >= ymin) & (y <= ymax)
-        x, y, recs = x[roi_m], y[roi_m], recs[roi_m]
-        points_xy = np.column_stack([x, y]) if len(x) else np.empty((0, 2))
-        # GT:动态目标按 track_id 聚合质心
-        tid = recs["track_id"]; lab = np.asarray(recs["label_id"], int)
-        # track_id 是 bytes/str;空 = 杂波
-        tid_str = np.array([t.decode() if isinstance(t, (bytes, bytearray)) else str(t) for t in tid])
-        dyn = (lab != STATIC_LABEL) & (tid_str != "") if dynamic_only_gt else (tid_str != "")
-        gt_ids, gt_pos = [], []
-        for u in np.unique(tid_str[dyn]):
-            m = dyn & (tid_str == u)
-            gt_ids.append(u); gt_pos.append([x[m].mean(), y[m].mean()])
-        yield points_xy, gt_ids, (np.array(gt_pos) if gt_pos else np.empty((0, 2)))
-    data.file.close()
+    order = sorted(scenes, key=lambda t: int(t))
+    with h5py.File(os.path.join(seq_dir, "radar_data.h5"), "r") as h5:
+        data = h5["radar_data"]
+        buf = deque(maxlen=window)
+        for ts in order:
+            a, b = scenes[ts]["radar_indices"]
+            buf.append(data[a:b])                          # 惰性切片,只读这一小段
+            recs = np.concatenate(list(buf)) if len(buf) > 1 else buf[0]
+            x = np.asarray(recs["x_cc"], float); y = np.asarray(recs["y_cc"], float)
+            keep = (x >= xmin) & (x <= xmax) & (y >= ymin) & (y <= ymax)
+            x, y, recs = x[keep], y[keep], recs[keep]
+            points_xy = np.column_stack([x, y]) if len(x) else np.empty((0, 2))
+            tid = np.array([_decode(t) for t in recs["track_id"]])
+            lab = np.asarray(recs["label_id"], int)
+            dyn = (tid != "") & ((lab != STATIC_LABEL) if dynamic_only_gt else True)
+            gt_ids, gt_pos = [], []
+            for u in np.unique(tid[dyn]):
+                mu = dyn & (tid == u)
+                gt_ids.append(u); gt_pos.append([x[mu].mean(), y[mu].mean()])
+            yield points_xy, gt_ids, (np.array(gt_pos) if gt_pos else np.empty((0, 2)))
 
 
 def list_sequences(data_root):
-    """列出所有 sequence_XXX 目录(train/test 划分用)。"""
-    d = os.path.join(data_root, "data") if os.path.isdir(os.path.join(data_root, "data")) else data_root
+    """列出所有 sequence_XXX 目录(train/test 按序列划分用)。"""
+    d = os.path.join(data_root, "data")
+    d = d if os.path.isdir(d) else data_root
     return sorted(p for p in (os.path.join(d, x) for x in os.listdir(d))
                   if os.path.isdir(p) and os.path.basename(p).startswith("sequence_"))
 
 
+# ---------------------------------------------------------------------------
+def _make_fake_sequence(dirpath, n_scenes=12):
+    """造一个格式忠实的迷你假序列(scenes.json + radar_data.h5),用于自测适配器逻辑。"""
+    import h5py
+    os.makedirs(dirpath, exist_ok=True)
+    dt = np.dtype([("x_cc", "<f4"), ("y_cc", "<f4"), ("vr_compensated", "<f4"),
+                   ("track_id", "S32"), ("label_id", "u1")])
+    rng = np.random.default_rng(0)
+    all_rows, scenes = [], {}
+    # 两个动态目标匀速 + 每 scene 若干杂波(静态)
+    tgt = [(np.array([10., 0.]), np.array([1.0, 0.2]), b"obj_a"),
+           (np.array([15., -5.]), np.array([0.5, 0.5]), b"obj_b")]
+    for s in range(n_scenes):
+        start = len(all_rows)
+        for pos0, vel, tid in tgt:
+            c = pos0 + vel * s
+            for _ in range(rng.integers(3, 6)):
+                p = c + rng.normal(0, 0.25, 2)
+                all_rows.append((p[0], p[1], 0.0, tid, 0))          # label 0 = CAR(动态)
+        for _ in range(rng.integers(2, 5)):                          # 杂波/静态
+            all_rows.append((rng.uniform(0, 40), rng.uniform(-20, 20), 0.0, b"", STATIC_LABEL))
+        scenes[str(100 + s)] = {"radar_indices": [start, len(all_rows)], "sensor_id": (s % 4) + 1}
+    arr = np.array(all_rows, dtype=dt)
+    with h5py.File(os.path.join(dirpath, "radar_data.h5"), "w") as h5:
+        h5.create_dataset("radar_data", data=arr)
+    with open(os.path.join(dirpath, "scenes.json"), "w") as f:
+        json.dump({"sequence_name": "fake", "first_timestamp": 100,
+                   "last_timestamp": 100 + n_scenes - 1, "scenes": scenes}, f)
+    return dirpath
+
+
 if __name__ == "__main__":
-    import sys
-    # 用法: python radar_adapter.py <sequence_XXX 目录>  —— 数据到后冒烟验证
-    if len(sys.argv) < 2:
-        print("待数据落地后:python radar_adapter.py ~/datasets/radar_scenes/data/sequence_1")
-        print("(需先 pip install h5py;当前 h5py 未装)")
-        sys.exit(0)
-    seq = sys.argv[1]
-    n_frames = 0; n_pts = []; n_gt = []
-    for pts, gid, gpos in stream_sequence(seq):
-        n_frames += 1; n_pts.append(len(pts)); n_gt.append(len(gid))
-        if n_frames >= 200:
-            break
-    print(f"序列 {os.path.basename(seq)}: 前{n_frames}帧  点/帧均值={np.mean(n_pts):.0f}  动态目标/帧均值={np.mean(n_gt):.1f}")
-    print("契约与 gen_scene 一致 → 可直接喂 evaluate_sequence()。")
+    import sys, tempfile
+    if len(sys.argv) > 1:   # 真数据:python radar_adapter.py ~/datasets/radar_scenes/data/sequence_1
+        seq = sys.argv[1]
+        npf = []; ngt = []
+        for i, (pts, gid, gpos) in enumerate(stream_sequence(seq)):
+            npf.append(len(pts)); ngt.append(len(gid))
+            if i >= 300:
+                break
+        print(f"真序列 {os.path.basename(seq)}: {len(npf)}帧 点/帧={np.mean(npf):.0f} 动态目标/帧={np.mean(ngt):.1f}")
+    else:   # 自测:造假序列跑适配器逻辑
+        d = _make_fake_sequence(os.path.join(tempfile.gettempdir(), "fake_seq"))
+        frames = list(stream_sequence(d, window=1, roi=(-5, 50, -30, 30)))
+        assert len(frames) == 12, len(frames)
+        # 每帧应恢复 2 个动态目标;点云含杂波(>动态点)
+        gt_counts = [len(g) for _, g, _ in frames]
+        assert all(c == 2 for c in gt_counts), f"应每帧2动态目标: {gt_counts}"
+        ids = set(frames[0][1]); assert ids == {"obj_a", "obj_b"}, ids
+        # GT 质心应随时间移动(obj_a 从 x≈10 前移)
+        xa0 = [p for i, p in zip(frames[0][1], frames[0][2]) if i == "obj_a"][0][0]
+        xa5 = [p for i, p in zip(frames[5][1], frames[5][2]) if i == "obj_a"][0][0]
+        assert xa5 > xa0 + 3, f"obj_a 应前移: {xa0:.1f}->{xa5:.1f}"
+        # 契约兼容:能直接喂 evaluate_sequence
+        from smoke_test import evaluate_sequence
+        from pipeline import PipelineParams
+        m = evaluate_sequence(stream_sequence(d, window=1, roi=(-5, 50, -30, 30)), PipelineParams())
+        print("适配器自测全过 ✓  假序列 evaluate:",
+              {k: round(v, 3) if isinstance(v, float) else v for k, v in m.items() if k in ("OSPA_mean", "MOTA", "GT")})
+        print("契约与 gen_scene 一致 → 真数据到后 stream_sequence 直接替换 gen_scene 即可。")
