@@ -26,12 +26,14 @@ def _decode(t):
     return t.decode() if isinstance(t, (bytes, bytearray)) else str(t)
 
 
-def stream_sequence(seq_dir, window=4, roi=DEFAULT_ROI, dynamic_only_gt=True):
+def stream_sequence(seq_dir, window=4, roi=DEFAULT_ROI, dynamic_only_gt=True, vr_thresh=0.5):
     """
     逐帧 yield (points_xy, gt_ids, gt_pos)。seq_dir 含 scenes.json + radar_data.h5。
     window:累积最近 window 个 scene(4 传感器轮流,单 scene 太稀)当一帧。
-    points_xy = 该帧全部检测 (x_cc,y_cc)(含杂波,交给 DBSCAN 去滤);
-    gt = 动态目标(label!=STATIC 且 track_id 非空)按 track_id 聚合质心。
+    vr_thresh:MTI 动目标指示——管线输入只保留 |vr_compensated|>vr_thresh 的【运动】点
+              (滤掉静止杂波,真雷达 MOT 标准第一步)。None=不滤。
+    GT = 动态目标(label!=STATIC 且 track_id 非空)按 track_id 聚合质心——【不】受 vr 滤影响
+         (真值反映真实目标,与我们的预处理无关)。
     """
     import h5py
     xmin, xmax, ymin, ymax = roi
@@ -49,7 +51,7 @@ def stream_sequence(seq_dir, window=4, roi=DEFAULT_ROI, dynamic_only_gt=True):
             x = np.asarray(recs["x_cc"], float); y = np.asarray(recs["y_cc"], float)
             keep = (x >= xmin) & (x <= xmax) & (y >= ymin) & (y <= ymax)
             x, y, recs = x[keep], y[keep], recs[keep]
-            points_xy = np.column_stack([x, y]) if len(x) else np.empty((0, 2))
+            # GT:真动态目标(不受 vr 滤影响)
             tid = np.array([_decode(t) for t in recs["track_id"]])
             lab = np.asarray(recs["label_id"], int)
             dyn = (tid != "") & ((lab != STATIC_LABEL) if dynamic_only_gt else True)
@@ -57,6 +59,13 @@ def stream_sequence(seq_dir, window=4, roi=DEFAULT_ROI, dynamic_only_gt=True):
             for u in np.unique(tid[dyn]):
                 mu = dyn & (tid == u)
                 gt_ids.append(u); gt_pos.append([x[mu].mean(), y[mu].mean()])
+            # 管线输入:MTI 动目标滤波(滤静止杂波)
+            if vr_thresh is not None and "vr_compensated" in recs.dtype.names:
+                mv = np.abs(np.asarray(recs["vr_compensated"], float)) > vr_thresh
+                px, py = x[mv], y[mv]
+            else:
+                px, py = x, y
+            points_xy = np.column_stack([px, py]) if len(px) else np.empty((0, 2))
             yield points_xy, gt_ids, (np.array(gt_pos) if gt_pos else np.empty((0, 2)))
 
 
@@ -111,7 +120,7 @@ if __name__ == "__main__":
         print(f"真序列 {os.path.basename(seq)}: {len(npf)}帧 点/帧={np.mean(npf):.0f} 动态目标/帧={np.mean(ngt):.1f}")
     else:   # 自测:造假序列跑适配器逻辑
         d = _make_fake_sequence(os.path.join(tempfile.gettempdir(), "fake_seq"))
-        frames = list(stream_sequence(d, window=1, roi=(-5, 50, -30, 30)))
+        frames = list(stream_sequence(d, window=1, roi=(-5, 50, -30, 30), vr_thresh=None))
         assert len(frames) == 12, len(frames)
         # 每帧应恢复 2 个动态目标;点云含杂波(>动态点)
         gt_counts = [len(g) for _, g, _ in frames]
@@ -124,7 +133,7 @@ if __name__ == "__main__":
         # 契约兼容:能直接喂 evaluate_sequence
         from smoke_test import evaluate_sequence
         from pipeline import PipelineParams
-        m = evaluate_sequence(stream_sequence(d, window=1, roi=(-5, 50, -30, 30)), PipelineParams())
+        m = evaluate_sequence(stream_sequence(d, window=1, roi=(-5, 50, -30, 30), vr_thresh=None), PipelineParams())
         print("适配器自测全过 ✓  假序列 evaluate:",
               {k: round(v, 3) if isinstance(v, float) else v for k, v in m.items() if k in ("OSPA_mean", "MOTA", "GT")})
         print("契约与 gen_scene 一致 → 真数据到后 stream_sequence 直接替换 gen_scene 即可。")
