@@ -97,18 +97,20 @@ class _Track:
 
 class MultiTargetTracker:
     """逐帧流式跟踪器。内存 = 活跃航迹数(小)。"""
-    def __init__(self, params: PipelineParams):
+    def __init__(self, params: PipelineParams, cluster_fn=None):
         self.p = params
         self.tracks = []
         self._next_id = 1
+        # 可插拔聚类组件(默认=固定eps DBSCAN);baseline 用它换自适应DBSCAN等
+        self.cluster_fn = cluster_fn or (lambda pts, pr: cluster_centroids(pts, pr.eps, pr.min_samples))
 
     def step(self, points_xy, dt):
         p = self.p
         # 1) 预测
         for t in self.tracks:
             t.predict(dt, p.q)
-        # 2) 聚类 → 检测
-        dets = cluster_centroids(np.asarray(points_xy, float).reshape(-1, 2), p.eps, p.min_samples)
+        # 2) 聚类 → 检测(经可插拔组件)
+        dets = self.cluster_fn(np.asarray(points_xy, float).reshape(-1, 2), p)
         # 3) 门控匈牙利关联(预测航迹 vs 检测)
         matched_tr, matched_de = set(), set()
         if self.tracks and len(dets):

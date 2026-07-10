@@ -32,9 +32,9 @@ def gen_scene(seed, n_frames=40, dt=0.1, clutter=(4, 9), pts_per_target=(6, 11),
         yield np.vstack(pts), gt_ids, np.array(gt_pos)
 
 
-def evaluate_sequence(scene_iter, params: PipelineParams, dt=0.1, ospa_c=2.0, mota_gate=2.0):
+def evaluate_sequence(scene_iter, params: PipelineParams, dt=0.1, ospa_c=2.0, mota_gate=2.0, cluster_fn=None):
     """跑一条序列 → {OSPA_mean, MOTA, MOTP, ...}。流式、内存安全。这是评测器核心。"""
-    trk = MultiTargetTracker(params)
+    trk = MultiTargetTracker(params, cluster_fn=cluster_fn)
     acc = MOTAccumulator(gate=mota_gate)
     ospas = []
     for pts, gt_ids, gt_pos in scene_iter:
