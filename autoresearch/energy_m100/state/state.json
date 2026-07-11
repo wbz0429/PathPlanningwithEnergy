@@ -1,0 +1,31 @@
+{
+  "iteration": 1,
+  "phase": "m100_energy_model",
+  "best": {
+    "src": "best_featurize.py",
+    "search_ARE": 0.07040523920780196,
+    "val_ARE": 0.06877334959011731,
+    "val_r2": 0.004009623273451668,
+    "n_feat": 3,
+    "name": "steady BEMT (1,v,v2) baseline"
+  },
+  "cadence": {
+    "episode_cap": 10,
+    "plateau_k": 3,
+    "milestone_every_episodes": 3,
+    "explore_every_episodes": 1,
+    "search_seeds": [
+      0,
+      1,
+      2
+    ],
+    "val_seeds": [
+      5,
+      6,
+      7
+    ]
+  },
+  "plateau_count": 0,
+  "episode": 0,
+  "bottleneck": "per-flight energy ARE"
+}
