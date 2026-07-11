@@ -1,5 +1,5 @@
 {
-  "iteration": 7,
+  "iteration": 11,
   "phase": "m100_energy_model",
   "best": {
     "src": "best_featurize.py",
@@ -26,6 +26,7 @@
     ]
   },
   "plateau_count": 0,
-  "episode": 1,
-  "bottleneck": "per-flight energy ARE"
+  "episode": 2,
+  "bottleneck": "per-flight energy ARE",
+  "note": "iter10 = capstone milestone (forced at convergence); loop paused for review"
 }
