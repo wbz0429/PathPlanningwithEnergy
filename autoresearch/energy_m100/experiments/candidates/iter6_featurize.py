@@ -1,12 +1,12 @@
 def featurize(s):
-    """BEST (iter6) — physics core + bare linear payload. held-out ARE 1.93%, R² 0.44.
+    """iter6 — iter3 physics core + ONE bare linear payload term (diagnostic-driven).
 
-    KEY FINDING: the physics-only core (iter3) sat at 4.24% ARE; adding ONE bare linear
-    `payload` term dropped it to 1.93% — matching the full linear-LIB frontier (1.91%).
-    So the physics-nonlinear forms (T^1.5, T²/V, ...) were NOT the value-add; a flexible
-    linear payload term was. physics+payload (1.93%) ≈ pure-linear LIB (1.91%): momentum-
-    theory nonlinear forms neither beat nor clearly add beyond flexible linear regression
-    on real M100 energy. (diagnostic: single 'payload'=2.25%, physics-only=4.24%.)
+    Decisive diagnostic (same evaluator, held-out seeds 5,6,7): a single bare `payload`
+    term scores 2.25% ARE, vs my 8-term physics model at 4.24%. Hypothesis: the physics
+    model underperforms because it forces payload into a rigid T^1.5 shape (base 2.4 kg,
+    payload a small perturbation) instead of a flexible linear term. Add bare `payload`
+    on top of iter3 and see if ARE collapses toward the linear frontier — isolating whether
+    physics priors *hurt* by over-constraining the payload->power map.
     """
     g = 9.81
     m0 = 2.4                                   # DJI M100 base mass (kg)
