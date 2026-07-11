@@ -1,13 +1,13 @@
 {
-  "iteration": 1,
+  "iteration": 2,
   "phase": "m100_energy_model",
   "best": {
     "src": "best_featurize.py",
-    "search_ARE": 0.07040523920780196,
-    "val_ARE": 0.06877334959011731,
-    "val_r2": 0.004009623273451668,
-    "n_feat": 3,
-    "name": "steady BEMT (1,v,v2) baseline"
+    "search_ARE": 0.045558021499615076,
+    "val_ARE": 0.04246527826096678,
+    "val_r2": 0.2513088560483819,
+    "n_feat": 7,
+    "name": "BEMT momentum-theory (T^1.5 + T2/V + v3 + climb/desc asym)"
   },
   "cadence": {
     "episode_cap": 10,

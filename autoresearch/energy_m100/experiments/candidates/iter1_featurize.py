@@ -1,14 +1,13 @@
 def featurize(s):
-    """BEST (iter1) — BEMT momentum-theory power form (novel, non-polynomial; fit linearly).
+    """iter1 — BEMT momentum-theory power form (novel, non-polynomial; fit linearly).
 
-    Baseline 1,v,v² is a crude parabola for the true U-shaped rotor power curve.
-    Momentum/blade-element theory gives an induced branch that is NON-polynomial
-    (a linear term-library cannot reach it):
+    Hypothesis: baseline 1,v,v² is a crude parabola for the true U-shaped rotor
+    power curve. Momentum/blade-element theory gives an induced branch that is
+    NON-polynomial (a linear term-library can't reach it):
       - hover induced power  P_i ∝ T^1.5            (T = thrust load)
       - forward induced relief P_i ∝ T² / V          (Glauert, high-speed approx)
     with thrust T = m·(g+a_z), m = base + payload (payload dominates on M100),
     plus parasite body drag ∝ v³ and an asymmetric climb/descent split.
-    held-out: search_ARE 4.56%, val_ARE 4.25%, R² 0.25 (vs baseline 6.88%, R²≈0).
     """
     g = 9.81
     m0 = 2.4                                  # DJI M100 base mass (kg)
