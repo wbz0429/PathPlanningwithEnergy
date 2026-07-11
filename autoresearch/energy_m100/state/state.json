@@ -1,13 +1,13 @@
 {
-  "iteration": 2,
+  "iteration": 4,
   "phase": "m100_energy_model",
   "best": {
     "src": "best_featurize.py",
-    "search_ARE": 0.045558021499615076,
-    "val_ARE": 0.04246527826096678,
-    "val_r2": 0.2513088560483819,
-    "n_feat": 7,
-    "name": "BEMT momentum-theory (T^1.5 + T2/V + v3 + climb/desc asym)"
+    "search_ARE": 0.04544764719331403,
+    "val_ARE": 0.042425607285726974,
+    "val_r2": 0.2510170261150766,
+    "n_feat": 8,
+    "name": "iter1 core + thrust-scaled profile T*v2"
   },
   "cadence": {
     "episode_cap": 10,
@@ -25,7 +25,7 @@
       7
     ]
   },
-  "plateau_count": 0,
+  "plateau_count": 2,
   "episode": 0,
   "bottleneck": "per-flight energy ARE"
 }

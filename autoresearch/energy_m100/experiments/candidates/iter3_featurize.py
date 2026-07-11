@@ -1,12 +1,13 @@
 def featurize(s):
-    """BEST (iter3) — iter1 induced/payload core + thrust-scaled profile interaction.
+    """iter3 — iter1 (kept best) + ONE physics interaction: thrust-scaled profile power.
 
-    iter1 winning core (two-term induced split T^1.5 + T²/V, profile v², parasite v³,
-    asymmetric climb/descent) + ONE added physics interaction:
-      P_prof_load = T · v_h²   (rotor loading × advance-ratio = v²·payload coupling),
-    T = m·(g+a_z), m = 2.4 + payload/1000.
-    held-out: search_ARE 4.5448%, val_ARE 4.2426%, R² 0.251.
-    NOTE: interaction adds only ~0.24% rel over iter1 — payload/induced core dominates.
+    iter1's winning core is unchanged (two-term induced split T^1.5 + T²/V, profile v²,
+    parasite v³, asymmetric climb/descent). Single added term:
+      P_prof_load = T · v_h²   (rotor loading × advance-ratio) — the v²·payload interaction
+    the ~1.9% frontier model used, expressed through thrust T = m·(g+a_z). Heavier/accelerating
+    craft spin rotors faster, so profile power at a given airspeed scales with thrust.
+    Interaction terms are an explicitly-preferred novel form (a bare linear v² + payload
+    cannot form their product without this cross column).
     """
     g = 9.81
     m0 = 2.4                                   # DJI M100 base mass (kg)
@@ -20,7 +21,7 @@ def featurize(s):
     P_hover = T ** 1.5                         # hover induced power (momentum theory) — NON-poly
     P_fwd = (T * T) / Veff                     # forward-flight induced relief (Glauert) — reciprocal
     P_prof = vh * vh                           # profile power base ~ v²
-    P_prof_load = T * (vh * vh)                # thrust-scaled profile (v²·payload interaction)
+    P_prof_load = T * (vh * vh)                # NEW: thrust-scaled profile (v²·payload interaction)
     P_para = vh ** 3                           # parasite body drag ~ v³
     climb = np.maximum(vz, 0.0)                # climb work
     desc = np.minimum(vz, 0.0)                # descent (asymmetric coeff)
