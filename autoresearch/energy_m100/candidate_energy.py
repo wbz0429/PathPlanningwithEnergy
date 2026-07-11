@@ -38,6 +38,22 @@ def contract_test_featurize(fn):
     assert np.all(np.isfinite(X)), "特征须有限"
 
 
+def eval_src(src, search_seeds=(0, 1, 2), val_seeds=(5, 6, 7)):
+    """给 featurize 源码字符串 → 沙箱+契约+评测。返回 {search_ARE, val_ARE, val_r2, n_feat}。
+    这是 /loop skill 每轮调的统一入口:proposer 写 featurize → 这里评 → keep/revert。
+    search_ARE = 搜索目标(交叉验证);val_ARE = 留出复核(不同飞行划分,防过拟合)。"""
+    import numpy as np
+    from m100_eval import evaluate
+    fn = load_featurize(src)               # 沙箱 check_code + 加载
+    contract_test_featurize(fn)            # 契约测试
+    s = [evaluate(fn, seed=k) for k in search_seeds]
+    v = [evaluate(fn, seed=k) for k in val_seeds]
+    return {"search_ARE": float(np.mean([m["energy_ARE"] for m in s])),
+            "val_ARE": float(np.mean([m["energy_ARE"] for m in v])),
+            "val_r2": float(np.mean([m["r2"] for m in v])),
+            "n_feat": int(s[0]["n_feat"])}
+
+
 if __name__ == "__main__":
     from m100_eval import evaluate
     fn = load_featurize(DEFAULT_FEATURIZE_SRC)
