@@ -35,7 +35,8 @@ class M100Em:
         lh = float(np.linalg.norm(disp[:2]))
         dz = float(disp[2])                          # NED: dz<0 = 上升
         v_h = lh / t
-        v_z = dz / t
+        v_z = -dz / t                                # 爬升率(正=上升):模型约定 正v_z=爬升(639W),
+        #                                              NED里dz<0才是爬升→取负号。曾漏此符号→爬升被当下降低估152W
         st = {k: np.array([v]) for k, v in
               dict(v_h=v_h, v_z=v_z, a_h=0.0, a_z=0.0, omega=0.0,
                    payload=self.payload, wind=0.0, speed=velocity).items()}
