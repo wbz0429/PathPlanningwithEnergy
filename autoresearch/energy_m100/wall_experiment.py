@@ -92,6 +92,8 @@ def _make_fig(paths_for_fig, rows):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    plt.rcParams["font.sans-serif"] = ["Arial Unicode MS", "Heiti TC"]
+    plt.rcParams["axes.unicode_minus"] = False
     from mpl_toolkits.mplot3d import Axes3D  # noqa
     fig = plt.figure(figsize=(15, 5))
     colors = {"距离最短": "tab:red", "教科书BEMT": "tab:orange", "真机M100": "tab:green"}

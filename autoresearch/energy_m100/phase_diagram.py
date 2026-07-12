@@ -45,6 +45,8 @@ def run():
 def _plot(save, m100_around):
     import matplotlib; matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    plt.rcParams["font.sans-serif"] = ["Arial Unicode MS", "Heiti TC"]
+    plt.rcParams["axes.unicode_minus"] = False
     fig, ax = plt.subplots(figsize=(8, 4))
     im = ax.imshow(save, aspect="auto", origin="lower", cmap="YlGn",
                    extent=[WIDTHS[0]-2, WIDTHS[-1]+2, VELS[0]-2, VELS[-1]+2], vmin=0)
