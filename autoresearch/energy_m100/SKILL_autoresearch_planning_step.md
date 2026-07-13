@@ -36,6 +36,8 @@ M100 数据。能量尺子 = M100Em(payload=250)@真实巡航速度;结论若依
 1. **读状态**:`program.md`、`state/planning_state.json`、`PLANNING_KNOWLEDGE.md`、上一轮 JSON。
 2. **取假设**:队列首个 open 假设;若空,自提一个(格式:"在___场景/任务下,能量感知相比距离基线会___,
    因为___机制;若___则否")。**先写下假设和判据再跑实验**(预注册,防事后圆)。
+   **轻文献检查(每轮必做,2-4 条 WebSearch)**:这个假设有没有人做过?已发表的幅度是多少?
+   把带来源的对标数字记进 PLANNING_KNOWLEDGE(我们的结果要和文献幅度对得上量级,差太远=先怀疑自己)。
 3. **实验**:写 `experiments/pl_iter<N>_<slug>.py`,跑,结果落 JSON。候选层探针可先行(快),
    但 SUPPORTED 裁决必须有规划器/动力学级证据。预算:单轮 ≤30 分钟计算;RotorPy 每条 ~1 分钟,能用。
 4. **裁决**:SUPPORTED / REFUTED / INCONCLUSIVE(+一句机制归因)。INCONCLUSIVE 须写清缺什么证据、
@@ -43,6 +45,14 @@ M100 数据。能量尺子 = M100Em(payload=250)@真实巡航速度;结论若依
 5. **落盘**:追加 `PLANNING_KNOWLEDGE.md`(假设/判据/证据/裁决/边界);更新 `planning_state.json`
    (iteration+=1,verdicts 追加,队列更新);`git add -A && git commit -m "planning iter <N>: <slug> <VERDICT>"`。
 6. **报告 2-3 句**:假设 → 证据数字 → 裁决。每 5 轮出一次里程碑小结(汇总表+值不值得进论文的判断)并停下等 review。
+
+## 重研究(deep-research workflow)的触发时机(别每轮跑,一次≈百个agent很贵)
+仅以下三种情况调用 `Workflow(name="deep-research", args={question: ...})`:
+1. **里程碑时**(每 5 轮):对本期 SUPPORTED 的发现做**查新**(novelty check)——"有没有人发表过完全一样的东西",
+   问题要具体到机制+场景+指标;查新不过=该发现降级为"复现/验证",诚实标注。
+2. **队列打空时**:跑一次"能量感知无人机规划的开放场景/任务"扫描,产出 3-5 个带文献依据的新假设入队。
+3. **program.md 明确指令时**。
+产出(带来源链接)一律落 `PLANNING_KNOWLEDGE.md` 的「文献对标」节。轻检索(WebSearch 2-4 条)不受此限,每轮都做。
 
 ## 种子假设队列(按序取)
 1. **H1 配送顺序防悠悠球**:多点配送中,能量最优访问顺序会避免"降进低点再重爬"(距离序 yo-yo 时)。
