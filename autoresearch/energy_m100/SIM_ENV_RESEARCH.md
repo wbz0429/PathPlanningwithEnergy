@@ -1,0 +1,1997 @@
+# macOS 无人机仿真环境全景(deep-research, 2026-07-13)
+
+**方法**: 106 agents / 24源 / 118论断提取 / top-25 三票对抗验证(24确认1否决)
+
+## 总结
+For a Mac-only (Apple Silicon), energy-aware path-planning project needing dynamics closed-loop validation in 2025-2026, the field narrows sharply: AirSim/Colosseum is dead (Colosseum archived July 11, 2026; macOS was only ever 'highly experimental' with no Apple Silicon path), and Isaac Sim/Lab plus its Pegasus/Aerial Gym drone extensions are categorically unusable on Mac (Ubuntu/Windows x86_64 + RTX GPU required). The strongest verified options are: RotorPy (pure Python, natively benchmarked on MacBook Air M3, mid-high dynamics fidelity with six aerodynamic effects, first-order motor lag exposing per-rotor speeds as simulated states — ideal for injecting a custom BEMT/hybrid power model), gym-pybullet-drones (first-party Apple Silicon/macOS 26.2 testing, active, MIT), and PX4 SITL + Gazebo Harmonic, whose macOS toolchain was rewritten in Feb-Apr 2026 to support Apple Silicon natively via `Tools/setup/macos.sh --sim-tools` (the old brew formulas are now deprecated no-ops), with x500 airframes carrying simulated depth cameras and lidar. The recommended combination matches the question's hypothesis: RotorPy for fast iteration and custom energy-model injection, gym-pybullet-drones as an RL/contact-physics alternative, and PX4 SITL + Gazebo Harmonic for full-stack firmware-in-the-loop validation — accepting that Gazebo's low visual fidelity limits photorealistic perception research and that RotorPy alone has no camera/depth sensors. Webots and CoppeliaSim are viable Mac-native general-purpose fallbacks but with simplified quadrotor aerodynamics; Flightmare and FlightGoggles are unmaintained with no Mac support.
+
+## 已验证发现(每条3-0票通过)
+
+### ① AirSim/Colosseum is a dead end for this project: Microsoft announced AirSim's shutdown in July 2022 (last real release...
+- 置信: high | 票: merged from 4 claims, each 3-0
+- 全文: ① AirSim/Colosseum is a dead end for this project: Microsoft announced AirSim's shutdown in July 2022 (last real release v1.8.1; subsequent commits are README-only), and its main community fork Colosseum was archived read-only on July 11, 2026 with its last release ('UE 5.2 Support') dating to June 2023. Colosseum's README listed macOS only as 'highly experimental and may be dropped', with zero mention of Apple Silicon/arm64, and its CI built only on Intel macOS runners — there was never a supported native Apple Silicon path. The 2025 aerial-simulator survey (Table V) likewise flags AirSim as not actively maintained despite nominally listing Mac support.
+- 证据: Colosseum README: 'This is a fork of the AirSim repository, which Microsoft decided to shutdown in July of 2022' and 'MacOS support is highly experimental and may be dropped in future releases.' GitHub API: archived:true, 'archived by the owner on Jul 11, 2026. It is now read-only.' Survey Table V marks AirSim Active=✗. Verifiers confirmed all points against live GitHub API and raw README; one not
+- 来源: https://github.com/CodexLabsLLC/Colosseum ; https://arxiv.org/pdf/2311.02296
+
+### ② PX4 SITL on macOS Apple Silicon is now officially supported natively (2025-2026): PX4 main-branch docs state 'It works...
+- 置信: high | 票: merged from 4 claims, each 3-0
+- 全文: ② PX4 SITL on macOS Apple Silicon is now officially supported natively (2025-2026): PX4 main-branch docs state 'It works on both Intel and Apple Silicon Macs' with the old Rosetta/x86-terminal requirement (still present in v1.13-v1.17 docs) completely removed after the Feb 2026 docs/toolchain rewrite. However, plain `brew install` is no longer the sanctioned route: as of 2026-04-20 the official PX4 Homebrew tap formulas (px4-sim, px4-sim-gazebo, px4-sim-jmavsim, px4-dev) are all deprecated no-op meta-formulas that install nothing; the correct installation is `./Tools/setup/macos.sh --sim-tools` from the PX4-Autopilot repo, which pulls in Gazebo Harmonic (gz-harmonic) via brew directly. jMAVSim is not mentioned as a macOS simulation option on the current setup page — Gazebo Harmonic is the sole documented macOS simulator.
+- 证据: Docs line verified verbatim in raw dev_env_mac.md with zero hits for rosetta/x86/M1/M2; PX4-Autopilot PR #25204 (2026-02-18) rewrote the macOS dev env. All four tap formulas contain 'deprecate! date: "2026-04-20"' and emit 'installs nothing' warnings redirecting to macos.sh --sim-tools; macos.sh's sim block explains Homebrew 4.5+ broke the cross-tap meta-formulas. Verifiers cross-checked live raw 
+- 来源: https://docs.px4.io/main/en/dev_setup/dev_env_mac ; https://github.com/PX4/homebrew-px4
+
+### PX4 + Gazebo is the canonical full-stack validation route — but not a photorealistic perception platform. The JHU simula...
+- 置信: high | 票: merged from 3 claims, each 3-0
+- 全文: PX4 + Gazebo is the canonical full-stack validation route — but not a photorealistic perception platform. The JHU simulator-survey authors chose Gazebo with PX4's SITL architecture precisely because PX4 officially recommends it, enabling the identical software stack in simulation and on hardware (controller gains transferred with only minor adjustments). The stack includes real sensor simulation: x500 quadrotor variants ship with a front-facing depth camera (OAK-D-modeled, gz_x500_depth), 1D/2D lidar, and a visual-odometry variant. However, Gazebo's rendered images had visual fidelity low enough to be prohibitive for visual odometry and DOPE object detection even after adding textures (the same object WAS detected in Flightmare's Unity rendering) — so PX4+Gazebo closes the dynamics loop and provides depth/lidar data, but is not suited to photorealistic camera research.
+- 证据: Dimmig & Kobilarov (JHU, ICRA 2023 workshop): 'PX4 highly recommends Gazebo for SITL simulation... we decided to use Gazebo with PX4's SITL simulation architecture' and 'This ended up being prohibitive to running visual odometry and object detection... including when more textures were added.' PX4 docs list gz_x500_depth (4002), gz_x500_lidar_down/front/2d, gz_x500_vision (4005). Verifiers read th
+- 来源: https://imrclab.github.io/workshop-uav-sims-icra2023/papers/RS4UAVs_paper_10.pdf ; https://docs.px4.io/main/en/sim_gazebo_gz/index
+
+### ③ gym-pybullet-drones runs natively on Apple Silicon with documented first-party support — its README states 'Tested on ...
+- 置信: high | 票: merged from 3 claims, each 3-0
+- 全文: ③ gym-pybullet-drones runs natively on Apple Silicon with documented first-party support — its README states 'Tested on Intel x64/Ubuntu 22.04 and Apple Silicon/macOS 26.2' (refreshed April 2026) — and per the 2025 survey it is actively maintained, MIT-licensed, interfaces with Betaflight/Crazyflie, and models aerodynamic effects (drag, ground effect, downwash) with realistic collisions; its listed weakness is low visual fidelity. One concrete Mac limitation: the Betaflight SITL (firmware-in-the-loop) example is 'Ubuntu only' — Betaflight upstream closed Apple Silicon SITL support as not-planned — so full flight-controller-firmware validation with this stack is not available natively on macOS.
+- 证据: README quotes verified verbatim against raw README.md (macOS-version commit 2026-04-14; repo active through May 2026, 849 commits). Survey Table V row: PyBullet | OpenGL | L:✓ W:✱ M:✓ | MIT | Active:✓, weakness 'Low visual fidelity'. Betaflight issue #12758 (Apple Silicon SITL) closed as not planned due to clang toolchain incompatibilities. Verifiers found no credible Apple Silicon failure reports
+- 来源: https://github.com/utiasDSL/gym-pybullet-drones ; https://arxiv.org/pdf/2311.02296
+
+### ④ RotorPy is the best-verified fast-iteration option on Apple Silicon: pure Python (100% per GitHub, 'OS Independent' cl...
+- 置信: high | 票: merged from 5 claims, each 3-0
+- 全文: ④ RotorPy is the best-verified fast-iteration option on Apple Silicon: pure Python (100% per GitHub, 'OS Independent' classifier, pip one-command install, no GPU requirement — torch is optional), with the maintainer's own README benchmarking PPO hover training (~5M timesteps) in under 4 minutes on a MacBook Air M3. Dynamics fidelity is mid-level and above kinematic/drag-free simulators: 6-DoF dynamics with six modeled aerodynamic effects (parasitic drag quadratic in airspeed; rotor drag, blade-flapping moment, and induced drag linear in airspeed; translational lift and drag), first-order motor lag, actuator saturation, and spatio-temporal wind fields including the Dryden turbulence model — experimentally validated against a real Crazyflie in agile maneuvers. The 2025 survey's only listed negative is 'simplistic environments'. Actively maintained (v2.1.2, March 2026).
+- 证据: README verified live 2026-07-13: M3 benchmark quote verbatim; all six aero effects with exact airspeed scalings; 'first-order motor dynamics to simulate lag' and 'spatio-temporal wind flow fields'. Paper (arXiv 2306.04485) confirms the lumped three-contribution aero wrench, Dryden model, and Crazyflie validation; repo contains dryden_winds.py. Survey Table IV: pro 'Comprehensive quadrotor model an
+- 来源: https://github.com/spencerfolk/rotorpy ; https://arxiv.org/pdf/2306.04485 ; https://arxiv.org/pdf/2311.02296
+
+### RotorPy is directly suitable for energy-consumption research: per-rotor speeds are explicit simulated states (state dict...
+- 置信: high | 票: 3-0
+- 全文: RotorPy is directly suitable for energy-consumption research: per-rotor speeds are explicit simulated states (state dict 'rotor_speeds', dynamics rotor_accel = (1/tau_m)*(cmd - actual)) governed by a first-order motor-delay process with a time constant identifiable from static thrust-stand testing — so a custom BEMT-based or hybrid physics+neural power model (as in this repo's energy/ module) can be driven straight from simulated rotor speeds. Caveat: RotorPy itself ships no battery, power, or energy-consumption model (zero hits for battery/power/energy in the paper and vehicle model), so the power model must be user-injected.
+- 证据: Paper Sec. II-C eq. 10: 'We model the actuator delay using a first order process' with commanded rotor speeds in R^n and 'the motor time constant... can be identified using static thrust stand testing.' Verifier confirmed rotorpy/vehicles/multirotor.py packs rotor_speeds as state s[16:] with the first-order update, and grep of full paper text returns 0 hits for battery/power/energy.
+- 来源: https://arxiv.org/pdf/2306.04485 ; https://github.com/spencerfolk/rotorpy
+
+### RotorPy's key limitation for this project: no camera, depth, or vision sensor simulation. Its sensor suite is IMU + exte...
+- 置信: medium | 票: 2-1
+- 全文: RotorPy's key limitation for this project: no camera, depth, or vision sensor simulation. Its sensor suite is IMU + external motion-capture (plus a 2D ray-cast range sensor in current code, which yields sparse XY ray distances, not depth images). It therefore cannot by itself support perception-in-the-loop (depth-image-based) receding-horizon planning — a 2026 project (Droneulator) had to bolt RotorPy dynamics onto Godot 4 specifically to obtain RGB/depth images.
+- 证据: Paper: 'inertial and motion capture sensors'. Verifier checked current main branch: rotorpy/sensors/ contains only imu.py, external_mocap.py, range_sensors.py (TwoDRangeSensor, output shape (N_rays,)); no camera/depth modules; sensors README documents only IMU and mocap. Split vote (2-1) reflects the literal 'IMU and mocap only' wording slightly understating the current suite (2D range sensor exis
+- 来源: https://arxiv.org/pdf/2306.04485 ; https://github.com/spencerfolk/rotorpy
+
+### ⑧⑩ Isaac Sim/Isaac Lab and its drone extensions (Pegasus Simulator, Aerial Gym) are unusable on Apple Silicon Macs, nati...
+- 置信: high | 票: merged from 2 claims, each 3-0
+- 全文: ⑧⑩ Isaac Sim/Isaac Lab and its drone extensions (Pegasus Simulator, Aerial Gym) are unusable on Apple Silicon Macs, natively or via Rosetta. Isaac Sim 5.1.0's official requirements list only Ubuntu 22.04/24.04 and Windows 10/11 on x86_64 (plus NVIDIA DGX OS on DGX Spark aarch64), never macOS, and hard-require an NVIDIA RTX GPU that no Mac has; the 2025 survey's Table V marks the Isaac (Pegasus, Aerial Gym) row Linux-only (✓✗✗), with Pegasus untested on Windows and Aerial Gym built on Linux-only Isaac Gym Preview.
+- 证据: NVIDIA requirements page fetched directly: all spec tiers list Ubuntu 22.04/24.04 + Windows 10/11 only; aarch64 limited to DGX Spark; RTX GPU mandatory. Survey Table V row verified in PDF. Verifier caveat: base Isaac Sim DOES support Windows (survey's ✗ applies to the drone extensions), but this does not affect the macOS conclusion. The only Apple artifact found is a Vision Pro CloudXR streaming c
+- 来源: https://docs.isaacsim.omniverse.nvidia.com/5.1.0/installation/requirements.html ; https://arxiv.org/pdf/2311.02296
+
+### ⑥⑦ Webots and CoppeliaSim are the only two general-purpose robotics simulators in the 2025 survey with full three-OS sup...
+- 置信: high | 票: 3-0
+- 全文: ⑥⑦ Webots and CoppeliaSim are the only two general-purpose robotics simulators in the 2025 survey with full three-OS support including Mac (Table V ✓✓✓) and active maintenance, and both ship native Apple Silicon builds in 2025 (Webots R2025a arm64 .dmg / Homebrew cask; CoppeliaSim macOS arm64 4.9.0). Caveats for quadrotor work: Webots has only 'two quadrotor models with simplified aerodynamic physics' (it primarily targets ground robots), and CoppeliaSim's physics-engine choice can cause 'velocity or position jumps, unrealistic collision behaviors, and erratic sensor outputs'; CoppeliaSim is also only partially open-source (GPL + commercial).
+- 证据: Both caveat quotes verified verbatim in the survey PDF; Table V rows extracted in full (Webots: ODE/OpenGL/✓✓✓/Apache-2.0/Active✓; CoppeliaSim: Bullet-ODE-Vortex-Newton-MuJoCo/✓✓✓/GPL+Commercial/Active✓). Verifier independently corroborated 2025 native arm64 distributions for both. Note: CoppeliaSim's MuJoCo plugin reportedly fails under Rosetta on Apple Silicon.
+- 来源: https://arxiv.org/pdf/2311.02296 ; https://github.com/cyberbotics/webots/releases/tag/R2025a
+
+### ⑤⑨ Flightmare/Agilicious and FlightGoggles are both marked not actively maintained and without Mac support in the 2025 s...
+- 置信: high | 票: 3-0 (within merged claim 22)
+- 全文: ⑤⑨ Flightmare/Agilicious and FlightGoggles are both marked not actively maintained and without Mac support in the 2025 survey's Table V (both repos dormant since ~2021) — despite Flightmare's Unity rendering being good enough that DOPE object detection succeeded where Gazebo failed, neither is a viable 2025-2026 Mac option.
+- 证据: Survey Table V: Flightmare L=✓ W=✗ M=✗ Active=✗; FlightGoggles M=✗ Active=✗; Table IV cons for both read 'Not actively maintained'. Verifier confirmed both repos dormant since ~2021 as of 2026. The Flightmare rendering-quality contrast comes from the JHU paper's Fig. 3 DOPE comparison.
+- 来源: https://arxiv.org/pdf/2311.02296 ; https://imrclab.github.io/workshop-uav-sims-icra2023/papers/RS4UAVs_paper_10.pdf
+
+### RECOMMENDATION for 'energy-aware path planning + dynamics closed-loop validation + Mac-only': a two-tier stack, exactly ...
+- 置信: high | 票: synthesis (no direct vote)
+- 全文: RECOMMENDATION for 'energy-aware path planning + dynamics closed-loop validation + Mac-only': a two-tier stack, exactly as the question hypothesized, with gym-pybullet-drones as a third leg. Tier 1 (fast iteration + energy): RotorPy — native M-series performance, six-effect aerodynamics with per-rotor-speed states feeding a user-injected BEMT/hybrid power model, wind fields for energy-under-disturbance studies. Tier 2 (full-stack closed-loop): PX4 SITL + Gazebo Harmonic via ./Tools/setup/macos.sh --sim-tools on PX4 main — the canonical identical-stack-to-hardware route, now Apple Silicon-native, with x500 depth-camera/lidar variants covering the depth-image → map → RRT* pipeline this repo uses (accepting low visual fidelity; adequate for depth/geometry, not photorealistic perception). Tier 3 (optional): gym-pybullet-drones for RL baselines and contact-rich scenarios (Betaflight SITL excluded on Mac). Rejected for Mac: AirSim/Colosseum (archived), Isaac Sim/Pegasus/Aerial Gym (no macOS, RTX-required), Flightmare/FlightGoggles (unmaintained). Fallbacks: Webots/CoppeliaSim (Mac-native but simplified quad aerodynamics).
+- 证据: Synthesis of all 24 verified claims: every eliminated option was eliminated by 3-0-verified primary evidence (archival dates, official OS requirement pages, survey Table V), and every recommended option has 3-0-verified native Apple Silicon evidence (PX4 docs line + tap deprecation trail; RotorPy M3 benchmark; gym-pybullet-drones macOS 26.2 test line). The RotorPy→PX4 split mirrors the JHU team's 
+- 来源: https://docs.px4.io/main/en/dev_setup/dev_env_mac ; https://github.com/spencerfolk/rotorpy ; https://github.com/utiasDSL/gym-pybullet-drones ; https://imrclab.github.io/workshop-uav-sims-icra2023/papers/RS4UAVs_paper_10.pdf ; https://arxiv.org/pdf/2311.02296
+
+## Caveats
+- T
+- i
+- m
+- e
+-  
+- s
+- e
+- n
+- s
+- i
+- t
+- i
+- v
+- i
+- t
+- y
+-  
+- i
+- s
+-  
+- t
+- h
+- e
+-  
+- b
+- i
+- g
+- g
+- e
+- s
+- t
+-  
+- c
+- a
+- v
+- e
+- a
+- t
+- :
+-  
+- (
+- 1
+- )
+-  
+- P
+- X
+- 4
+- '
+- s
+-  
+- A
+- p
+- p
+- l
+- e
+-  
+- S
+- i
+- l
+- i
+- c
+- o
+- n
+- -
+- n
+- a
+- t
+- i
+- v
+- e
+- ,
+-  
+- n
+- o
+- -
+- R
+- o
+- s
+- e
+- t
+- t
+- a
+-  
+- p
+- a
+- t
+- h
+-  
+- e
+- x
+- i
+- s
+- t
+- s
+-  
+- o
+- n
+- l
+- y
+-  
+- o
+- n
+-  
+- m
+- a
+- i
+- n
+- -
+- b
+- r
+- a
+- n
+- c
+- h
+-  
+- d
+- o
+- c
+- s
+- /
+- t
+- o
+- o
+- l
+- c
+- h
+- a
+- i
+- n
+-  
+- a
+- s
+-  
+- o
+- f
+-  
+- F
+- e
+- b
+- -
+- A
+- p
+- r
+-  
+- 2
+- 0
+- 2
+- 6
+-  
+- —
+-  
+- t
+- h
+- e
+-  
+- l
+- a
+- t
+- e
+- s
+- t
+-  
+- r
+- e
+- l
+- e
+- a
+- s
+- e
+- -
+- v
+- e
+- r
+- s
+- i
+- o
+- n
+- e
+- d
+-  
+- d
+- o
+- c
+- s
+-  
+- (
+- v
+- 1
+- .
+- 1
+- 7
+- )
+-  
+- s
+- t
+- i
+- l
+- l
+-  
+- i
+- n
+- s
+- t
+- r
+- u
+- c
+- t
+-  
+- R
+- o
+- s
+- e
+- t
+- t
+- a
+- ,
+-  
+- s
+- o
+-  
+- p
+- i
+- n
+- n
+- i
+- n
+- g
+-  
+- t
+- o
+-  
+- a
+-  
+- r
+- e
+- l
+- e
+- a
+- s
+- e
+-  
+- t
+- a
+- g
+-  
+- m
+- a
+- y
+-  
+- r
+- e
+- i
+- n
+- t
+- r
+- o
+- d
+- u
+- c
+- e
+-  
+- t
+- h
+- e
+-  
+- o
+- l
+- d
+-  
+- w
+- o
+- r
+- k
+- f
+- l
+- o
+- w
+- ;
+-  
+- t
+- h
+- e
+-  
+- b
+- r
+- e
+- w
+- -
+- f
+- o
+- r
+- m
+- u
+- l
+- a
+-  
+- d
+- e
+- p
+- r
+- e
+- c
+- a
+- t
+- i
+- o
+- n
+-  
+- i
+- s
+-  
+- u
+- n
+- d
+- e
+- r
+-  
+- 3
+-  
+- m
+- o
+- n
+- t
+- h
+- s
+-  
+- o
+- l
+- d
+-  
+- a
+- n
+- d
+-  
+- o
+- n
+- e
+-  
+- s
+- t
+- a
+- l
+- e
+-  
+- d
+- o
+- c
+- s
+-  
+- l
+- i
+- n
+- e
+-  
+- s
+- t
+- i
+- l
+- l
+-  
+- r
+- e
+- f
+- e
+- r
+- e
+- n
+- c
+- e
+- s
+-  
+- `
+- b
+- r
+- e
+- w
+-  
+- i
+- n
+- s
+- t
+- a
+- l
+- l
+-  
+- p
+- x
+- 4
+- -
+- s
+- i
+- m
+- `
+- .
+-  
+- (
+- 2
+- )
+-  
+- C
+- o
+- l
+- o
+- s
+- s
+- e
+- u
+- m
+-  
+- w
+- a
+- s
+-  
+- a
+- r
+- c
+- h
+- i
+- v
+- e
+- d
+-  
+- o
+- n
+- l
+- y
+-  
+- d
+- a
+- y
+- s
+-  
+- b
+- e
+- f
+- o
+- r
+- e
+-  
+- t
+- h
+- i
+- s
+-  
+- r
+- e
+- s
+- e
+- a
+- r
+- c
+- h
+-  
+- (
+- 2
+- 0
+- 2
+- 6
+- -
+- 0
+- 7
+- -
+- 1
+- 1
+- )
+- ,
+-  
+- a
+- n
+- d
+-  
+- m
+- i
+- c
+- r
+- o
+- s
+- o
+- f
+- t
+- /
+- A
+- i
+- r
+- S
+- i
+- m
+-  
+- i
+- s
+-  
+- t
+- e
+- c
+- h
+- n
+- i
+- c
+- a
+- l
+- l
+- y
+-  
+- n
+- o
+- t
+-  
+- a
+- r
+- c
+- h
+- i
+- v
+- e
+- d
+-  
+- (
+- R
+- E
+- A
+- D
+- M
+- E
+- -
+- o
+- n
+- l
+- y
+-  
+- c
+- o
+- m
+- m
+- i
+- t
+- s
+-  
+- t
+- h
+- r
+- o
+- u
+- g
+- h
+-  
+- J
+- u
+- n
+- e
+-  
+- 2
+- 0
+- 2
+- 6
+- )
+-  
+- —
+-  
+- t
+- h
+- e
+-  
+- l
+- i
+- n
+- e
+- a
+- g
+- e
+-  
+- i
+- s
+-  
+- '
+- e
+- f
+- f
+- e
+- c
+- t
+- i
+- v
+- e
+- l
+- y
+-  
+- d
+- e
+- a
+- d
+- '
+- ,
+-  
+- n
+- o
+- t
+-  
+- l
+- i
+- t
+- e
+- r
+- a
+- l
+- l
+- y
+-  
+- d
+- e
+- l
+- e
+- t
+- e
+- d
+- ;
+-  
+- C
+- o
+- s
+- y
+- s
+- -
+- A
+- i
+- r
+- S
+- i
+- m
+-  
+- i
+- s
+-  
+- a
+- n
+-  
+- a
+- c
+- t
+- i
+- v
+- e
+- l
+- y
+-  
+- m
+- a
+- i
+- n
+- t
+- a
+- i
+- n
+- e
+- d
+-  
+- f
+- o
+- r
+- k
+-  
+- b
+- u
+- t
+-  
+- w
+- i
+- t
+- h
+-  
+- n
+- o
+-  
+- v
+- e
+- r
+- i
+- f
+- i
+- e
+- d
+-  
+- M
+- a
+- c
+-  
+- p
+- a
+- t
+- h
+- .
+-  
+- (
+- 3
+- )
+-  
+- N
+- o
+-  
+- h
+- a
+- n
+- d
+- s
+- -
+- o
+- n
+-  
+- i
+- n
+- s
+- t
+- a
+- l
+- l
+- a
+- t
+- i
+- o
+- n
+-  
+- o
+- r
+-  
+- r
+- u
+- n
+- t
+- i
+- m
+- e
+-  
+- t
+- e
+- s
+- t
+- i
+- n
+- g
+-  
+- w
+- a
+- s
+-  
+- p
+- e
+- r
+- f
+- o
+- r
+- m
+- e
+- d
+-  
+- o
+- n
+-  
+- a
+- n
+- y
+-  
+- s
+- t
+- a
+- c
+- k
+-  
+- —
+-  
+- a
+- l
+- l
+-  
+- e
+- v
+- i
+- d
+- e
+- n
+- c
+- e
+-  
+- i
+- s
+-  
+- d
+- o
+- c
+- u
+- m
+- e
+- n
+- t
+- a
+- r
+- y
+-  
+- (
+- o
+- f
+- f
+- i
+- c
+- i
+- a
+- l
+-  
+- d
+- o
+- c
+- s
+- ,
+-  
+- r
+- e
+- p
+- o
+-  
+- c
+- o
+- d
+- e
+- ,
+-  
+- R
+- E
+- A
+- D
+- M
+- E
+-  
+- c
+- l
+- a
+- i
+- m
+- s
+- ,
+-  
+- s
+- u
+- r
+- v
+- e
+- y
+-  
+- P
+- D
+- F
+- s
+- )
+- ;
+-  
+- i
+- n
+-  
+- p
+- a
+- r
+- t
+- i
+- c
+- u
+- l
+- a
+- r
+- ,
+-  
+- t
+- h
+- e
+-  
+- p
+- r
+- a
+- c
+- t
+- i
+- c
+- a
+- l
+-  
+- s
+- t
+- a
+- b
+- i
+- l
+- i
+- t
+- y
+-  
+- a
+- n
+- d
+-  
+- s
+- e
+- n
+- s
+- o
+- r
+-  
+- f
+- r
+- a
+- m
+- e
+-  
+- r
+- a
+- t
+- e
+- s
+-  
+- o
+- f
+-  
+- G
+- a
+- z
+- e
+- b
+- o
+-  
+- H
+- a
+- r
+- m
+- o
+- n
+- i
+- c
+-  
+- +
+-  
+- P
+- X
+- 4
+-  
+- S
+- I
+- T
+- L
+-  
+- o
+- n
+-  
+- A
+- p
+- p
+- l
+- e
+-  
+- S
+- i
+- l
+- i
+- c
+- o
+- n
+-  
+- a
+- r
+- e
+-  
+- a
+- s
+- s
+- e
+- r
+- t
+- e
+- d
+-  
+- b
+- y
+-  
+- d
+- o
+- c
+- s
+- /
+- t
+- o
+- o
+- l
+- c
+- h
+- a
+- i
+- n
+-  
+- c
+- o
+- d
+- e
+- ,
+-  
+- n
+- o
+- t
+-  
+- b
+- y
+-  
+- v
+- e
+- r
+- i
+- f
+- i
+- e
+- d
+-  
+- u
+- s
+- e
+- r
+-  
+- r
+- u
+- n
+-  
+- r
+- e
+- p
+- o
+- r
+- t
+- s
+-  
+- (
+- t
+- h
+- e
+-  
+- r
+- e
+- l
+- a
+- t
+- e
+- d
+-  
+- c
+- l
+- a
+- i
+- m
+-  
+- t
+- h
+- a
+- t
+-  
+- n
+- e
+- w
+-  
+- G
+- a
+- z
+- e
+- b
+- o
+-  
+- i
+- s
+-  
+- L
+- i
+- n
+- u
+- x
+- -
+- o
+- n
+- l
+- y
+-  
+- w
+- a
+- s
+-  
+- r
+- e
+- f
+- u
+- t
+- e
+- d
+-  
+- 0
+- -
+- 3
+- ,
+-  
+- b
+- u
+- t
+-  
+- t
+- h
+- a
+- t
+-  
+- r
+- e
+- f
+- u
+- t
+- a
+- t
+- i
+- o
+- n
+-  
+- e
+- s
+- t
+- a
+- b
+- l
+- i
+- s
+- h
+- e
+- s
+-  
+- d
+- o
+- c
+- u
+- m
+- e
+- n
+- t
+- a
+- t
+- i
+- o
+- n
+- ,
+-  
+- n
+- o
+- t
+-  
+- f
+- i
+- e
+- l
+- d
+-  
+- e
+- x
+- p
+- e
+- r
+- i
+- e
+- n
+- c
+- e
+- )
+- .
+-  
+- (
+- 4
+- )
+-  
+- R
+- o
+- t
+- o
+- r
+- P
+- y
+- '
+- s
+-  
+- d
+- y
+- n
+- a
+- m
+- i
+- c
+- s
+-  
+- v
+- a
+- l
+- i
+- d
+- a
+- t
+- i
+- o
+- n
+-  
+- i
+- s
+-  
+- C
+- r
+- a
+- z
+- y
+- f
+- l
+- i
+- e
+- -
+- s
+- p
+- e
+- c
+- i
+- f
+- i
+- c
+-  
+- (
+- s
+- m
+- a
+- l
+- l
+-  
+- q
+- u
+- a
+- d
+- r
+- o
+- t
+- o
+- r
+- )
+- ;
+-  
+- f
+- i
+- d
+- e
+- l
+- i
+- t
+- y
+-  
+- c
+- l
+- a
+- i
+- m
+- s
+-  
+- f
+- o
+- r
+-  
+- l
+- a
+- r
+- g
+- e
+- r
+-  
+- a
+- i
+- r
+- f
+- r
+- a
+- m
+- e
+- s
+-  
+- a
+- r
+- e
+-  
+- e
+- x
+- t
+- r
+- a
+- p
+- o
+- l
+- a
+- t
+- i
+- o
+- n
+- ,
+-  
+- a
+- n
+- d
+-  
+- i
+- t
+- s
+-  
+- M
+- 3
+-  
+- b
+- e
+- n
+- c
+- h
+- m
+- a
+- r
+- k
+-  
+- i
+- s
+-  
+- a
+- u
+- t
+- h
+- o
+- r
+- -
+- s
+- e
+- l
+- f
+- -
+- r
+- e
+- p
+- o
+- r
+- t
+- e
+- d
+- .
+-  
+- (
+- 5
+- )
+-  
+- T
+- h
+- e
+-  
+- '
+- R
+- o
+- t
+- o
+- r
+- P
+- y
+-  
+- h
+- a
+- s
+-  
+- n
+- o
+-  
+- c
+- a
+- m
+- e
+- r
+- a
+-  
+- s
+- e
+- n
+- s
+- o
+- r
+- s
+- '
+-  
+- f
+- i
+- n
+- d
+- i
+- n
+- g
+-  
+- c
+- a
+- r
+- r
+- i
+- e
+- d
+-  
+- a
+-  
+- 2
+- -
+- 1
+-  
+- s
+- p
+- l
+- i
+- t
+-  
+- v
+- o
+- t
+- e
+-  
+- o
+- v
+- e
+- r
+-  
+- l
+- i
+- t
+- e
+- r
+- a
+- l
+-  
+- w
+- o
+- r
+- d
+- i
+- n
+- g
+-  
+- (
+- a
+-  
+- 2
+- D
+-  
+- r
+- a
+- n
+- g
+- e
+-  
+- s
+- e
+- n
+- s
+- o
+- r
+-  
+- e
+- x
+- i
+- s
+- t
+- s
+-  
+- i
+- n
+-  
+- c
+- u
+- r
+- r
+- e
+- n
+- t
+-  
+- c
+- o
+- d
+- e
+- )
+- ,
+-  
+- t
+- h
+- o
+- u
+- g
+- h
+-  
+- t
+- h
+- e
+-  
+- s
+- u
+- b
+- s
+- t
+- a
+- n
+- t
+- i
+- v
+- e
+-  
+- c
+- o
+- n
+- c
+- l
+- u
+- s
+- i
+- o
+- n
+-  
+- w
+- a
+- s
+-  
+- c
+- o
+- d
+- e
+- -
+- v
+- e
+- r
+- i
+- f
+- i
+- e
+- d
+- .
+-  
+- (
+- 6
+- )
+-  
+- T
+- h
+- e
+-  
+- G
+- a
+- z
+- e
+- b
+- o
+-  
+- v
+- i
+- s
+- u
+- a
+- l
+- -
+- f
+- i
+- d
+- e
+- l
+- i
+- t
+- y
+-  
+- '
+- p
+- r
+- o
+- h
+- i
+- b
+- i
+- t
+- i
+- v
+- e
+-  
+- f
+- o
+- r
+-  
+- V
+- O
+- '
+-  
+- f
+- i
+- n
+- d
+- i
+- n
+- g
+-  
+- i
+- s
+-  
+- o
+- n
+- e
+-  
+- t
+- e
+- a
+- m
+- '
+- s
+-  
+- f
+- i
+- r
+- s
+- t
+- -
+- h
+- a
+- n
+- d
+-  
+- r
+- e
+- p
+- o
+- r
+- t
+-  
+- i
+- n
+-  
+- a
+-  
+- m
+- i
+- n
+- i
+- m
+- a
+- l
+- l
+- y
+-  
+- t
+- e
+- x
+- t
+- u
+- r
+- e
+- d
+-  
+- w
+- o
+- r
+- l
+- d
+-  
+- a
+- n
+- d
+-  
+- p
+- r
+- e
+- d
+- a
+- t
+- e
+- s
+-  
+- G
+- a
+- z
+- e
+- b
+- o
+-  
+- H
+- a
+- r
+- m
+- o
+- n
+- i
+- c
+- '
+- s
+-  
+- P
+- B
+- R
+-  
+- r
+- e
+- n
+- d
+- e
+- r
+- e
+- r
+- ;
+-  
+- i
+- t
+-  
+- s
+- h
+- o
+- u
+- l
+- d
+-  
+- b
+- e
+-  
+- r
+- e
+- a
+- d
+-  
+- a
+- s
+-  
+- a
+-  
+- p
+- h
+- o
+- t
+- o
+- r
+- e
+- a
+- l
+- i
+- s
+- m
+-  
+- g
+- a
+- p
+- ,
+-  
+- n
+- o
+- t
+-  
+- a
+-  
+- u
+- n
+- i
+- v
+- e
+- r
+- s
+- a
+- l
+-  
+- i
+- m
+- p
+- o
+- s
+- s
+- i
+- b
+- i
+- l
+- i
+- t
+- y
+- .
+-  
+- (
+- 7
+- )
+-  
+- T
+- h
+- e
+-  
+- s
+- u
+- r
+- v
+- e
+- y
+- '
+- s
+-  
+- '
+- c
+- o
+- m
+- m
+- e
+- r
+- c
+- i
+- a
+- l
+-  
+- P
+- r
+- o
+- j
+- e
+- c
+- t
+-  
+- A
+- i
+- r
+- S
+- i
+- m
+- '
+-  
+- s
+- t
+- a
+- t
+- e
+- m
+- e
+- n
+- t
+-  
+- i
+- s
+-  
+- s
+- t
+- a
+- l
+- e
+-  
+- (
+- P
+- r
+- o
+- j
+- e
+- c
+- t
+-  
+- A
+- i
+- r
+- S
+- i
+- m
+-  
+- w
+- a
+- s
+-  
+- i
+- t
+- s
+- e
+- l
+- f
+-  
+- s
+- h
+- u
+- t
+-  
+- d
+- o
+- w
+- n
+-  
+- D
+- e
+- c
+-  
+- 2
+- 0
+- 2
+- 3
+-  
+- a
+- n
+- d
+-  
+- l
+- a
+- t
+- e
+- r
+-  
+- r
+- e
+- l
+- e
+- a
+- s
+- e
+- d
+-  
+- M
+- I
+- T
+-  
+- v
+- i
+- a
+-  
+- I
+- A
+- M
+- A
+- I
+- )
+- .
+
+## 被否决的论断(诚实记录)
+- {'claim': "PX4's modern Gazebo (Gz) simulator is documented as supported only on Ubuntu Linux (Harmonic on 22.04; Harmonic/Ionic/Jetty on 24.04); the page provides no macOS installation instructions or brew-based path, implying no documented native macOS Apple Silicon support for PX4 SITL + new Gazebo.", 'vote': '0-3', 'source': 'https://docs.px4.io/main/en/sim_gazebo_gz/index'}
