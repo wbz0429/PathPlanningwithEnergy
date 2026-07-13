@@ -98,7 +98,42 @@ M100 选的绕行路,**只在 M100 尺子下省能**;在 BEMT 尺子下反而更
   "重载→绕行 / 轻载→翻越"的翻转在真实 envelope 内不成立(需 >650g 载荷比,无公开大载荷数据集)。
 - **诚实价值**:这个负结果反而强化主结果的可信度——我们不硬凑不存在的载荷效应,只报真实存在的爬升效应。
 
+## 溯源与可复现(审计三问)
+
+### ① 每次迭代的真实运行记录
+- **模型演化 loop**:`experiments/candidates/iter1~9_featurize.py`(每迭代候选代码)+
+  `experiments/agent_log.jsonl`(每迭代 search/val ARE 真实数字,含 REVERT 失败记录:6.88%→4.25%→1.93%)+
+  git 每迭代一 commit + KNOWLEDGE.md 结论。
+- **规划实验**:`wall_experiment_result.json` / `phase_diagram.json` / `batch_compare_result.json`(平场景全 0% 负结果也在)/
+  `robustness_suite.json`(速度、起终点、消融、BEMT质量公平性)+ 4 张 PNG,全部 git 提交。
+
+### ② M100 参数从哪来(为什么可信)
+- **系数不是手填的**:9 个模型系数全部从 Rodrigues 2021 公开数据集(209 次真实 DJI Matrice 100 飞行,
+  机载电压×电流真功率遥测)回归拟合。
+- **唯一手填先验**:`m0 = 2.4 kg` = M100 + TB47D 电池官方起飞重量(2355g)。
+- **验证**:按航班 held-out ARE 1.93~2.18%;爬升 premium 预测 +108W vs 真实 +114W(<5%)。参数错不可能这么准。
+- **公平性对照**:BEMT baseline 原始 mass=1.5kg;`robustness_suite.py` ④ 将其改为 M100 的 2.65kg 复跑,
+  验证"翻墙"不是质量参数造成(与消融结论一致:因是爬升盲)。
+- **包络纪律**:模型只在数据范围内使用(v 4–12 m/s、载荷 0–500g),不外推。
+
+### ③ 仿真闭环链条(与诚实缺口)
+```
+真 M100 飞行数据(209 航班,V·I 真功率)
+  → 冻结评测器 m100_eval.py(按航班 held-out,防作弊,从未改动)
+  → 拟合能耗模型(ARE 1.93%,爬升机制单独验证 <5%)
+  → em 接口插进真规划器(energy_astar + 原仓库 VoxelGrid/ESDF)
+  → 路径双模型尺子评分(M100 + BEMT 交叉验证)
+  → 因果消融(挖爬升项 → 决策退化 = 机制确认)
+```
+- **接口一致性校验**:喂给模型的运动学必须与训练特征同定义——v_z 符号 bug(NED 爬升 dz<0 vs 模型正 v_z=爬升)
+  即由"探针测试"(vz=+3 → 639W)抓出并修复,这是闭环校验的实例。
+- **诚实缺口(不装闭环)**:无动力学仿真器(Mac 无 AirSim)→ 路径评估是运动学折线,非物理仿真闭环;
+  无真机复飞 → 省能是模型预测,非实飞测量;场景为构造墙,非实测地图。
+
 ## 复现
 ```
-python wall_experiment.py   # 主结果 + 图 + JSON
+python wall_experiment.py    # 主结果 + 图 + JSON
+python robustness_suite.py   # 速度/起终点/消融/BEMT质量 四项审计落盘
+python validate_climb.py     # held-out 爬升代价验证
+python phase_diagram.py      # 操作包络相图
 ```
