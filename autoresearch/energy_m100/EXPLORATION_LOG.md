@@ -60,3 +60,13 @@
 - M100 能耗 distance-dominated → 省能幅度可能小(~6%),诚实报;
 - 用真规划器出真路径(不用手画,用户批过 mock);
 - 破循环:双模型交叉验证。
+
+## 2026-07-13 下半场(动力学闭环 + 场景 + 报告)
+- RotorPy 动力学闭环:单墙实飞省 6.1%(折线 10.7%);工程发现"平滑切角蹭墙,裕度须 2.0m"
+- 城市走廊旗舰:逐障碍混合决策(翻矮楼A/绕高楼B),实飞省 4.4%
+- 因果消融:挖爬升项 → ARE 变差 + 决策退化回翻墙(BEMT 非稻草人)
+- 飞行视频 ×2(MP4 内嵌报告)
+- deep-research 仿真环境全景(106 agents):RotorPy=tier-1 已验证;PX4+Gazebo=感知升级路径
+- PX4 线:构建成功后按用户决定封存(4 坑记录,恢复命令在 px4_integration/README.md)
+- 删除 radar_scenes 数据集(13GB,用户要求;radar 代码保留)
+- **中期报告 v2 生成**:experiments/midterm_report_v2.html(1.7MB 单文件,5图2视频内嵌,数据全从JSON读)
