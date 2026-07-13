@@ -1,0 +1,188 @@
+{
+ "preregistered": {
+  "criteria": "4 judged wind cells (head/cross x 3/6 m/s): savings sign holds AND wall_margin>0 AND goal_err<5m for both routes",
+  "judged_cells": [
+   "cross3",
+   "cross6",
+   "head3",
+   "head6"
+  ],
+  "extra_cells": [
+   "nowind",
+   "tail6"
+  ],
+  "ruler": "frozen M100Em on ground-frame flown kinematics (no wind energy term; iter5 falsified that channel)"
+ },
+ "scenario": {
+  "wall": "half_y=16, h=12, s=(10,0,-3), g=(72,0,-3), margin=2.0, v_plan=8"
+ },
+ "cells": [
+  {
+   "wind": "nowind",
+   "wind_vec": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "climb_dist": {
+    "E_J": 6416.0,
+    "T_s": 12.2,
+    "meanP_W": 525.0,
+    "wall_margin_m": 1.46,
+    "goal_err_m": 0.01
+   },
+   "detour_m100": {
+    "E_J": 6025.0,
+    "T_s": 12.9,
+    "meanP_W": 466.0,
+    "wall_margin_m": 0.72,
+    "goal_err_m": 0.02
+   },
+   "savings_pct": 6.09,
+   "sign_holds": true,
+   "both_safe": true,
+   "both_tracked": true
+  },
+  {
+   "wind": "head3",
+   "wind_vec": [
+    -3.0,
+    0.0,
+    0.0
+   ],
+   "climb_dist": {
+    "E_J": 6457.0,
+    "T_s": 12.2,
+    "meanP_W": 528.0,
+    "wall_margin_m": 2.09,
+    "goal_err_m": 0.44,
+    "max_dev_from_nowind_m": 1.96
+   },
+   "detour_m100": {
+    "E_J": 6095.0,
+    "T_s": 12.9,
+    "meanP_W": 471.0,
+    "wall_margin_m": 0.14,
+    "goal_err_m": 0.58,
+    "max_dev_from_nowind_m": 2.08
+   },
+   "savings_pct": 5.61,
+   "sign_holds": true,
+   "both_safe": true,
+   "both_tracked": true
+  },
+  {
+   "wind": "head6",
+   "wind_vec": [
+    -6.0,
+    0.0,
+    0.0
+   ],
+   "climb_dist": {
+    "E_J": 6601.0,
+    "T_s": 12.2,
+    "meanP_W": 540.0,
+    "wall_margin_m": 2.17,
+    "goal_err_m": 1.75,
+    "max_dev_from_nowind_m": 6.16
+   },
+   "detour_m100": {
+    "E_J": 6347.0,
+    "T_s": 12.9,
+    "meanP_W": 490.0,
+    "wall_margin_m": 0.0,
+    "goal_err_m": 2.15,
+    "max_dev_from_nowind_m": 5.87
+   },
+   "savings_pct": 3.85,
+   "sign_holds": true,
+   "both_safe": false,
+   "both_tracked": true
+  },
+  {
+   "wind": "cross3",
+   "wind_vec": [
+    0.0,
+    3.0,
+    0.0
+   ],
+   "climb_dist": {
+    "E_J": 6420.0,
+    "T_s": 12.2,
+    "meanP_W": 525.0,
+    "wall_margin_m": 1.48,
+    "goal_err_m": 0.3,
+    "max_dev_from_nowind_m": 0.95
+   },
+   "detour_m100": {
+    "E_J": 6026.0,
+    "T_s": 12.9,
+    "meanP_W": 466.0,
+    "wall_margin_m": 0.0,
+    "goal_err_m": 0.24,
+    "max_dev_from_nowind_m": 1.15
+   },
+   "savings_pct": 6.14,
+   "sign_holds": true,
+   "both_safe": false,
+   "both_tracked": true
+  },
+  {
+   "wind": "cross6",
+   "wind_vec": [
+    0.0,
+    6.0,
+    0.0
+   ],
+   "climb_dist": {
+    "E_J": 6436.0,
+    "T_s": 12.2,
+    "meanP_W": 526.0,
+    "wall_margin_m": 1.55,
+    "goal_err_m": 1.15,
+    "max_dev_from_nowind_m": 2.07
+   },
+   "detour_m100": {
+    "E_J": 6050.0,
+    "T_s": 12.9,
+    "meanP_W": 468.0,
+    "wall_margin_m": 0.0,
+    "goal_err_m": 0.98,
+    "max_dev_from_nowind_m": 2.78
+   },
+   "savings_pct": 6.0,
+   "sign_holds": true,
+   "both_safe": false,
+   "both_tracked": true
+  },
+  {
+   "wind": "tail6",
+   "wind_vec": [
+    6.0,
+    0.0,
+    0.0
+   ],
+   "climb_dist": {
+    "E_J": 6350.0,
+    "T_s": 12.2,
+    "meanP_W": 519.0,
+    "wall_margin_m": 0.75,
+    "goal_err_m": 0.92,
+    "max_dev_from_nowind_m": 2.53
+   },
+   "detour_m100": {
+    "E_J": 5990.0,
+    "T_s": 12.9,
+    "meanP_W": 463.0,
+    "wall_margin_m": 0.64,
+    "goal_err_m": 0.86,
+    "max_dev_from_nowind_m": 2.28
+   },
+   "savings_pct": 5.67,
+   "sign_holds": true,
+   "both_safe": true,
+   "both_tracked": true
+  }
+ ],
+ "verdict_hint": "check cells"
+}

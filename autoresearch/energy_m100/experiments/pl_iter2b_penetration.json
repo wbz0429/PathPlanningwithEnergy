@@ -1,0 +1,24 @@
+{
+ "detour_side_max_abs_y": 17.8,
+ "detour_side_sign": -1.0,
+ "cells": {
+  "head3": {
+   "steps_inside": 0,
+   "frac_inside_pct": 0.0
+  },
+  "head6": {
+   "steps_inside": 23,
+   "frac_inside_pct": 1.78,
+   "max_penetration_m": 0.55
+  },
+  "cross3": {
+   "steps_inside": 0,
+   "frac_inside_pct": 0.0
+  },
+  "cross6": {
+   "steps_inside": 51,
+   "frac_inside_pct": 3.94,
+   "max_penetration_m": 0.96
+  }
+ }
+}
