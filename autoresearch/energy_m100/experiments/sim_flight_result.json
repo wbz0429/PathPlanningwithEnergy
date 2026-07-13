@@ -1,0 +1,22 @@
+{
+  "翻越(距离代价)": {
+    "waypoints": 6,
+    "flown_E": 6416.0,
+    "flight_time": 12.2,
+    "mean_power": 525.0,
+    "planned_E": 4777.0,
+    "wall_margin": 1.46,
+    "max_alt": 14.9
+  },
+  "绕行(M100代价)": {
+    "waypoints": 8,
+    "flown_E": 6025.0,
+    "flight_time": 12.9,
+    "mean_power": 466.0,
+    "planned_E": 4265.0,
+    "wall_margin": 0.72,
+    "max_alt": 2.8
+  },
+  "saving_planned%": 10.7,
+  "saving_flown%": 6.1
+}
