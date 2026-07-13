@@ -111,3 +111,14 @@ v_z<0 区间未单独 held-out、H5 踩线+CI 宽、固定指令速度框架。
 
 ## 文献对标(loop 每轮轻检索 + 里程碑查新写这里,带来源)
 - (待 loop 填充;已知锚点:EcoFlight/CARRT*/WA-LPA* 等报的省能多在 5-30% 区间,Dai 有 M100 建模——我们的 4-22% 量级相符)
+
+### 里程碑 M-pl-1 查新结果(deep-research,101 agents,9 论断 3-0 确认;B 部分因限流未完)
+**发现A(H3 电池可达集)→ PARTIAL,禁止声称评估角度新颖:**
+- Nguyen & Au, AAMAS 2017(https://www.cs.utexas.edu/~chiu/papers/Ty17Extending.pdf)与 arXiv:2012.09367:
+  已定义"能量预算下可达配送目标集=maximum coverage"为核心评估对象,且明言"energy saving → extended range → serve a larger area"。
+- arXiv:2012.08602(Mission-Feasibility Problem):能量预算下任务可行性框架已有;指标=任务完成率。
+- **我们剩下的差异点(写论文按此收窄)**:①对比对象是"代价函数选择"(能量感知 vs 距离,同规划器同地图)而非风利用;
+  ②量化前沿扩张 +31%(峰值)与预算窗口;③"中位省能0但前沿扩张显著"的二分表述;④真机锚定代价。
+  → 定位:"量化代价函数选择带来的可达前沿扩张(真机验证代价)",必须引 Nguyen&Au 2017。
+**发现B(H1 配送顺序)→ 查新未完成**(限流 9:40pm 恢复;在飞线索:疑似存在"climb/descent 不对称顺序"相近文献,
+  Li, Guo & Schonfeld arXiv 26xx 待核)。**B 的新颖性声明冻结,等续跑结论。**
