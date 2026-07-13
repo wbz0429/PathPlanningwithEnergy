@@ -1,1 +1,1 @@
-{"iteration": 1, "open_hypotheses": ["H1-delivery-yoyo", "H2-wind-robust", "H3-battery-reach", "H4-gravity-glide", "H5-savings-distribution"], "verdicts": []}
+{"iteration": 2, "open_hypotheses": ["H2-wind-robust", "H3-battery-reach", "H4-gravity-glide", "H5-savings-distribution"], "verdicts": [{"iter": 1, "hyp": "H1-delivery-yoyo", "verdict": "SUPPORTED", "headline": "不等高链(12-2-10m,d=10m)开放路线顺序翻转省 3.0%@v8 / 9.3%@v12(规划器级,纯顺序效应);闭合巡回距离平局→免费省 12.4-20.2%@v4-12 全域;v=4 open 不翻(水平米太贵);|v_z|>3 外推已标记", "json": "experiments/pl_iter1_delivery_yoyo.json"}]}
