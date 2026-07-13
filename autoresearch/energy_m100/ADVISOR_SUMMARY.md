@@ -157,9 +157,11 @@
 
 - 查新裁决:规划层效应(顺序翻转/可达集/绕行省能/载荷)**全部 prior art**。查新门兑现价值——
   拦住了把"复现 Michel 2024"当创新去写。
-- **AI4S 方向 novelty check 进行中**:"面向无人机能耗规划的**可信 AI4S 方法学**"能否成立——
-  重点查"可信/证伪优先自动科研协议"(cheat-proof 评测器+查新门+因果消融+破循环+系统报负结果)
-  在 AI4S 文献里是否为公认空白(AI Scientist 那批恰被批 overclaim/自评)。结论回来补。
+- **AI4S 方向 novelty check 完成(102 agents)——裁决:站得住**(详见 `AI4S_POSITIONING.md`):
+  - 定位为"把可信/证伪优先 AI4S 方法学**实例化+实证消融**在 UAV 能耗+规划",不声称发明 AI4S/证伪/查新门(AIGS 2024/AI Scientist 已有);
+  - 两条腿:①域应用(旗舰框架没做过 UAV 能耗规划)②方法学 bundle 对着实测失效模式(reward hacking 随能力变严重 54%);
+  - **关键设防=让 safeguard 实证承重**:证明去掉某 safeguard→loop overclaim。**本会话已产出全部承重证据**
+    (查新门抓 H1/H3 prior art、留出抓 iter8 过拟合、负结果抓 loop=随机)。
 
 ---
 
