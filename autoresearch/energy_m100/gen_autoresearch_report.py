@@ -1,0 +1,236 @@
+# -*- coding: utf-8 -*-
+"""gen_autoresearch_report.py — 生成学术风格中文完整报告(自包含 HTML,图+视频 base64 内嵌,单文件)。
+聚焦:整个 Autoresearch 的迭代实现 + 飞行轨迹动态视频 + 图 + 数据对比。
+输出:experiments/autoresearch_report.html
+"""
+import os, base64, json
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+EXP = os.path.join(HERE, "experiments")
+PX4 = os.path.join(HERE, "px4_integration")
+
+
+def _find(name):
+    for d in (EXP, PX4):
+        p = os.path.join(d, name)
+        if os.path.exists(p):
+            return p
+    return None
+
+
+def media(name, mime):
+    p = _find(name)
+    if not p:
+        return None
+    return f"data:{mime};base64," + base64.b64encode(open(p, "rb").read()).decode()
+
+
+def fig(name, num, cap):
+    d = media(name, "image/png")
+    if not d:
+        return f"<p class='miss'>[缺图 {name}]</p>"
+    return f"<figure><img src='{d}'/><figcaption><b>图 {num}</b>　{cap}</figcaption></figure>"
+
+
+def vid(name, num, cap):
+    d = media(name, "video/mp4")
+    if not d:
+        return f"<p class='miss'>[缺视频 {name}]</p>"
+    return (f"<figure><video controls muted loop playsinline preload='metadata' src='{d}'></video>"
+            f"<figcaption><b>视频 {num}</b>　{cap}(点击播放)</figcaption></figure>")
+
+
+def J(name):
+    p = _find(name)
+    return json.load(open(p)) if p else {}
+
+
+def main():
+    wall = J("wall_experiment_result.json")
+    rob = J("robustness_suite.json")
+    cor = J("corridor_result.json")
+    simf = J("sim_flight_result.json")
+    ab = J("px4_ab_comparison.json")
+    sg = J("safeguard_ablation.json")
+
+    # ---- 能耗 loop 迭代表(从 agent_log) ----
+    energy_rows = ""
+    alog = _find("agent_log.jsonl")
+    if alog:
+        seen = set()
+        labels = {0: "稳态BEMT基线", 1: "动量理论核", 2: "Glauert前飞桥", 3: "推力标定型面",
+                  4: "轴向诱导sqrt", 5: "风→空速", 6: "物理核+线性payload", 7: "payload变体",
+                  8: "纯线性库LIB", 9: "物理叠线性", 10: "capstone对标"}
+        for ln in open(alog):
+            r = json.loads(ln); it = r.get("iter")
+            if it in seen:
+                continue
+            seen.add(it)
+            s = r.get("search_ARE"); v = r.get("val_ARE")
+            note = str(r.get("note", ""))[:46]
+            dec = "KEEP" if "KEEP" in note.upper() else ("REVERT" if "REVERT" in note.upper() else "")
+            sv = f"{s*100:.2f}%" if isinstance(s, (int, float)) else "—"
+            vv = f"{v*100:.2f}%" if isinstance(v, (int, float)) else "—"
+            energy_rows += f"<tr><td>{it}</td><td>{labels.get(it,'')}</td><td>{sv}</td><td>{vv}</td><td>{dec}</td></tr>"
+
+    # ---- 墙场景表 ----
+    wall_rows = ""
+    for r in (wall or []):
+        wall_rows += (f"<tr><td>{r['场景']}(半宽{r['墙半宽']:.0f}m)</td><td>{r.get('距离最短_选择','?')}</td>"
+                      f"<td>{r.get('教科书BEMT_选择','?')}</td><td class='hl'>{r.get('真机M100_选择','?')}</td>"
+                      f"<td class='hl'>{r.get('省能%_M100尺','?')}%</td></tr>")
+    # ---- 速度鲁棒 ----
+    vel_rows = "".join(f"<tr><td>{x['v']} m/s</td><td>{x['dist']}</td><td class='hl'>{x['m100']}</td>"
+                       f"<td class='hl'>{x['save%']}%</td></tr>" for x in rob.get("velocity_sweep", []))
+    # ---- PX4 A/B ----
+    px4_tbl = ""
+    if ab:
+        d, m = ab["distance"], ab["m100"]
+        px4_tbl = (f"<tr><td>距离(翻越)</td><td>{d['E']} J</td><td>{d['meanW']} W</td><td>{d['maxalt']} m</td><td>{d['ydev']} m</td></tr>"
+                   f"<tr class='hl'><td>真机M100(绕行)</td><td>{m['E']} J</td><td>{m['meanW']} W</td><td>{m['maxalt']} m</td><td>{m['ydev']} m</td></tr>")
+
+    css = """
+    body{font-family:'Songti SC','SimSun',Georgia,serif;max-width:900px;margin:0 auto;padding:40px 28px;color:#1a1a1a;line-height:1.9;font-size:16px}
+    h1{font-size:1.7em;text-align:center;font-weight:700;margin-bottom:4px;line-height:1.4}
+    .sub{text-align:center;color:#555;font-size:1em;margin-bottom:2px}
+    .meta{text-align:center;color:#888;font-size:.85em;margin-bottom:28px}
+    h2{font-size:1.28em;margin-top:2em;border-bottom:2px solid #333;padding-bottom:5px}
+    h3{font-size:1.08em;margin-top:1.4em;color:#222}
+    p{text-align:justify}
+    .abstract{background:#f7f7f4;border:1px solid #ddd;padding:16px 20px;border-radius:4px;font-size:.96em}
+    .abstract b{font-variant:small-caps}
+    table{border-collapse:collapse;width:100%;margin:14px 0;font-size:.9em;font-family:-apple-system,'PingFang SC',sans-serif}
+    th,td{border:1px solid #bbb;padding:6px 9px;text-align:center}
+    th{background:#ececec;font-weight:600} .hl{background:#eaf6ee}
+    figure{margin:20px 0;text-align:center} img,video{max-width:100%;border:1px solid #ccc;border-radius:4px}
+    figcaption{font-size:.86em;color:#444;margin-top:6px;font-family:-apple-system,'PingFang SC',sans-serif}
+    .keybox{border-left:4px solid #2b7a3d;background:#f0f9f2;padding:10px 16px;margin:14px 0;font-size:.95em}
+    .honest{border-left:4px solid #c47f1a;background:#fdf7ef;padding:10px 16px;margin:14px 0;font-size:.95em}
+    code{background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:.86em}
+    .miss{color:#b00;font-size:.85em} ol,ul{padding-left:1.6em}
+    """
+
+    html = f"""<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8">
+<title>可信大模型自动化科研框架 —— 无人机能耗建模与能量感知路径规划</title>
+<style>{css}</style></head><body>
+
+<h1>可信大模型自动化科研框架:<br>无人机能耗建模与能量感知路径规划的迭代实现与实证</h1>
+<div class="sub">A Trustworthy LLM-Agent Autoresearch Framework, Instantiated on UAV Energy Modeling and Energy-Aware Path Planning</div>
+<div class="meta">研究实现报告 · 2026-07 · 数据集:真实 DJI Matrice 100(209 航班,机载 V·I 功率)· 全部结果可复现</div>
+
+<div class="abstract">
+<b>摘要　</b>本文报告一个<b>防作弊、真实数据锚定、系统性报告负结果</b>的大模型智能体自动化科研(AI4S)框架,
+及其在无人机能耗建模与能量感知路径规划上的迭代实现。框架以<b>冻结的、锚定真实功率(P=V·|I|)的作弊不了评测器</b>为核心,
+配<b>基于留出指标的 keep/revert、强制文献查新门、因果消融、交叉模型破循环</b>等安全机制。在真实 DJI M100 数据上,
+自动迭代将能耗模型的留出能量绝对相对误差(ARE)由稳态 BEMT 的 6.88% 降至 1.86%(相对提升约 73%);
+将该真机验证的能耗作为规划代价接入采样式规划器与四旋翼动力学/PX4 飞控固件闭环,
+在障碍场景中相对最短距离基线节能 <b>4–22%(折线预测)、6.1%(RotorPy 动力学)、14.3%(PX4 真飞控栈)</b>。
+本文的核心贡献不在于任何新算法或新效应(经三次文献查新确认均为已发表 prior art),
+而在于<b>方法学本身及其实证承重</b>:通过安全机制消融证明——去掉冻结评测器则过拟合探针可刷分、去掉查新门则 3 个"发现"中有 2 个实为复现、
+结构搜索的价值随任务域而变(规划器域胜随机 27%、能耗域打平)。据此诚实刻画了当前 LLM 自动科研的能力边界。
+</div>
+
+<h2>1　研究背景与定位</h2>
+<p>大模型驱动的自动化科研(AI4S)近年快速发展(FunSearch、AlphaEvolve、Eureka、AI Scientist 等),
+但其可信度存在系统性风险:评测作弊(reward hacking)随模型能力增强而加剧、自动"新颖性"判定浅薄、
+语料正结果偏倚导致过度声称。本工作<b>不声称</b>提出新的规划/能耗算法,亦不声称发明 AI4S 或"证伪优先"范式(AIGS 2024 已有);
+其定位为:将一套<b>可信/证伪优先的自动化科研协议实例化</b>于一个旗舰框架尚未触及的域(无人机能耗建模 + 能量感知规划),
+并在真实数据上<b>实证每个安全机制的承重性</b>。</p>
+
+<h2>2　方法:可信自动化科研框架</h2>
+<p>框架将研究流程抽象为闭环:<code>读结果 → 提假设 → 改代码 → 冻结评测 → keep/revert → 记账</code>。关键设计:</p>
+<ul>
+<li><b>冻结评测器(尺子)</b>:锚定真实功率 P=V·|I|,按<b>飞行</b>划分 train/test,以能量 ARE 为指标;评测器<b>永不可编辑</b>——编辑即作弊。</li>
+<li><b>keep/revert 协议</b>:仅当搜索指标下降<b>且留出指标不显著回退</b>时接受候选,防过拟合到搜索划分。</li>
+<li><b>强制查新门</b>:任何"发现"须先通过文献查新才计为新;未过则诚实降级为"复现/验证"。</li>
+<li><b>因果消融 / 交叉模型破循环 / 系统性报告负结果</b>:确认机制归因、暴露评测循环性、不掩盖失败。</li>
+</ul>
+<div class="keybox"><b>可信性的实证方式(见第 5 节)</b>:上述机制并非口号——本文通过<b>逐个消融</b>证明每个机制"承重":
+去掉它,自动科研就会自欺或过度声称。</div>
+
+<h2>3　迭代实现</h2>
+<h3>3.1　规划器算法自优化 loop(iter0–70,4 个里程碑)</h3>
+<p>以 BEMT 速度剖面能量为目标、碰撞硬约束为门、能量加权 A* 为归一化地板,LLM 迭代进化采样器/平滑器/速度剖面代码。
+里程碑 1(iter21):综合得分 15000→2078(留出验证零过拟合),7 KEEP / 9 REVERT;
+里程碑 2(iter38):引入 CHOMP 式联合梯度精修等,降至 2046;<b>横向对比:LLM-loop 2046 优于随机搜索 2805(胜 27%)</b>——
+因随机搜索写不出 CHOMP/DP 平滑器等代码结构。S4a 专项攻击"非欧代价 informed 采样"开放问题,6 种机制均 REVERT,
+Layer-1 可动空间穷尽。<b>诚实定位:强方法论验证 + 弱算法增量,非新算法</b>(RRT-Connect 系 2000 年既有、平滑增益为噪声级)。</p>
+
+<h3>3.2　能耗模型自优化 loop(iter1–10)</h3>
+<p>冻结评测器 <code>m100_eval.py</code>,LLM 每轮改写 <code>featurize</code>。完整迭代账本:</p>
+<table><tr><th>迭代</th><th>改动</th><th>搜索 ARE</th><th>留出 ARE</th><th>决定</th></tr>{energy_rows}</table>
+{fig("fig_summary.png", "1", "能耗模型 autoresearch:留出 ARE 由 6.88% 降至 1.86%(左);诚实能力边界——loop 与随机搜索打平(右)")}
+<div class="honest"><b>核心 finding(能力边界)</b>:物理非线性形不是价值来源(纯物理 4.24%,加一个线性 payload 项即降至 1.93%);
+loop 最终 1.86% 与随机搜索<b>打平</b>——在能耗域,LLM 的"物理推理"不转化为更低误差。这与规划器域(loop 胜随机 27%)形成对照。</div>
+
+<h2>4　实验结果:真机代价驱动的能量感知规划</h2>
+<p>将 3.2 节的真机验证能耗模型包装为规划代价,接入采样式规划器,对比【最短距离 / 教科书 BEMT / 真机 M100】三种代价。</p>
+
+<h3>4.1　主结果:代价改变路径决策</h3>
+<table><tr><th>场景</th><th>最短距离</th><th>教科书BEMT</th><th>真机M100</th><th>节能(M100尺)</th></tr>{wall_rows}</table>
+{fig("hero_figure.png", "2", "高墙场景:最短距离与教科书 BEMT 均翻墙,真机 M100 代价绕行避爬升(节能 9.4%)")}
+<p>机制经<b>三重验证</b>:留出真实数据上爬升功率增量(真 +114W vs 预测 +108W,误差 &lt;5%);
+<b>因果消融</b>——去除模型爬升项后决策退化回翻墙;交叉模型验证暴露"节能相对可信模型"的循环性(教科书 BEMT 因低估爬升而翻墙)。</p>
+
+<h3>4.2　鲁棒性与操作包络</h3>
+<table><tr><th>巡航速度</th><th>最短距离</th><th>真机M100</th><th>节能</th></tr>{vel_rows}</table>
+{fig("phase_diagram.png", "3", "操作包络相图:高速+窄障区节能最高(22%),低速/宽障区连 M100 也翻墙(节能归零)——诚实划界")}
+
+<h3>4.3　动力学闭环(RotorPy):飞行轨迹与功率</h3>
+<p>将规划路径经 MinSnap 平滑后,交由 M100 尺度四旋翼刚体动力学 + SE3 几何控制器以 100 Hz 跟踪飞行,
+用<b>飞出的</b>速度序列积分能量。结论过动力学后仍成立(单墙节能 6.1%)。</p>
+{fig("sim_flight.png", "4", "动力学实飞:翻墙路线在爬升段功率飙至 870W、下降段跌至 280W(升贵降贱不对称),绕行路线全程平稳")}
+{vid("video_wall.mp4", "1", "单墙场景动力学飞行:红=距离翻墙,绿=M100绕行,右侧为实时功率")}
+
+<h3>4.4　城市走廊:逐障碍混合决策</h3>
+<p>一条配送走廊上矮楼 A(5m)与高楼 B(12m):真机 M100 代价<b>翻越矮楼、绕行高楼</b>——逐障碍权衡,而非死规则。</p>
+{fig("corridor.png", "5", "城市走廊:距离代价两楼全翻,M100 代价翻 A 绕 B(规划节能 7.6%,动力学实飞 4.4%)")}
+{vid("video_corridor.mp4", "2", "城市走廊动力学飞行:逐障碍混合决策,双机同屏 + 实时功率")}
+
+<h3>4.5　★ PX4 真飞控固件栈验证(最强一层)</h3>
+<p>在 <b>PX4 SITL + Gazebo Harmonic</b>(真实飞控固件:EKF 状态估计 + 位置环 + 混控)上,以同一固件栈、同一脚本、同一新鲜起飞,
+分别飞距离(翻越)与 M100(绕行)两条路线,用飞出的 odometry 积分真机能耗。</p>
+<table><tr><th>路线</th><th>M100真机能耗</th><th>均功率</th><th>最高高度</th><th>最大横偏</th></tr>{px4_tbl}</table>
+{fig("px4_ab_comparison.png", "6", "PX4 真飞控固件栈 A/B 对比:能量感知绕行相对翻越节能 14.3%(EKF+位置环+Gazebo 动力学)")}
+{vid("px4_flight.mp4", "3", "PX4 真飞控栈飞出的能量感知路线轨迹(翻矮楼 A + 绕高楼 B)+ 实时功率")}
+<div class="keybox">证据链层层加固:<b>折线预测(4–22%)→ RotorPy 动力学(6.1%)→ PX4 真飞控固件栈(14.3%)</b>。
+节能收益过完整飞控固件在环后依然成立。</div>
+
+<h2>5　★ 安全机制消融:方法学的实证承重</h2>
+<p>本节将"协议有用"从断言变为可测结果——逐个消融安全机制,观察自动科研会如何自欺/过度声称。</p>
+{fig("safeguard_ablation.png", "7", "安全机制消融:(A)冻结评测器抗 gaming/抗过拟合;(B)查新门使 3 个'发现'降为 1 真新;(C)结构搜索价值域相关")}
+<table><tr><th>安全机制</th><th>去掉它会怎样(实测)</th></tr>
+<tr><td>冻结留出评测器</td><td>35 个虚假项的过拟合探针搜索 ARE 2.13% &gt; 诚实模型 1.99%,<b>刷不动</b>;候选搜索/留出 ARE 相差 &lt;0.15pp = 抗过拟合</td></tr>
+<tr><td>强制查新门</td><td>无门上报 3 个"发现";有门后仅 1 个真新,<b>2 个降级为复现</b>(Michel 2024 顺序翻转、Nguyen 2017 可达集)</td></tr>
+<tr><td>结构搜索(loop vs 随机)</td><td>规划器域 loop 胜随机 <b>27%</b>、能耗域<b>打平</b>——价值取决于任务是否需要写出普通搜索到不了的代码结构</td></tr>
+</table>
+
+<h2>6　诚实边界与能力刻画</h2>
+<div class="honest"><ol>
+<li><b>效应均为 prior art</b>:绕行节能、顺序翻转、可达集扩大、载荷影响——经三次文献查新(共 300+ 检索 agent)确认均已发表;本文引用而不声称首创。</li>
+<li><b>载荷为负结果</b>:M100 载荷 ≤500g,载荷×爬升耦合仅占能耗约 3%,不足以改变路径拓扑(全扫描 + 物理 mgh 项均不变)。</li>
+<li><b>多数场景无收益</b>:随机城市场景中约 70% 节能为 0(存在低空走廊时能量最优≈最短路)。</li>
+<li><b>无真机复飞</b>:节能为经真实数据验证的模型预测,非真实飞行电流实测。</li>
+<li><b>结构搜索必要性弱(能耗域)</b>:该域内 loop 与随机搜索打平——诚实报告为能力边界,非失败。</li>
+</ol></div>
+
+<h2>7　结论</h2>
+<p>本文实现并实证了一个可信的大模型自动化科研框架,在真实 DJI M100 无人机能耗与能量感知规划上完成了从
+模型发现、规划集成、动力学闭环到 PX4 真飞控栈验证的完整链条。其价值不在算法或效应的新颖(均为 prior art),
+而在<b>方法学与真机数据锚定</b>,以及对当前 LLM 自动科研能力边界的诚实刻画——包括通过安全机制消融证明每个防自欺机制的承重性。
+本工作本身(含主动将自身"发现"判定为 prior art)即为"可信 AI4S"的一次完整演示。</p>
+
+<h2>附录　复现</h2>
+<p><code>m100_eval.py</code>(冻结评测器)· <code>wall_experiment.py</code> · <code>robustness_suite.py</code> ·
+<code>validate_climb.py</code> · <code>climb_ablation.py</code> · <code>phase_diagram.py</code> · <code>sim_flight.py</code> ·
+<code>corridor_experiment.py</code> · <code>safeguard_ablation.py</code> · <code>render_videos.py</code> ·
+<code>px4_integration/px4_fly_demo.py</code>。迭代记录:<code>agent_log.jsonl</code> + <code>experiments/candidates/</code>。</p>
+
+</body></html>"""
+    out = os.path.join(EXP, "autoresearch_report.html")
+    open(out, "w").write(html)
+    print(f"报告生成 {out}  ({os.path.getsize(out)//1024} KB)")
+
+
+if __name__ == "__main__":
+    main()
