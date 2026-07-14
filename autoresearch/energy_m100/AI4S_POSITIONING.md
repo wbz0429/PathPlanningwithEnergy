@@ -63,3 +63,25 @@ RewardHackingAgents 2603.11337
 ## 待补实验(把设防做实,均低成本)
 - [ ] 正式跑"safeguard 消融对照实验":每个 safeguard 关掉一次,记录 loop 会怎样 overclaim(我们有素材,整理成一张表+图)。
 - [ ] 与 AIGS FalsificationAgent / RewardHackingAgents 防御做定性对比表(读那两篇,列异同)。
+
+## 补强(2026-07,deep-research 103 agents + domain_value.py 实证)—— 回答"用你这套比不用强在哪 / 别人都有创新你没有"
+**裁决:处境有一手文献强力背书,主论点=AI4S 价值域相关,能耗域产 null 是域性质非框架失败。**
+
+- **旗舰 AI4S 结构上就要求可验证评测器**(作者自认局限):AlphaEvolve"需人工实验的任务超出范围";
+  FunSearch 只做"有高效 evaluate 的问题"。**噪声真实传感器域 AI4S 用不了——是他们划的界,无成功先例。**
+- **连理想域也大多产 null**:AlphaEvolve 50+ 数学问题 **75% 只是 match(null)**、20% 真发现;
+  FunSearch 最难任务成功率 **2.9%**。→ "匹配/持平"是常态,封顶域产 null 正常。
+- **朴素 AI4S 会 overclaim(实测)**:AI Scientist 独立评估(Beel 等,ACM SIGIR Forum,DOI 10.1145/3769733.3769747):
+  42% 实验编码错误失败、**57% 手稿含错误/幻觉数值**、prior art 误判为 novel。**这正是我们 safeguard 拦的。**
+- **可信 null 是被接受的贡献类型**:ICML 2024《Embracing Negative Results in ML》、NeurIPS ICBINB、
+  EMNLP Insights、2025 顶会 Refutations&Critiques track 提案(Schaeffer/Koyejo/Donoho/Dodge)。
+  但**价值取决于严谨性**——冻结评测器+查新门+随机对照提供了它。
+
+### 两个量化证据(domain_value.py,已跑)
+- **① 噪声地板**:held-out ARE 在 6 项即触底 **1.88%**;加到 12/20/52 项 held-out 不降反升(过拟合)。
+  → 52 项大模型赢不了 6 项 = **地板是数据信息量,不是模型容量**。"数据封顶"从主张变测量。
+- **② 跨域对照**:同框架,规划器域(有 headroom)loop **胜随机 27%**、能耗域(封顶)**打平**。
+  → **排除"框架无能",证明 null 是域性质**——这是主贡献的关键支柱(deep-research 强烈建议)。
+
+**审稿人会问"够不够"** → 答:①跨域对照排除框架无能 ②噪声地板量化证明数据封顶 ③safeguard 消融证明防 overclaim。
+三者合起来 = 一个严谨的、有文献支撑的"可信 AI4S 能力边界"贡献。必引:AlphaEvolve/FunSearch/AI Scientist独立评估(2502.14297)/ICML2024负结果(2406.03980)。

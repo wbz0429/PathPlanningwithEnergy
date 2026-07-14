@@ -1,0 +1,59 @@
+{
+  "noise_floor": {
+    "rows": [
+      {
+        "model": "BEMT(1,v,v²)",
+        "n_feat": 3,
+        "search%": 7.04,
+        "val%": 6.88
+      },
+      {
+        "model": "+payload",
+        "n_feat": 4,
+        "search%": 2.19,
+        "val%": 2.17
+      },
+      {
+        "model": "+爬升+载荷(6项)",
+        "n_feat": 6,
+        "search%": 1.97,
+        "val%": 1.88
+      },
+      {
+        "model": "多项式库(12项)",
+        "n_feat": 12,
+        "search%": 2.0,
+        "val%": 1.92
+      },
+      {
+        "model": "富多项式(22项)",
+        "n_feat": 20,
+        "search%": 1.92,
+        "val%": 1.94
+      },
+      {
+        "model": "过拟合(50虚假项)",
+        "n_feat": 52,
+        "search%": 2.21,
+        "val%": 2.17
+      }
+    ],
+    "held_out_floor_pct": 1.88,
+    "interpretation": "held-out 触底~1.9%,加容量不降反升(过拟合),地板由数据信息量决定"
+  },
+  "cross_domain": {
+    "规划器域(采样/平滑代码,有headroom)": {
+      "loop": 2046,
+      "random": 2805,
+      "metric": "能量(越低越好)",
+      "loop_vs_random": "loop 胜 27%"
+    },
+    "能耗域(featurize,噪声封顶)": {
+      "loop": 1.86,
+      "random": 1.86,
+      "metric": "留出ARE%",
+      "loop_vs_random": "打平(结构搜索无益)"
+    }
+  },
+  "thesis_claim": "AI4S 价值域相关:需可验证评测器+真实headroom;能耗域产正确null,规划器域产正值(胜随机27%)"
+}
