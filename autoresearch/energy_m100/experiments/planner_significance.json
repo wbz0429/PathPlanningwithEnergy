@@ -1,0 +1,18 @@
+{
+  "loop": 2882.0,
+  "default": 11814.4,
+  "random_mean": 3135.2,
+  "random_std": 106.4,
+  "random_min": 3029.7,
+  "random_max": 3397.8,
+  "random_mean_95CI": [
+    3083.0,
+    3197.0
+  ],
+  "loop_z": -2.38,
+  "win_pct": 8.1,
+  "pct_random_better": 0.0,
+  "significant": true,
+  "R": 12,
+  "B": 15
+}
