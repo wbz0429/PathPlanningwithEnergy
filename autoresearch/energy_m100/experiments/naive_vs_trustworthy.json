@@ -1,0 +1,27 @@
+{
+  "naive_energy_pick": {
+    "name": "iter8",
+    "search%": 1.99,
+    "true_val%": 1.96
+  },
+  "trust_energy_pick": {
+    "name": "iter8",
+    "val%": 1.96
+  },
+  "naive_claims": 4,
+  "trust_real_findings": 0,
+  "downgraded": [
+    {
+      "claim": "配送顺序翻转省能",
+      "prior_art": "Michel 2024 arXiv 2410.17585"
+    },
+    {
+      "claim": "电池可达集扩大31%",
+      "prior_art": "Nguyen & Au AAMAS 2017"
+    },
+    {
+      "claim": "省能分布(20场景25%)",
+      "prior_art": "n=20 CI宽[9,49]%"
+    }
+  ]
+}
