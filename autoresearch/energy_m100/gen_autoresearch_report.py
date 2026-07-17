@@ -164,6 +164,15 @@ Layer-1 可动空间穷尽。<b>诚实定位:强方法论验证 + 弱算法增�
 <p>冻结评测器 <code>m100_eval.py</code>,LLM 每轮改写 <code>featurize</code>。完整迭代账本:</p>
 <table><tr><th>迭代</th><th>改动</th><th>搜索 ARE</th><th>留出 ARE</th><th>决定</th></tr>{energy_rows}</table>
 {fig("fig_summary.png", "1", "能耗模型 autoresearch:留出 ARE 由 6.88% 降至 1.86%(左);诚实能力边界——loop 与随机搜索打平(右)")}
+
+<p><b>过程即贡献——loop 如何处理瓶颈</b>:本框架的价值不在最终模型(prior art),而在这套“撞到瓶颈→触发文献检索→改变方向→诚实记录”的可信过程。
+下图为真实迭代轨迹(KEEP/REVERT)与机制流程;四个关键瓶颈的处理见表。</p>
+{fig("loop_process.png", "1b", "loop 全过程(真实 agent_log):迭代轨迹标注每个 KEEP/REVERT 与瓶颈处理;下半为机制流程——撞瓶颈触发文献检索并改向")}
+<table><tr><th>瓶颈</th><th>怎么处理</th><th>调研发现</th><th>结果</th></tr>
+<tr><td>物理非线性形卡在 ~4.24%</td><td>Episode 边界触发文献检索</td><td>Tseng 多项式是前沿;缺口是 wind 而非更花哨物理</td><td>改方向,转测 wind</td></tr>
+<tr><td>wind 到底有没有用</td><td>空速替换地速,单独测</td><td>留出 ARE 4.24→4.38 反而变差(quadrature 抵消)</td><td>iter5 REVERT,记库不再试</td></tr>
+<tr><td>物理形式赢不赢纯线性</td><td>纯线性 vs 物理,决定性诊断</td><td>打平;物理叠线性反而退(共线)</td><td>核心 finding:物理不转化为更低 ARE</td></tr>
+<tr><td>loop 相对简单基线有无必要</td><td>生死线 + R=40 显著性检验</td><td>与随机打平(z=−0.35),仅略胜贪心</td><td>诚实报告能耗域能力边界</td></tr></table>
 <div class="honest"><b>核心 finding(能力边界)</b>:物理非线性形不是价值来源(纯物理 4.24%,加一个线性 payload 项即降至 1.93%);
 loop 最终 1.86% 与随机搜索<b>打平</b>——在能耗域,LLM 的"物理推理"不转化为更低误差。这与规划器域(loop 胜随机 27%)形成对照。</div>
 
