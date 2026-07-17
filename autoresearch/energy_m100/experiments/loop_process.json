@@ -1,0 +1,96 @@
+{
+  "trajectory": [
+    {
+      "iter": 0,
+      "val_ARE": 6.88,
+      "decision": "base",
+      "note": "稳态BEMT基线(1,v,v²)"
+    },
+    {
+      "iter": 1,
+      "val_ARE": 4.25,
+      "decision": "KEEP",
+      "note": "动量理论核 T^1.5+T²/V+v³+爬降"
+    },
+    {
+      "iter": 2,
+      "val_ARE": 4.91,
+      "decision": "REVERT",
+      "note": "Glauert前飞桥→去掉主导项,更差"
+    },
+    {
+      "iter": 3,
+      "val_ARE": 4.24,
+      "decision": "KEEP",
+      "note": "推力标定型面 T·v²(勉强)"
+    },
+    {
+      "iter": 4,
+      "val_ARE": 4.23,
+      "decision": "REVERT",
+      "note": "轴向诱导sqrt→增益低于阈"
+    },
+    {
+      "iter": 5,
+      "val_ARE": 4.38,
+      "decision": "REVERT",
+      "note": "风→空速→留出反而变差"
+    },
+    {
+      "iter": 6,
+      "val_ARE": 1.93,
+      "decision": "KEEP",
+      "note": "物理核+裸线性payload(决定性)"
+    },
+    {
+      "iter": 7,
+      "val_ARE": 1.93,
+      "decision": "REVERT",
+      "note": "payload变体→与iter6相同"
+    },
+    {
+      "iter": 8,
+      "val_ARE": 1.96,
+      "decision": "KEEP*",
+      "note": "纯线性库≈物理+payload(诊断)"
+    },
+    {
+      "iter": 9,
+      "val_ARE": 1.96,
+      "decision": "REVERT",
+      "note": "物理叠线性→共线,留出退"
+    },
+    {
+      "iter": 10,
+      "val_ARE": 1.86,
+      "decision": "END",
+      "note": "capstone:loop≈随机(能力边界)"
+    }
+  ],
+  "bottlenecks": [
+    {
+      "瓶颈": "物理非线性形卡在 ~4.24%,加花哨物理形不降",
+      "怎么处理": "Episode边界触发文献检索:查这个数据集的既定最优模型",
+      "调研发现": "Tseng 多项式回归(数据集论文自带)是前沿;缺口可能是 wind + 多项式垂直项,非更花哨的物理",
+      "结果": "改变方向:不再堆物理非线性,转去干净测 wind"
+    },
+    {
+      "瓶颈": "wind 到底有没有用?(数据集专装风速计)",
+      "怎么处理": "EXPLORE:空速 v_air=√(v_h²+wind²) 替换地速,单独测",
+      "调研发现": "per-sample R² 微升但留出能量 ARE 4.24→4.38 反而变差(quadrature 风向抵消)",
+      "结果": "iter5 REVERT:对能量指标 wind quadrature 耦合无益,记入知识库不再试"
+    },
+    {
+      "瓶颈": "物理形式到底赢不赢纯线性回归?",
+      "怎么处理": "决定性诊断:纯线性库 LIB vs 物理核+payload,同评测器对比",
+      "调研发现": "纯线性 1.909% ≈ 物理+payload 1.929%;物理叠线性反而退(共线过拟合)",
+      "结果": "核心 finding:物理先验不转化为更低 ARE(能力边界·创新点3)"
+    },
+    {
+      "瓶颈": "loop 相对简单基线到底有没有必要?",
+      "怎么处理": "生死线:random_subset / greedy 同预算对比 + R=40 显著性",
+      "调研发现": "loop 1.86% 与随机 1.87±0.03 打平(z=−0.35);只略胜贪心",
+      "结果": "诚实报告:能耗域结构搜索≈随机(域相关能力边界)"
+    }
+  ]
+}
