@@ -1,0 +1,10 @@
+{
+  "honest": {
+    "gamed_train_ARE": 1.83,
+    "frozen_heldout_ARE": 2.15
+  },
+  "overfit_probe": {
+    "gamed_train_ARE": 4.99,
+    "frozen_heldout_ARE": 5.17
+  }
+}
