@@ -57,7 +57,18 @@ def chip(s, l, t, txt, color=TEAL):
     r.font.color.rgb = WHITE; _font(r); tf.paragraphs[0].alignment = PP_ALIGN.CENTER
 
 
+PUB = {"hero_figure.png": "真机代价改变决策.png", "phase_diagram.png": "操作包络相图.png",
+       "tradeoff.png": "翻越绕行权衡.png", "corridor.png": "城市走廊_混合决策.png",
+       "px4_ab_comparison.png": "PX4真飞控_AB对比.png", "framework_ablation.png": "框架消融_局部最优.png",
+       "domain_value.png": "噪声地板.png", "significance_test.png": "两域显著性.png",
+       "large_scale_savings.png": "省能分布_n250.png"}
+PUBDIR = os.path.join(EXP, "pub")
+
+
 def fit(s, path, l, t, w, h):
+    base = os.path.basename(path)
+    if base in PUB and os.path.exists(os.path.join(PUBDIR, PUB[base])):
+        path = os.path.join(PUBDIR, PUB[base])
     if not os.path.exists(path): tb(s, l, t, w, In(0.4), f"[缺图 {os.path.basename(path)}]", 12, MUTED); return
     iw, ih = Image.open(path).size; ar = iw/ih
     if ar > w/h: nw = w; nh = int(w/ar)
@@ -243,8 +254,7 @@ def build():
 
     # ---- 12 两域显著性 ----
     s = numbered(); title(s, "同框架:有改进空间的域显著胜随机,噪声封顶的域统计打平")
-    fit(s, os.path.join(EXP, "significance_test.png"), In(0.5), In(2.05), In(6.15), In(3.2))
-    fit(s, os.path.join(EXP, "planner_significance.png"), In(0.5), In(5.3), In(6.15), In(1.9))
+    fit(s, os.path.join(EXP, "significance_test.png"), In(0.5), In(2.2), In(6.3), In(4.4))
     tb(s, In(6.9), In(2.1), In(6.0), In(4.8),
        [("能耗域(封顶):", 17, INK, True),
         ("  loop 1.86% vs 随机 1.87±0.03,z=−0.35", 16, INK, False),

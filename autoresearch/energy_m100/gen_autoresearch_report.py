@@ -10,7 +10,26 @@ EXP = os.path.join(HERE, "experiments")
 PX4 = os.path.join(HERE, "px4_integration")
 
 
+# 旧图名 → 顶会 pub 版(中文,矢量重绘)。命中则优先用 pub 版。
+PUB = {
+    "hero_figure.png": "真机代价改变决策.png",
+    "phase_diagram.png": "操作包络相图.png",
+    "tradeoff.png": "翻越绕行权衡.png",
+    "corridor.png": "城市走廊_混合决策.png",
+    "px4_ab_comparison.png": "PX4真飞控_AB对比.png",
+    "framework_ablation.png": "框架消融_局部最优.png",
+    "domain_value.png": "噪声地板.png",
+    "significance_test.png": "两域显著性.png",
+    "large_scale_savings.png": "省能分布_n250.png",
+}
+PUBDIR = os.path.join(EXP, "pub")
+
+
 def _find(name):
+    if name in PUB:
+        p = os.path.join(PUBDIR, PUB[name])
+        if os.path.exists(p):
+            return p
     for d in (EXP, PX4):
         p = os.path.join(d, name)
         if os.path.exists(p):
@@ -268,8 +287,7 @@ loop 就是随机分布中的一个普通样本(|z|&lt;1.96),<b>"持平"是统�
 · <b>规划器域(有改进空间)</b>:重复 {ps.get("R","12")} 次随机配置搜索(默认平滑器)得分布(均值 {ps.get("random_mean","3135"):.0f} ± {ps.get("random_std","106"):.0f});
 loop(调优配置 + 进化平滑器代码)= {ps.get("loop","2882"):.0f},<b>z = {ps.get("loop_z","-2.38")}</b>(&lt;−1.96 显著),{ps.get("pct_random_better","0"):.0f}% 的随机运行优于 loop——
 <b>loop 显著优于随机(此次新鲜复现胜 {ps.get("win_pct","8"):.0f}%;历史里程碑 MS2 记录为 27%)</b>。</p>
-{fig("significance_test.png", "10", f"能耗域(封顶):loop 落在随机分布(R={st.get('R','40')})正中(z={st.get('loop_z_score','-0.35')})= 统计打平")}
-{fig("planner_significance.png", "11", f"规划器域(有改进空间):loop({ps.get('loop','2882'):.0f})显著低于随机分布(z={ps.get('loop_z','-2.38')},{ps.get('pct_random_better','0'):.0f}% 随机更优)= 显著胜随机")}
+{fig("significance_test.png", "10", f"两域显著性:能耗域 loop 落在随机分布正中(z={st.get('loop_z_score','-0.35')})= 统计打平;规划器域 loop 在随机分布左侧外(z={ps.get('loop_z','-2.38')})= 显著胜")}
 <p>两域对照统计成立:<b>同一框架在有改进空间的域显著胜随机、在噪声封顶的域与随机统计持平</b>——这是"null 由域性质决定,而非框架失败"最直接的因果证据。</p>
 
 <h3>7.5　"用 vs 不用本框架":端到端产出对照</h3>
