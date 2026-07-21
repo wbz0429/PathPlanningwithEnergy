@@ -35,12 +35,14 @@ def framework_ablation():
     ax.barh([-1.1], [esc], color=PAL["green"], height=.62)
     for i, v in enumerate(vals):
         ax.text(v + 0.06, y[i], f"{v:.2f}", va="center", fontsize=8)
-    ax.text(esc + 0.06, -1.1, f"{esc:.2f}", va="center", fontsize=9, fontweight="bold", color=PAL["green"])
+    ax.text(esc + 0.08, -1.1, f"{esc:.2f}(外搜逃逸)", va="center", fontsize=9, fontweight="bold", color=PAL["green"])
     ax.axvline(esc, color=PAL["green"], ls=(0, (4, 3)), lw=1)
     ax.set_yticks(list(y) + [-1.1]); ax.set_yticklabels(names + ["★ 物理核+线性payload"], fontsize=8.5)
     ax.set_xlabel("留出能量 ARE(%)")
-    ax.text(np.mean(vals), len(names) - 1.5, "局部最优盆地\n(7 变体全卡)", fontsize=9, color=PAL["red"], ha="center")
-    ax.set_xlim(0, 5)
+    # 盆地标注放在柱区左下的空白处(2.0~3.2 之间无柱),避开数值标签
+    ax.text(2.55, 1.5, "局部最优盆地\n(7 变体全卡 ~4.3%)", fontsize=8.5, color=PAL["red"], ha="center",
+            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec=PAL["red"], lw=0.6, alpha=0.9))
+    ax.set_xlim(0, 5.2)
     save(fig, "框架消融_局部最优")
 
 
@@ -130,7 +132,9 @@ def crossdomain_sig():
     a1.axvspan(m-1.96*sd, m+1.96*sd, color=PAL["blue"], alpha=.12)
     a1.axvline(m, color=PAL["gray"], ls=(0, (3, 3)), lw=1)
     a1.axvline(lp, color=PAL["green"], lw=2)
-    a1.text(lp, .82, f"loop {lp}%\nz={e['loop_z_score']}", transform=a1.get_xaxis_transform(), fontsize=8.5, ha="center", color=PAL["green"])
+    # 文字挪到 loop 线左侧、避免被竖线穿过,加白底
+    a1.text(lp-0.006, .78, f"loop {lp}%\nz={e['loop_z_score']}", transform=a1.get_xaxis_transform(), fontsize=8.5,
+            ha="right", color=PAL["green"], bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.85))
     a1.set_xlim(m-3.2*sd, m+3.2*sd); a1.set_yticks([]); a1.set_xlabel("留出 ARE(%)")
     a1.set_title("能耗域(封顶)→ 打平", fontsize=10)
     # 规划器域
@@ -138,7 +142,8 @@ def crossdomain_sig():
     a2.axvspan(m2-1.96*sd2, m2+1.96*sd2, color=PAL["blue"], alpha=.12)
     a2.axvline(m2, color=PAL["gray"], ls=(0, (3, 3)), lw=1)
     a2.axvline(lp2, color=PAL["green"], lw=2)
-    a2.text(lp2, .82, f"loop {lp2:.0f}\nz={p['loop_z']}", transform=a2.get_xaxis_transform(), fontsize=8.5, ha="center", color=PAL["green"])
+    a2.text(lp2+12, .78, f"loop {lp2:.0f}\nz={p['loop_z']}", transform=a2.get_xaxis_transform(), fontsize=8.5,
+            ha="left", color=PAL["green"], bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.85))
     a2.set_xlim(min(lp2, m2-3.2*sd2)-40, m2+3.2*sd2); a2.set_yticks([]); a2.set_xlabel("能耗 score")
     a2.set_title("规划器域(有 headroom)→ 显著胜", fontsize=10)
     for a in (a1, a2): a.spines["left"].set_visible(False)

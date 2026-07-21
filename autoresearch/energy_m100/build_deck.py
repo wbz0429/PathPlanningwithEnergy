@@ -311,7 +311,8 @@ def build():
 
     # ---- 附录 ----
     for name, fig_path, cap in [
-        ("附录 A:翻越/绕行能量权衡分解", os.path.join(EXP, "tradeoff.png"), "翻越=固定爬升罚+少走距离,绕行=无爬升+多走距离,交叉≈半宽24m=相图边界物理解释"),
+        ("附录 A:累加消融阶梯(框架每步都承重)", os.path.join(EXP, "pub", "消融阶梯.png"), "逐步加回安全机制:假发现 3→0(左),报告数字保持诚实不虚低(右)"),
+        ("附录 A2:翻越/绕行能量权衡分解", os.path.join(EXP, "tradeoff.png"), "翻越=固定爬升罚+少走距离,绕行=无爬升+多走距离,交叉≈半宽24m=相图边界物理解释"),
         ("附录 B:操作包络相图", os.path.join(EXP, "phase_diagram.png"), "高速+窄障省 22%,低速/宽障归零"),
         ("附录 C:安全机制消融(评测器抗 gaming)", os.path.join(EXP, "safeguard_ablation.png"), "过拟合探针刷不动;查新门降级 2/3"),
         ("附录 D:动力学实飞功率剖面", os.path.join(EXP, "sim_flight.png"), "翻墙爬升段飙 870W,绕行平稳"),
