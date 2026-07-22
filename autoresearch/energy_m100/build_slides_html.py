@@ -56,6 +56,30 @@ S(f"""<div class='cover'>
 <div class='csub'>A Trustworthy LLM-Agent Autoresearch Framework, Instantiated on UAV Energy Modeling and Energy-Aware Path Planning</div>
 <div class='cmeta'>硕士学位论文 · 中期答辩 · 2026</div></div>""", "cover")
 
+# === 引入页1:研究场景(先落地,别一上来就宏大)===
+S("<h2>研究场景:无人机能耗建模 + 能量感知路径规划</h2>" +
+  two_col(img(pub="真机代价改变决策.png"),
+          bl(["<b>无人机能耗建模</b>:预测无人机飞一段路耗多少电",
+              "&nbsp;&nbsp;(输入速度/爬升/载荷 → 输出功率/能量)",
+              "<b>能量感知路径规划</b>:不只找最短路,而是找最省电的路",
+              "&nbsp;&nbsp;(如上图:绕开高墙比翻越更省电)",
+              "<b>为什么选这个场景:</b>",
+              "&nbsp;&nbsp;· 有真机数据(DJI M100 209 航班真实功率)",
+              "&nbsp;&nbsp;· 直接关系无人机续航/配送里程",
+              "&nbsp;&nbsp;· 能耗与规划天然耦合,是完整工程闭环"])) +
+  "<div class='cite'>场景图:真机能耗代价让规划绕开爬升(省电);数据 DJI M100 (Rodrigues 2021)</div>")
+
+# === 引入页2:在这个场景上要实现什么 ===
+S("<h2>在这个场景上,我们要实现什么</h2>" +
+  "<div class='mech'>" + "".join(
+      f"<div class='mrow'><div class='mnum'>{i+1}</div><div class='mh'>{h}</div><div class='md'>{d}</div></div>"
+      for i, (h, d) in enumerate([
+          ("建能耗模型", "从真机 DJI M100 数据自动拟合出准确的能耗预测模型"),
+          ("接入路径规划", "把能耗模型当规划代价,让无人机飞更省电的路(避爬升)"),
+          ("用可信方法做", "全程用一套防作弊、防自欺的自动科研流程,并诚实刻画能力边界"),
+      ])) + "</div>" +
+  "<div class='cite'>三件事一条链:数据→能耗模型→规划省电,方法学贯穿全程</div>")
+
 S("<h2><span class='n'>1</span>大模型自动科研正在爆发,但它的“发现”普遍不可信</h2>" +
   two_col("<div class='stat'><div class='big'>57%</div><div class='cap'>朴素 AI4S 手稿含错误或幻觉数值</div></div>",
           bl(["FunSearch / AlphaEvolve / Eureka 在数学、代码、RL 上确有新发现",

@@ -122,7 +122,34 @@ def build():
         ("Modeling and Energy-Aware Path Planning", 14, ICE, False)], space=3)
     tb(s, In(0.9), In(6.5), In(11.5), In(0.6), "西安交通大学　硕士学位论文·中期答辩　|　2026", 15, WHITE, False, anchor=MSO_ANCHOR.MIDDLE)
 
-    # ---- 1 背景 ----
+    # ---- 引入1:研究场景(先落地)----
+    s = S(); content(s); title(s, "研究场景:无人机能耗建模 + 能量感知路径规划")
+    fit(s, os.path.join(EXP, "pub", "真机代价改变决策.png"), In(0.5), In(2.0), In(7.4), In(4.6))
+    tb(s, In(8.1), In(2.0), In(4.9), In(4.8),
+       [("能耗建模:", 17, DEEP, True), ("预测飞一段路耗多少电(速度/爬升/载荷→功率)", 14, INK, False),
+        ("能量感知规划:", 17, DEEP, True), ("找最省电的路,不只最短(如图:绕墙比翻墙省电)", 14, INK, False),
+        ("为什么选这个场景:", 17, DEEP, True),
+        ("· 有真机数据(DJI M100,209 航班真实功率)", 14, INK, False),
+        ("· 直接关系续航/配送里程", 14, INK, False),
+        ("· 能耗与规划天然耦合,完整工程闭环", 14, INK, False)], space=9)
+    cite(s, "场景图:真机能耗代价让规划绕开爬升;数据 DJI M100 (Rodrigues 2021)")
+
+    # ---- 引入2:要实现什么 ----
+    s = S(); content(s); title(s, "在这个场景上,我们要实现什么")
+    for i, (h, d) in enumerate([
+            ("建能耗模型", "从真机 DJI M100 数据自动拟合出准确的能耗预测模型"),
+            ("接入路径规划", "把能耗模型当规划代价,让无人机飞更省电的路(避爬升)"),
+            ("用可信方法做", "全程用防作弊、防自欺的自动科研流程,并诚实刻画能力边界")]):
+        y = In(2.4 + i * 1.35)
+        c = s.shapes.add_shape(MSO_SHAPE.OVAL, In(1.2), y, In(0.75), In(0.75))
+        c.fill.solid(); c.fill.fore_color.rgb = [DEEP, TEAL, MINT][i]; c.line.fill.background()
+        rr = c.text_frame.paragraphs[0].add_run(); rr.text = str(i+1); rr.font.size = Pt(26); rr.font.bold = True
+        rr.font.color.rgb = WHITE; _font(rr); c.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
+        tb(s, In(2.4), y + In(0.02), In(3.5), In(0.7), h, 22, INK, True, anchor=MSO_ANCHOR.MIDDLE)
+        tb(s, In(6.2), y + In(0.05), In(6.7), In(0.7), d, 16, MUTED, False, anchor=MSO_ANCHOR.MIDDLE)
+    cite(s, "三件事一条链:数据 → 能耗模型 → 规划省电,方法学贯穿全程")
+
+    # ---- 1 背景(为什么要'可信')----
     s = numbered(); title(s, "大模型自动科研正在爆发,但它的“发现”普遍不可信")
     tb(s, In(0.7), In(2.2), In(5.9), In(3.2),
        [("57%", 96, DEEP, True), ("朴素 AI4S 手稿含错误或幻觉数值", 18, MUTED, False)],
