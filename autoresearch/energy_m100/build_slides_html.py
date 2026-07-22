@@ -145,15 +145,6 @@ S("<h2><span class='n'>8</span>结论过 RotorPy 动力学与 PX4 真飞控固�
               "(EKF + 位置环 + Gazebo 动力学)"])) +
   "<div class='cite'>PX4 SITL + Gazebo Harmonic;同固件栈同脚本 A/B 对比</div>")
 
-S("<h2><span class='n'>9</span>但这些“效应”经三次文献查新,全部是已发表的 prior art</h2>" +
-  "<table class='pa'>" + "".join(f"<tr><td>{a}</td><td class='src'>{b}</td></tr>" for a, b in [
-      ("能量感知规划改变路径", "EcoFlight (2025)"),
-      ("配送顺序因爬降不对称翻转", "Michel et al. 2024, arXiv 2410.17585"),
-      ("电池约束下可达集扩大", "Nguyen & Au, AAMAS 2017"),
-      ("载荷影响爬升 vs 绕行", "EcoFlight / 物流 UAV, Drones 2025"),
-      ("M100 能耗建模 / v* / 爬降不对称", "Dai;Di Franco 2015;Liu 2017")]) + "</table>" +
-  "<div class='concl red'>→ 我们主动引用、不声称首创。查新门拦住了把“复现”当“发现”。</div>")
-
 S("<h2><span class='n'>10</span>框架每个节点都“承重”:去掉它,loop 就退化或自欺</h2>" +
   two_col(img(pub="框架消融_局部最优.png"),
           bl(["<b>去掉每个节点会怎样:</b>",

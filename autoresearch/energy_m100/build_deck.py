@@ -252,22 +252,6 @@ def build():
         ("下方 GIF:PX4 真飞控飞出的轨迹", 13, MUTED, False)], space=10)
     cite(s, "PX4 SITL + Gazebo Harmonic;同固件栈同脚本 A/B 对比")
 
-    # ---- 9 prior art 表 ----
-    s = numbered(); title(s, "但这些“效应”经三次文献查新,全部是已发表的 prior art")
-    pr = [("能量感知规划改变路径", "EcoFlight (2025)"),
-          ("配送顺序因爬降不对称翻转", "Michel et al. 2024, arXiv 2410.17585"),
-          ("电池约束下可达集扩大", "Nguyen & Au, AAMAS 2017"),
-          ("载荷影响爬升 vs 绕行", "EcoFlight / 物流 UAV, Drones 2025"),
-          ("M100 能耗建模 / v* / 爬降不对称", "Dai;Di Franco 2015;Liu 2017")]
-    y = In(2.2)
-    for i, (a, b) in enumerate(pr):
-        r = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, In(0.7), y, In(12.0), In(0.72))
-        r.fill.solid(); r.fill.fore_color.rgb = RGBColor(0xEE,0xF4,0xF7) if i%2==0 else WHITE
-        r.line.color.rgb = RGBColor(0xDD,0xE3,0xE8); r.line.width = Pt(0.5)
-        tb(s, In(0.95), y+In(0.13), In(6.6), In(0.5), a, 17, INK, False)
-        tb(s, In(7.7), y+In(0.13), In(4.9), In(0.5), b, 15, DEEP, True)
-        y += In(0.8)
-    tb(s, In(0.7), In(6.5), In(12.0), In(0.5), "→ 我们主动引用、不声称首创。查新门拦住了把“复现”当“发现”。", 16, RED, True)
 
     # ---- 10 框架节点消融(NEW,提为正文)----
     s = numbered(); title(s, "框架每个节点都“承重”:去掉它,loop 就退化或自欺")
