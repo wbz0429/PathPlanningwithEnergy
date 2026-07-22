@@ -171,40 +171,33 @@ def build():
     tb(s, In(0.9), In(5.6), In(11.5), In(0.9),
        "核心主张:贡献不是新算法或新发现(均为 prior art),而是方法学 + 真机数据锚定 + 诚实能力边界。", 17, ICE, False)
 
-    # ---- 3 整体框架总览(NEW,一图讲全局)----
-    s = numbered(); title(s, "整体框架:六个环节一环扣一环,贡献落在“过程”而非“发现”")
-    rows = [("① 数据与评测", "地基", "真机功率 P=V·I 当尺子,冻结+留出防作弊"),
-            ("② 自动科研框架", "过程(真贡献)", "只改模型、撞瓶颈触发外搜、诚实 keep/revert"),
-            ("③ 能耗模型", "产物", "9 项物理特征线性拟合(base 全是别人的)"),
-            ("④ 能量感知规划", "应用", "模型当边权插进 A*,改变翻越/绕行决策"),
-            ("⑤ 动力学与真飞控", "验证层", "RotorPy→PX4 真固件,结论过动力学仍成立"),
-            ("⑥ 统计与防守", "能力边界", "两域显著性+噪声地板,证明 null 是域性质")]
-    y = In(2.1)
+    # ---- 3 框架总体结构(六部分 + 底部五道机制条)----
+    s = numbered(); title(s, "框架总体结构:六个部分")
+    # 表头
+    hd = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, In(0.7), In(1.95), In(12.0), In(0.5))
+    hd.fill.solid(); hd.fill.fore_color.rgb = DEEP; hd.line.fill.background()
+    tb(s, In(0.95), In(2.03), In(3.1), In(0.4), "组成部分", 14, WHITE, True)
+    tb(s, In(4.1), In(2.03), In(2.2), In(0.4), "角色", 14, WHITE, True)
+    tb(s, In(6.4), In(2.03), In(6.1), In(0.4), "说明", 14, WHITE, True)
+    rows = [("① 数据与评测", "基础", "以真机功率(P=V·I)为基准的防作弊评测"),
+            ("② 自动科研框架", "核心", "大模型闭环搜索:提议 → 评测 → 保留/回滚"),
+            ("③ 能耗模型", "产物", "从真机数据拟合的能耗预测模型"),
+            ("④ 能量感知规划", "应用", "以能耗为代价,规划更省电的路径"),
+            ("⑤ 动力学与真飞控", "验证", "RotorPy 动力学 + PX4 真飞控栈验证"),
+            ("⑥ 统计与防守", "边界", "统计检验 + 诚实刻画能力边界")]
+    y = In(2.5)
     for i, (a, role, d) in enumerate(rows):
-        r = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, In(0.7), y, In(12.0), In(0.72))
+        r = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, In(0.7), y, In(12.0), In(0.55))
         r.fill.solid(); r.fill.fore_color.rgb = RGBColor(0xEE,0xF4,0xF7) if i%2==0 else WHITE
         r.line.color.rgb = RGBColor(0xDD,0xE3,0xE8); r.line.width = Pt(0.5)
-        tb(s, In(0.95), y+In(0.14), In(3.1), In(0.5), a, 16, INK, True)
-        tb(s, In(4.1), y+In(0.14), In(2.2), In(0.5), role, 15, TEAL, True)
-        tb(s, In(6.4), y+In(0.14), In(6.1), In(0.5), d, 14, MUTED, False)
-        y += In(0.8)
-
-    # ---- 4 五道安全机制 ----
-    s = numbered(); title(s, "我们把“可信性”工程化为五道相互独立的安全机制")
-    items = [("冻结评测器", "锚定真机功率 P=V·|I|,按航班留出,永不可编辑"),
-             ("keep / revert", "仅当搜索降且留出不显著退才接受,防过拟合"),
-             ("强制查新门", "任何“发现”须先过文献查新,否则降级为复现"),
-             ("因果消融", "挖掉关键项验证机制归因"),
-             ("交叉模型 + 诚实报负结果", "暴露评测循环性,系统记录失败")]
-    y = In(2.15)
-    for i, (h, d) in enumerate(items):
-        c = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, In(0.7), y, In(0.55), In(0.55))
-        c.fill.solid(); c.fill.fore_color.rgb = TEAL if i%2==0 else DEEP; c.line.fill.background()
-        rr = c.text_frame.paragraphs[0].add_run(); rr.text = str(i+1); rr.font.size = Pt(18); rr.font.bold = True
-        rr.font.color.rgb = WHITE; _font(rr); c.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
-        tb(s, In(1.5), y-In(0.02), In(3.4), In(0.6), h, 18, INK, True)
-        tb(s, In(5.0), y+In(0.02), In(7.7), In(0.6), d, 15, MUTED, False)
-        y += In(0.92)
+        tb(s, In(0.95), y+In(0.08), In(3.1), In(0.4), a, 15, INK, True)
+        tb(s, In(4.1), y+In(0.08), In(2.2), In(0.4), role, 14, TEAL, True)
+        tb(s, In(6.4), y+In(0.08), In(6.1), In(0.4), d, 13, MUTED, False)
+        y += In(0.6)
+    # 底部:②的五道安全机制(压缩成一条)
+    tb(s, In(0.7), y + In(0.15), In(12.0), In(1.0),
+       [("其中 ② 的可信性由五道安全机制保证:", 15, INK, True),
+        ("冻结评测器 · keep/revert · 强制查新门 · 因果消融 · 交叉模型+诚实报负结果", 15, DEEP, True)], space=4)
 
     # ---- 架构图(NEW)----
     s = numbered(); title(s, "框架架构:五节点闭环 + 外搜逃逸支路")
@@ -312,7 +305,7 @@ def build():
         ("规划器域(有 headroom):", 17, INK, True),
         ("  loop 显著低于随机,z=−2.38", 16, MINT, True),
         ("  0% 随机更好 → 显著胜", 16, INK, False),
-        ("→ null 由域性质决定,非框架失败", 17, DEEP, True)], space=12)
+        ("→ 打平因任务简单,换复杂任务就赢随机", 17, DEEP, True)], space=12)
     cite(s, "significance_test.py / planner_significance.py(随机分布 + z 检验)")
 
     # ---- 12b 复杂度规律(为什么打平)----

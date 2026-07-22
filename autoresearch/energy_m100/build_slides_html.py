@@ -93,25 +93,17 @@ S("""<div class='qbox'><div class='qlab'>研究问题</div>
 <div class='qbig'>在一个真实、含噪、无干净真值的工程域(无人机能耗与规划),<br>可信的自动科研框架能“得到什么”、又该“诚实承认什么”?</div>
 <div class='qnote'>核心主张:贡献不是新算法或新发现(均为 prior art),而是方法学 + 真机数据锚定 + 诚实能力边界。</div></div>""", "dark")
 
-S("<h2><span class='n'>3</span>整体框架:六个环节一环扣一环,贡献落在“过程”而非“发现”</h2>" +
-  "<table class='fw'>" +
+S("<h2><span class='n'>3</span>框架总体结构:六个部分</h2>" +
+  "<table class='fw'><tr class='hd'><td>组成部分</td><td>角色</td><td>说明</td></tr>" +
   "".join(f"<tr><td class='c1'>{a}</td><td class='c2'>{r}</td><td class='c3'>{d}</td></tr>" for a, r, d in [
-      ("① 数据与评测", "地基", "真机功率 P=V·I 当尺子,冻结+留出防作弊"),
-      ("② 自动科研框架", "过程(真贡献)", "只改模型、撞瓶颈触发外搜、诚实 keep/revert"),
-      ("③ 能耗模型", "产物", "9 项物理特征线性拟合(base 全是别人的)"),
-      ("④ 能量感知规划", "应用", "模型当边权插进 A*,改变翻越/绕行决策"),
-      ("⑤ 动力学与真飞控", "验证层", "RotorPy→PX4 真固件,结论过动力学仍成立"),
-      ("⑥ 统计与防守", "能力边界", "两域显著性+噪声地板,证明 null 是域性质")]) + "</table>")
-
-S("<h2><span class='n'>4</span>我们把“可信性”工程化为五道相互独立的安全机制</h2>" +
-  "<div class='mech'>" + "".join(
-      f"<div class='mrow'><div class='mnum'>{i+1}</div><div class='mh'>{h}</div><div class='md'>{d}</div></div>"
-      for i, (h, d) in enumerate([
-          ("冻结评测器", "锚定真机功率 P=V·|I|,按航班留出,永不可编辑"),
-          ("keep / revert", "仅当搜索降且留出不显著退才接受,防过拟合"),
-          ("强制查新门", "任何“发现”须先过文献查新,否则降级为复现"),
-          ("因果消融", "挖掉关键项验证机制归因"),
-          ("交叉模型 + 诚实报负结果", "暴露评测循环性,系统记录失败")])) + "</div>")
+      ("① 数据与评测", "基础", "以真机功率(P=V·I)为基准的防作弊评测"),
+      ("② 自动科研框架", "核心", "大模型闭环搜索:提议 → 评测 → 保留/回滚"),
+      ("③ 能耗模型", "产物", "从真机数据拟合的能耗预测模型"),
+      ("④ 能量感知规划", "应用", "以能耗为代价,规划更省电的路径"),
+      ("⑤ 动力学与真飞控", "验证", "RotorPy 动力学 + PX4 真飞控栈验证"),
+      ("⑥ 统计与防守", "边界", "统计检验 + 诚实刻画能力边界")]) + "</table>" +
+  "<div class='sub2'>其中②的可信性由五道安全机制保证:"
+  "<b>冻结评测器 · keep/revert · 强制查新门 · 因果消融 · 交叉模型+诚实报负结果</b></div>")
 
 S("<h2><span class='n'>4b</span>框架架构:五节点闭环 + 外搜逃逸支路</h2>" +
   f"<div class='apxfig'>{img(pub='框架架构图.png')}</div>" +
@@ -187,7 +179,7 @@ S("<h2><span class='n'>12</span>同框架:有改进空间的域显著胜随机,�
               "loop 1.86% vs 随机 1.87±0.03,z=−0.35 → 打平",
               "<b>规划器域(有 headroom):</b>",
               "<b class='grn'>loop 显著低于随机,z=−2.38 → 显著胜</b>",
-              "<b class='blu'>→ null 由域性质决定,非框架失败</b>"])) +
+              "<b class='blu'>→ 打平因任务简单,换复杂任务(规划器)就赢随机</b>"])) +
   "<div class='cite'>significance_test.py / planner_significance.py(随机分布 + z 检验)</div>")
 
 S("<h2><span class='n'>12b</span>为什么打平?引导搜索的优势随搜索空间复杂度增长(文献规律)</h2>" +
@@ -287,6 +279,8 @@ table.fw{width:100%;border-collapse:collapse;font-size:1.4vw}
 table.fw td{border:1px solid #dde3e8;padding:1.4vh 1.2vw}
 table.fw .c1{font-weight:700;color:#1a2333;width:22%}.fw .c2{color:#4472C4;font-weight:700;width:18%}.fw .c3{color:#6b7a8d}
 table.fw tr:nth-child(odd){background:#eef4f7}
+table.fw tr.hd td{background:#0563C1;color:#fff;font-weight:700;font-size:1.15vw}
+.sub2{margin-top:2.5vh;font-size:1.25vw;color:#333;line-height:1.7}.sub2 b{color:#0563C1}
 .mech{display:flex;flex-direction:column;gap:1.6vh;margin-top:1vh}
 .mrow{display:flex;align-items:center;gap:1.2vw}
 .mnum{background:#4472C4;color:#fff;width:2.4vw;height:2.4vw;line-height:2.4vw;text-align:center;border-radius:.5vw;font-size:1.3vw;font-weight:700;flex:none}
