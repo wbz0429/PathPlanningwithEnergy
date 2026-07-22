@@ -36,7 +36,7 @@ a2.plot(np.arange(len(Pr)) / 5.0, Pr, color=PAL["red"], lw=0.8)  # 5Hz
 a2.axhline(Pr.mean(), ls=(0, (4, 3)), color="#333", lw=1)
 a2.set_xlabel("时间 (s)"); a2.set_ylabel("功率 (W)"); a2.set_ylim(0, 900)
 a2.set_title("真机:实测功率(剧烈波动)", fontsize=11)
-a2.text(0.5, 0.93, "变异系数≈0.20;运动学只解释~40%\n其余~60%=风/电压/控制噪声",
+a2.text(0.5, 0.93, "变异系数≈0.20;运动学只解释~40%\n其余~60%无法由当前输入解释(待归因)",
         transform=a2.transAxes, fontsize=8.5, color=PAL["red"], ha="center", va="top")
 
 fig.suptitle("为什么误差降不到 1.9% 以下:真机功率含大量不可观测噪声(非模型不足)", fontsize=11.5, y=1.02)
