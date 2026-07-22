@@ -18,6 +18,9 @@ NAVY = RGBColor(0x0A,0x2A,0x66); DEEP = RGBColor(0x05,0x63,0xC1); TEAL = RGBColo
 MINT = RGBColor(0x5B,0x9B,0xD5); WHITE = RGBColor(0xFF,0xFF,0xFF); INK = RGBColor(0x1A,0x23,0x33)
 MUTED = RGBColor(0x6B,0x7A,0x8D); RED = RGBColor(0xC0,0x50,0x2D); ICE = RGBColor(0xD6,0xE4,0xF7)
 CJK = "微软雅黑"; SW, SH = In(13.333), In(7.5)
+ASSETS = os.path.join(HERE, "assets")
+LOGO = os.path.join(ASSETS, "xjtu_logo_white.png")       # 白色校徽横版(透明底)
+BUILDING = os.path.join(ASSETS, "xjtu_building.jpg")      # 创新港建筑
 
 
 def _font(run, name=CJK):
@@ -32,9 +35,13 @@ def bg(s, c): f = s.background.fill; f.solid(); f.fore_color.rgb = c
 def content(s):
     bg(s, WHITE); b = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, In(0.12), SH)
     b.fill.solid(); b.fill.fore_color.rgb = TEAL; b.line.fill.background()
+    # 右上角校名(内容页角标)
+    tb(s, In(9.9), In(0.32), In(3.1), In(0.4), "西安交通大学", 12, RGBColor(0x9A,0xA8,0xB8), False, align=PP_ALIGN.RIGHT)
 def dark(s):
     bg(s, NAVY); b = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, In(0.12), SH)
     b.fill.solid(); b.fill.fore_color.rgb = MINT; b.line.fill.background()
+    if os.path.exists(LOGO):   # 深色页右上角白色校徽
+        s.shapes.add_picture(LOGO, In(9.5), In(0.4), height=In(0.5))
 
 
 def tb(s, l, t, w, h, lines, size=16, color=INK, bold=False, align=PP_ALIGN.LEFT, anchor=MSO_ANCHOR.TOP, space=4):
@@ -93,15 +100,24 @@ def build():
         s = S(); (dark if dk else content)(s); _sec[0] += 1
         chip(s, In(0.55), In(0.4), str(_sec[0]), MINT if dk else TEAL); return s
 
-    # ---- 封面 ----
-    s = S(); dark(s)
-    tb(s, In(0.9), In(2.2), In(11.5), In(1.9),
+    # ---- 封面(西交蓝 + 建筑背景 + 校徽)----
+    s = S(); bg(s, NAVY)
+    if os.path.exists(BUILDING):        # 建筑图铺底部(半幅),上方深蓝叠色
+        s.shapes.add_picture(BUILDING, 0, In(4.7), SW, In(2.8))
+        band = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, In(4.7), SW, In(2.8))
+        band.fill.solid(); band.fill.fore_color.rgb = NAVY
+        try: band.fill.transparency = 0.45
+        except Exception: pass
+        band.line.fill.background()
+    if os.path.exists(LOGO):            # 顶部白色校徽横版
+        s.shapes.add_picture(LOGO, In(0.85), In(0.7), height=In(0.85))
+    tb(s, In(0.9), In(2.4), In(11.5), In(1.9),
        [("面向无人机能耗建模与能量感知路径规划的", 26, WHITE, False),
-        ("可信大模型自动化科研框架", 40, MINT, True)], space=8)
-    tb(s, In(0.9), In(4.4), In(11.5), In(1.2),
-       [("A Trustworthy LLM-Agent Autoresearch Framework, Instantiated on UAV Energy", 15, ICE, False),
-        ("Modeling and Energy-Aware Path Planning", 15, ICE, False)], space=3)
-    tb(s, In(0.9), In(6.2), In(11.5), In(0.6), "硕士学位论文·中期答辩　|　2026", 15, WHITE, False)
+        ("可信大模型自动化科研框架", 40, RGBColor(0x8C,0xC0,0xFF), True)], space=8)
+    tb(s, In(0.9), In(4.05), In(11.5), In(0.9),
+       [("A Trustworthy LLM-Agent Autoresearch Framework, Instantiated on UAV Energy", 14, ICE, False),
+        ("Modeling and Energy-Aware Path Planning", 14, ICE, False)], space=3)
+    tb(s, In(0.9), In(6.5), In(11.5), In(0.6), "西安交通大学　硕士学位论文·中期答辩　|　2026", 15, WHITE, False, anchor=MSO_ANCHOR.MIDDLE)
 
     # ---- 1 背景 ----
     s = numbered(); title(s, "大模型自动科研正在爆发,但它的“发现”普遍不可信")
