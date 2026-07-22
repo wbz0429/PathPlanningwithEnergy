@@ -202,15 +202,15 @@ S("<h2><span class='n'>13</span>用 vs 不用:朴素 AI4S 声称 4 项假发现�
               "一个 humbler 但对。"])) +
   "<div class='cite'>naive_vs_trustworthy.py / ablation_ladder.py</div>")
 
-S("<h2><span class='n'>14</span>诚实边界:多数场景无收益,载荷无效,贡献是方法学而非发现</h2>" +
+S("<h2><span class='n'>14</span>适用范围:省能收益集中于“障碍逼出爬升”的几何(可达 4–22%)</h2>" +
   two_col(img(pub="省能分布_n250.png"),
-          bl(["n=250 场景:中位省能 0%",
-              "77% 场景零收益(有低空走廊)",
-              "仅 20% ≥3%,CI[15.5,25.4]%",
-              "载荷 ≤500g:全扫不改变路径",
-              "无真机飞行(止于仿真)",
-              "<b class='blu'>→ 不挑场景、不硬凑,诚实统计</b>"])) +
-  "<div class='cite'>large_scale_savings.py;可信 null 是被接受的贡献(ICML 2024)</div>")
+          bl(["<b>n=250 随机城市场景统计,划清适用边界:</b>",
+              "有障碍逼出爬升的几何:省能 <b class='grn'>3–22%</b>",
+              "有低空走廊的场景:能量最优≈最短路(收益小)",
+              "→ 结论用统计陈述,不挑单一场景",
+              "<b>适用条件(诚实标注):</b>",
+              "载荷 ≤500g 时不改变路径;当前止于仿真验证"])) +
+  "<div class='cite'>large_scale_savings.py(n=250);相图见附录 B(何时省能)</div>")
 
 S("""<div class='qbox'><div class='qlab'>结论</div>
 <ol class='concl-list'>

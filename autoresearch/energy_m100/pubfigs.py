@@ -145,7 +145,7 @@ def crossdomain_sig():
     a2.text(lp2+12, .78, f"loop {lp2:.0f}\nz={p['loop_z']}", transform=a2.get_xaxis_transform(), fontsize=8.5,
             ha="left", color=PAL["green"], bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.85))
     a2.set_xlim(min(lp2, m2-3.2*sd2)-40, m2+3.2*sd2); a2.set_yticks([]); a2.set_xlabel("能耗 score")
-    a2.set_title("规划器域(有 headroom)→ 显著胜", fontsize=10)
+    a2.set_title("规划器域(有改进空间)→ 显著胜", fontsize=10)
     for a in (a1, a2): a.spines["left"].set_visible(False)
     save(fig, "两域显著性")
 

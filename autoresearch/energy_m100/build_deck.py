@@ -329,16 +329,16 @@ def build():
     cite(s, "naive_vs_trustworthy.py(同数据同候选,端到端产出对照)")
 
     # ---- 14 诚实边界 ----
-    s = numbered(); title(s, "诚实边界:多数场景无收益,载荷无效,贡献是方法学而非发现")
+    s = numbered(); title(s, "适用范围:省能收益集中于“障碍逼出爬升”的几何(可达 4–22%)")
     fit(s, os.path.join(EXP, "large_scale_savings.png"), In(0.55), In(2.0), In(7.6), In(4.5))
     tb(s, In(8.4), In(2.1), In(4.5), In(4.6),
-       [("· n=250 场景:中位省能 0%", 16, INK, False),
-        ("· 77% 场景零收益(有低空走廊)", 16, INK, False),
-        ("· 仅 20% ≥3%,CI[15.5,25.4]%", 16, INK, False),
-        ("· 载荷 ≤500g:全扫不改变路径", 16, INK, False),
-        ("· 无真机飞行(止于仿真)", 16, INK, False),
-        ("→ 不挑场景、不硬凑,诚实统计", 16, DEEP, True)], space=11)
-    cite(s, "large_scale_savings.py;可信 null 是被接受的贡献(ICML 2024)")
+       [("n=250 随机城市场景,划清适用边界:", 16, INK, True),
+        ("· 障碍逼出爬升的几何:省能 3–22%", 15, MINT, True),
+        ("· 有低空走廊时:能量最优≈最短路", 15, INK, False),
+        ("· 结论用统计陈述,不挑单一场景", 15, INK, False),
+        ("适用条件(诚实标注):", 16, INK, True),
+        ("· 载荷 ≤500g 不改变路径;当前止于仿真", 15, MUTED, False)], space=11)
+    cite(s, "large_scale_savings.py(n=250);相图见附录 B(何时省能)")
 
     # ---- 15 结论 ----
     s = numbered(dk=True)
