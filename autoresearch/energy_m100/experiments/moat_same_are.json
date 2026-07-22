@@ -1,0 +1,56 @@
+{
+  "truth_W": 105.0,
+  "rows": [
+    {
+      "name": "★我们(物理锚定)",
+      "ARE%": 1.82,
+      "climb_premium_W": 137.0,
+      "err_vs_truth_W": 31.0,
+      "mechanism_ok": true
+    },
+    {
+      "name": "随机#1",
+      "ARE%": 1.94,
+      "climb_premium_W": 141.0,
+      "err_vs_truth_W": 35.0,
+      "mechanism_ok": true
+    },
+    {
+      "name": "随机#2",
+      "ARE%": 1.92,
+      "climb_premium_W": 137.0,
+      "err_vs_truth_W": 31.0,
+      "mechanism_ok": true
+    },
+    {
+      "name": "随机#3",
+      "ARE%": 2.06,
+      "climb_premium_W": 0.0,
+      "err_vs_truth_W": -105.0,
+      "mechanism_ok": false
+    },
+    {
+      "name": "随机#4",
+      "ARE%": 1.99,
+      "climb_premium_W": 130.0,
+      "err_vs_truth_W": 25.0,
+      "mechanism_ok": true
+    },
+    {
+      "name": "随机#5",
+      "ARE%": 1.97,
+      "climb_premium_W": 142.0,
+      "err_vs_truth_W": 37.0,
+      "mechanism_ok": true
+    },
+    {
+      "name": "随机#6",
+      "ARE%": 2.1,
+      "climb_premium_W": 130.0,
+      "err_vs_truth_W": 25.0,
+      "mechanism_ok": true
+    }
+  ],
+  "verdict": "MOAT_FAILED",
+  "reason": "小空间里随机拟合的模型多数(5/6)机制也对→随机确实≈我们,连爬升机制都对。此实验反证了能耗域护城河弱,如实记录不进答辩正面。"
+}
