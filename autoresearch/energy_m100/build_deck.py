@@ -13,9 +13,10 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 EXP = os.path.join(HERE, "experiments"); PX4 = os.path.join(HERE, "px4_integration"); GIF = os.path.join(EXP, "gifs")
-NAVY = RGBColor(0x1E,0x29,0x61); DEEP = RGBColor(0x06,0x5A,0x82); TEAL = RGBColor(0x02,0x80,0x90)
-MINT = RGBColor(0x02,0xC3,0x9A); WHITE = RGBColor(0xFF,0xFF,0xFF); INK = RGBColor(0x1A,0x23,0x33)
-MUTED = RGBColor(0x6B,0x7A,0x8D); RED = RGBColor(0xB8,0x3A,0x3A); ICE = RGBColor(0xCA,0xDC,0xFC)
+# 西安交通大学创新港模板配色(西交蓝系)
+NAVY = RGBColor(0x0A,0x2A,0x66); DEEP = RGBColor(0x05,0x63,0xC1); TEAL = RGBColor(0x44,0x72,0xC4)
+MINT = RGBColor(0x5B,0x9B,0xD5); WHITE = RGBColor(0xFF,0xFF,0xFF); INK = RGBColor(0x1A,0x23,0x33)
+MUTED = RGBColor(0x6B,0x7A,0x8D); RED = RGBColor(0xC0,0x50,0x2D); ICE = RGBColor(0xD6,0xE4,0xF7)
 CJK = "微软雅黑"; SW, SH = In(13.333), In(7.5)
 
 
@@ -159,6 +160,11 @@ def build():
         tb(s, In(5.0), y+In(0.02), In(7.7), In(0.6), d, 15, MUTED, False)
         y += In(0.92)
 
+    # ---- 架构图(NEW)----
+    s = numbered(); title(s, "框架架构:五节点闭环 + 外搜逃逸支路")
+    fit(s, os.path.join(EXP, "pub", "框架架构图.png"), In(0.7), In(1.85), In(11.9), In(4.9))
+    cite(s, "LLM 提议→Harness 实验→冻结评测器→keep/revert 闭环;撞瓶颈触发外搜;知识库持久化")
+
     # ---- 5 loop 全过程(NEW,过程即贡献)----
     s = numbered(); title(s, "过程即贡献:loop 撞瓶颈→触发外搜→改向→诚实记录(真实迭代)")
     fit(s, os.path.join(EXP, "loop_process.png"), In(0.55), In(1.95), In(9.0), In(4.7))
@@ -171,6 +177,11 @@ def build():
         ("· 物理≈线性→诚实报", 15, INK, False),
         ("· loop≈随机→报边界", 15, INK, False)], space=10)
     cite(s, "真实 agent_log.jsonl + KNOWLEDGE.md;下半为 loop 机制流程")
+
+    # ---- 突破阈值叙事(NEW)----
+    s = numbered(); title(s, "autoresearch 如何突破阈值:局部搜索卡壳→外搜识别方向→一步突破")
+    fit(s, os.path.join(EXP, "pub", "突破阈值叙事.png"), In(0.7), In(1.9), In(11.9), In(4.6))
+    cite(s, "6.88% → 卡 4.2%(7变体全卡)→ 外搜识别'加线性payload' → 1.9%。突破来自框架的外搜环节,非更花哨的模型")
 
     # ---- 6 能耗迭代 ----
     s = numbered(); title(s, "能耗模型自动迭代把留出误差从 6.88% 降到 1.86%——但这不是重点")

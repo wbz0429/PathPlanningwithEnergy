@@ -85,3 +85,18 @@ RewardHackingAgents 2603.11337
 
 **审稿人会问"够不够"** → 答:①跨域对照排除框架无能 ②噪声地板量化证明数据封顶 ③safeguard 消融证明防 overclaim。
 三者合起来 = 一个严谨的、有文献支撑的"可信 AI4S 能力边界"贡献。必引:AlphaEvolve/FunSearch/AI Scientist独立评估(2502.14297)/ICML2024负结果(2406.03980)。
+
+## 补充(2026-07,deep-research 100 agents)—— 无算法创新的框架论文如何主张价值(带顶刊先例)
+**问题:框架打不平"最终性能"时,凭什么有价值?答:在其他维度主张,均有先例。**
+
+| 价值维度 | 先例 | 对我们 |
+|---|---|---|
+| **样本效率/收敛速度**(同等质量、更少评估) | **Bergstra & Bengio 2012**(JMLR,随机搜索超参:一小部分算力达同等质量) | ★ 我们补了收敛速度实验(见下) |
+| "≈随机"本身可发表 | **Li & Talwalkar 2019**(random search NAS baseline,arXiv:1902.07638) | 我们诚实报 loop≈随机有先例 |
+| 不胜随机时用"相对随机平均的提升"当指标 | Yang et al. 2020(NAS eval frustratingly hard,arXiv:1912.12522) | 我们两域对照正是此法 |
+| 强简单基线/诚实 null 当贡献 | White 2020(local search,arXiv:2004.08996);Farahani 2024(arXiv:2403.08265) | 我们的诚实定位 |
+| 框架应用(非新学习算法)+ 可解释 + 减少人工 | **FunSearch(Nature 2023)**;**Eureka(ICLR 2024)** | 顶刊/顶会先例,我们同类 |
+| 可复现/泛化到新领域(基础设施贡献) | NAS-Bench-Suite(ICLR 2022,arXiv:2201.13396) | 我们冻结评测器+跨域 |
+
+**架构图画法(问题A结论)**:回环作"反向边"走外圈不交叉(Sugiyama 分层,tikz.dev/arXiv:1608.07809);
+FunSearch Figure 1(问题→LLM→评测器→数据库→回灌)是我们架构图的同构模板;工具 TikZ(LaTeX矢量)/Graphviz(自动布局)/matplotlib3.5+(中文矢量PDF)。**我们已用 Graphviz 重画,布局原则一致。**
