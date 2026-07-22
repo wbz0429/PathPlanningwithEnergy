@@ -168,7 +168,7 @@ S("<h2><span class='n'>12</span>同框架:有改进空间的域显著胜随机,�
   two_col(img(pub="两域显著性.png"),
           bl(["<b>能耗域(封顶):</b>",
               "loop 1.86% vs 随机 1.87±0.03,z=−0.35 → 打平",
-              "<b>规划器域(有 headroom):</b>",
+              "<b>规划器域(有改进空间):</b>",
               "<b class='grn'>loop 显著低于随机,z=−2.38 → 显著胜</b>",
               "<b class='blu'>→ 优势取决于搜索空间复杂度:小空间相当,大空间显著胜</b>"])) +
   "<div class='cite'>significance_test.py / planner_significance.py(随机分布 + z 检验)</div>")
@@ -208,7 +208,7 @@ S("""<div class='qbox'><div class='qlab'>结论</div>
 <li class='hl2'>贡献 = 可信自动科研方法学 + 真机数据锚定 + 诚实能力边界</li>
 <li>逐个消融证明每道节点“承重”:去掉即退化/overclaim</li>
 <li>价值 = 在该 overclaim 处不 overclaim,并量化能力边界</li>
-<li>域相关:有 headroom 显著胜随机、封顶域正确产出 null</li>
+<li>搜索空间大则显著胜随机,空间小(已封顶)则与随机相当</li>
 </ol></div>""", "dark")
 
 S("<h2><span class='n'>16</span>参考文献</h2><div class='refs'>" + "<br>".join([

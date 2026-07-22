@@ -286,7 +286,7 @@ def build():
        [("能耗域(封顶):", 17, INK, True),
         ("  loop 1.86% vs 随机 1.87±0.03,z=−0.35", 16, INK, False),
         ("  52% 随机更好 → 统计打平", 16, INK, False),
-        ("规划器域(有 headroom):", 17, INK, True),
+        ("规划器域(有改进空间):", 17, INK, True),
         ("  loop 显著低于随机,z=−2.38", 16, MINT, True),
         ("  0% 随机更好 → 显著胜", 16, INK, False),
         ("→ 优势取决于搜索空间复杂度:小空间相当,大空间显著胜", 16, DEEP, True)], space=12)
@@ -334,7 +334,7 @@ def build():
         ("② 贡献 = 可信自动科研方法学 + 真机数据锚定 + 诚实能力边界", 21, MINT, True),
         ("③ 逐个消融证明每道节点“承重”:去掉即退化/overclaim", 21, WHITE, False),
         ("④ 价值 = 在该 overclaim 处不 overclaim,并量化能力边界", 21, WHITE, False),
-        ("⑤ 域相关:有 headroom 显著胜随机、封顶域正确产出 null", 21, WHITE, False)], space=16)
+        ("⑤ 搜索空间大则显著胜随机,空间小(已封顶)则与随机相当", 21, WHITE, False)], space=16)
 
     # ---- 16 参考文献 ----
     s = numbered(); title(s, "参考文献")
