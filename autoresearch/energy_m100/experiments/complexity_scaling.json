@@ -1,0 +1,53 @@
+{
+  "budget": 30,
+  "seeds": 6,
+  "rows": [
+    {
+      "K": 10,
+      "space": "2^10",
+      "guided_ARE": 1.902,
+      "guided_std": 0.059,
+      "random_ARE": 1.914,
+      "random_std": 0.019,
+      "advantage_pp": 0.011
+    },
+    {
+      "K": 20,
+      "space": "2^20",
+      "guided_ARE": 1.966,
+      "guided_std": 0.044,
+      "random_ARE": 1.945,
+      "random_std": 0.073,
+      "advantage_pp": -0.021
+    },
+    {
+      "K": 40,
+      "space": "2^40",
+      "guided_ARE": 3.133,
+      "guided_std": 0.871,
+      "random_ARE": 1.997,
+      "random_std": 0.093,
+      "advantage_pp": -1.136
+    },
+    {
+      "K": 70,
+      "space": "2^70",
+      "guided_ARE": 3.278,
+      "guided_std": 0.993,
+      "random_ARE": 2.085,
+      "random_std": 0.281,
+      "advantage_pp": -1.193
+    },
+    {
+      "K": 110,
+      "space": "2^110",
+      "guided_ARE": 2.632,
+      "guided_std": 0.773,
+      "random_ARE": 2.101,
+      "random_std": 0.128,
+      "advantage_pp": -0.531
+    }
+  ],
+  "verdict": "INVALID_FOR_CLAIM",
+  "reason": "引导用贪心增删单项,大K时贪心卡局部最优(非引导本身弱);随机抽整子集不受影响。对比不公平→既不能证明也不能反驳规律。诚实作废,不进答辩材料。规律仍靠文献+两真实端点(规划器胜27%/能耗打平)。"
+}
