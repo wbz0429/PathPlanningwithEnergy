@@ -118,14 +118,14 @@ S("<h2><span class='n'>5b</span>autoresearch 如何突破阈值:局部搜索卡�
   f"<div class='apxfig'>{img(pub='突破阈值叙事.png')}</div>" +
   "<div class='cite'>6.88% → 卡在 4.2%(7 变体全卡)→ 外搜识别“加线性 payload” → 1.9%。突破来自框架的外搜环节</div>")
 
-S("<h2><span class='n'>6</span>能耗模型自动迭代把留出误差 6.88% → 1.86%——但这不是重点</h2>" +
+S("<h2><span class='n'>6</span>从真机数据自动建模:能耗预测误差降 73%(6.88% → 1.86%)</h2>" +
   two_col(img(pub="噪声地板.png", raw=os.path.join(EXP, "fig_summary.png")),
-          bl(["冻结评测器 + LLM 每轮改一次 featurize",
-              "iter1–10 全程留出验证 + keep/revert",
-              "<b>相对提升约 73%</b>",
-              "<b class='red'>但——结构搜索与随机搜索打平</b>",
-              "(见能力边界)"])) +
-  "<div class='cite'>冻结评测器 m100_eval.py;数据:真实 DJI M100(209 航班)</div>")
+          bl(["冻结评测器 + LLM 每轮改一次能耗公式",
+              "iter1–10 全程留出验证 + 保留/回滚",
+              "<b>误差 6.88% → 1.86%,相对提升约 73%</b>",
+              "<span style='font-size:1vw;color:#666'>ARE = |预测能量−真实能量| / 真实能量,",
+              "<span style='font-size:1vw;color:#666'>在“未参与训练的飞行”上取平均(防背答案)</span>"])) +
+  "<div class='cite'>能量真值 = 机载电压×电流积分;数据:真实 DJI M100(209 航班);评测器 m100_eval.py 冻结</div>")
 
 S("<h2><span class='n'>7</span>真机验证的能耗代价改变规划决策:避开真实存在的爬升能耗</h2>" +
   two_col(img(pub="真机代价改变决策.png") + img(raw=os.path.join(GIF, "video_corridor.gif"), cls="gif"),

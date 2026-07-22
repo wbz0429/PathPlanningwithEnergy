@@ -216,15 +216,17 @@ def build():
     cite(s, "6.88% → 卡 4.2%(7变体全卡)→ 外搜识别'加线性payload' → 1.9%。突破来自框架的外搜环节,非更花哨的模型")
 
     # ---- 6 能耗迭代 ----
-    s = numbered(); title(s, "能耗模型自动迭代把留出误差从 6.88% 降到 1.86%——但这不是重点")
+    s = numbered(); title(s, "从真机数据自动建模:能耗预测误差降 73%(6.88% → 1.86%)")
     fit(s, os.path.join(EXP, "fig_summary.png"), In(0.6), In(2.0), In(7.6), In(4.6))
-    tb(s, In(8.5), In(2.1), In(4.4), In(4.4),
-       [("· 冻结评测器 + LLM 每轮改一次 featurize", 16, INK, False),
-        ("· iter1–10 全程留出验证 + keep/revert", 16, INK, False),
-        ("· 相对提升约 73%", 16, INK, True),
-        ("· 但——结构搜索与随机搜索打平", 16, RED, True),
-        ("  (见能力边界)", 15, MUTED, False)], space=12)
-    cite(s, "冻结评测器 m100_eval.py;数据:真实 DJI M100(209 航班)")
+    tb(s, In(8.3), In(2.1), In(4.7), In(4.6),
+       [("· 冻结评测器 + LLM 每轮改一次能耗公式", 16, INK, False),
+        ("· iter1–10 全程留出验证 + 保留/回滚", 16, INK, False),
+        ("· 误差 6.88% → 1.86%(相对提升约 73%)", 16, DEEP, True),
+        ("", 8, MUTED, False),
+        ("ARE = |预测能量 − 真实能量| / 真实能量", 13, MUTED, False),
+        ("在“未参与训练的飞行”上取平均(防背答案)", 13, MUTED, False),
+        ("能量真值 = 机载电压 × 电流积分", 13, MUTED, False)], space=8)
+    cite(s, "数据:真实 DJI M100(209 航班);评测器 m100_eval.py 冻结")
 
     # ---- 7 真机代价改规划 ----
     s = numbered(); title(s, "真机验证的能耗代价改变规划决策:避开真实存在的爬升能耗")
