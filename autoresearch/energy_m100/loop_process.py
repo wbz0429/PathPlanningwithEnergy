@@ -48,10 +48,10 @@ BOTTLENECKS = [
 
 
 def main():
-    fig = plt.figure(figsize=(15, 9))
-    gs = fig.add_gridspec(2, 1, height_ratios=[1.15, 1], hspace=0.32)
+    fig = plt.figure(figsize=(15, 5.4))
+    gs = fig.add_gridspec(1, 1)
 
-    # ---- 上:迭代轨迹 ----
+    # ---- 迭代轨迹(流程图改用 Graphviz 版 loop流程图.png)----
     ax = fig.add_subplot(gs[0])
     xs = [t[0] for t in TRAJ]; ys = [t[1] for t in TRAJ]
     ax.plot(xs, ys, "-", color="#888", lw=1.5, zorder=1)
@@ -86,30 +86,9 @@ def main():
               fontsize=9, loc="upper right")
     ax.set_ylim(0.5, 7.4); ax.grid(alpha=.25)
 
-    # ---- 下:loop 机制流程图 ----
-    ax2 = fig.add_subplot(gs[1]); ax2.axis("off"); ax2.set_xlim(0, 10); ax2.set_ylim(0, 3)
-    boxes = [(0.5, "读状态\n(冻结评测器/知识库)"), (2.4, "提假设\n改一次featurize"),
-             (4.3, "沙箱评测\nsearch+留出ARE"), (6.2, "keep / revert\n留出退则回滚"),
-             (8.1, "记账+提交\nagent_log/git")]
-    for x, txt in boxes:
-        b = FancyBboxPatch((x, 1.6), 1.5, 0.9, boxstyle="round,pad=0.05", fc="#eaf4f7", ec="#028090", lw=1.5)
-        ax2.add_patch(b); ax2.text(x+0.75, 2.05, txt, ha="center", va="center", fontsize=8.5)
-    for i in range(len(boxes)-1):
-        ax2.add_patch(FancyArrowPatch((boxes[i][0]+1.5, 2.05), (boxes[i+1][0], 2.05),
-                     arrowstyle="->", mutation_scale=15, color="#028090"))
-    # 回环 + episode 边界分支
-    ax2.add_patch(FancyArrowPatch((8.85, 1.6), (3.15, 1.6), arrowstyle="->", mutation_scale=15,
-                 color="#028090", connectionstyle="arc3,rad=0.25"))
-    ax2.text(5.5, 0.75, "循环", fontsize=9, color="#028090", ha="center")
-    # episode 边界 → 文献检索
-    eb = FancyBboxPatch((3.3, 0.05), 3.4, 0.7, boxstyle="round,pad=0.05", fc="#fef3e6", ec="#c47f1a", lw=1.5)
-    ax2.add_patch(eb); ax2.text(5.0, 0.4, "★ Episode边界 / 撞瓶颈 → 触发文献检索(deep-research)\n把带来源的洞见写回知识库,改变下一轮方向",
-                                ha="center", va="center", fontsize=8.5, color="#8a5a12")
-    ax2.add_patch(FancyArrowPatch((3.15, 1.55), (4.3, 0.78), arrowstyle="->", mutation_scale=13, color="#c47f1a"))
-    ax2.set_title("loop 机制:读→提→评→keep/revert→记账,循环;撞瓶颈则触发文献检索改向", fontsize=12, fontweight="bold", y=0.98)
-
+    plt.tight_layout()
     plt.savefig(os.path.join(EXP, "loop_process.png"), dpi=125, bbox_inches="tight")
-    print("图存 experiments/loop_process.png")
+    print("图存 experiments/loop_process.png(仅迭代轨迹;流程图见 pub/loop流程图.png)")
     json.dump({"trajectory": [{"iter": t[0], "val_ARE": t[1], "decision": t[2], "note": t[3]} for t in TRAJ],
                "bottlenecks": BOTTLENECKS}, open(os.path.join(EXP, "loop_process.json"), "w"), ensure_ascii=False, indent=2)
     print("瓶颈处理表存 experiments/loop_process.json")

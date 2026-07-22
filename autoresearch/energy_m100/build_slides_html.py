@@ -95,12 +95,8 @@ S("<h2><span class='n'>4b</span>框架架构:五节点闭环 + 外搜逃逸支�
 
 S("<h2><span class='n'>5</span>过程即贡献:loop 撞瓶颈 → 触发外搜 → 改向 → 诚实记录</h2>" +
   two_col(img(raw=os.path.join(EXP, "loop_process.png")),
-          bl(["<b>价值不在最终模型(prior art),在这套过程:</b>",
-              "卡在 4.24% → 触发文献检索",
-              "试 wind 没用 → REVERT 记进知识库",
-              "物理形≈线性 → 诚实报告",
-              "loop≈随机 → 诚实报能力边界"])) +
-  "<div class='cite'>真实 agent_log.jsonl + KNOWLEDGE.md</div>")
+          f"<div style='text-align:center'>{img(pub='loop流程图.png')}</div>") +
+  "<div class='cite'>左:真实迭代轨迹(卡4.24%→外搜→突破1.9%);右:loop 机制流程。数据 agent_log.jsonl + KNOWLEDGE.md</div>")
 
 S("<h2><span class='n'>5b</span>autoresearch 如何突破阈值:局部搜索卡壳 → 外搜识别方向 → 一步突破</h2>" +
   f"<div class='apxfig'>{img(pub='突破阈值叙事.png')}</div>" +

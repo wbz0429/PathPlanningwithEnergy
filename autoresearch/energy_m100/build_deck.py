@@ -181,18 +181,11 @@ def build():
     fit(s, os.path.join(EXP, "pub", "框架架构图.png"), In(0.7), In(1.85), In(11.9), In(4.9))
     cite(s, "LLM 提议→Harness 实验→冻结评测器→keep/revert 闭环;撞瓶颈触发外搜;知识库持久化")
 
-    # ---- 5 loop 全过程(NEW,过程即贡献)----
+    # ---- 5 loop 全过程(过程即贡献)----
     s = numbered(); title(s, "过程即贡献:loop 撞瓶颈→触发外搜→改向→诚实记录(真实迭代)")
-    fit(s, os.path.join(EXP, "loop_process.png"), In(0.55), In(1.95), In(9.0), In(4.7))
-    tb(s, In(9.7), In(2.1), In(3.3), In(4.6),
-       [("价值不在最终模型", 16, INK, True),
-        ("(prior art),", 15, MUTED, False),
-        ("在这套过程:", 16, INK, True),
-        ("· 卡 4.24% → 查文献", 15, INK, False),
-        ("· wind 试→REVERT 记库", 15, INK, False),
-        ("· 物理≈线性→诚实报", 15, INK, False),
-        ("· loop≈随机→报边界", 15, INK, False)], space=10)
-    cite(s, "真实 agent_log.jsonl + KNOWLEDGE.md;下半为 loop 机制流程")
+    fit(s, os.path.join(EXP, "loop_process.png"), In(0.5), In(2.0), In(7.6), In(4.5))
+    fit(s, os.path.join(EXP, "pub", "loop流程图.png"), In(8.3), In(1.9), In(4.6), In(4.9))
+    cite(s, "左:真实迭代轨迹(卡4.24%→外搜→突破1.9%);右:loop 机制流程。数据 agent_log.jsonl + KNOWLEDGE.md")
 
     # ---- 突破阈值叙事(NEW)----
     s = numbered(); title(s, "autoresearch 如何突破阈值:局部搜索卡壳→外搜识别方向→一步突破")
