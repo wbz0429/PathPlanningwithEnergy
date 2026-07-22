@@ -166,6 +166,17 @@ S("<h2><span class='n'>12</span>同框架:有改进空间的域显著胜随机,�
               "<b class='blu'>→ null 由域性质决定,非框架失败</b>"])) +
   "<div class='cite'>significance_test.py / planner_significance.py(随机分布 + z 检验)</div>")
 
+S("<h2><span class='n'>12b</span>为什么打平?引导搜索的优势随搜索空间复杂度增长(文献规律)</h2>" +
+  two_col(img(pub="复杂度规律.png"),
+          bl(["<b>不是框架无能,是规律预测的必然:</b>",
+              "Bergstra&Bengio'12:低有效维→随机追平",
+              "REMBO/贝叶斯:~15–20 维临界点",
+              "FunSearch:程序空间>宇宙原子数→引导才行",
+              "<b class='red'>我们能耗域(小)→打平</b>",
+              "<b class='grn'>我们规划器域(大)→胜 27%</b>",
+              "<b class='blu'>同框架横跨两端点,亲手印证规律</b>"])) +
+  "<div class='cite'>规律来自文献综合;两端点是我们实测。CMU《Hidden Pitfalls》(2509.08713)反证可信性为刚需</div>")
+
 S("<h2><span class='n'>13</span>用 vs 不用:朴素 AI4S 声称 4 项假发现且藏负结果,我们相反</h2>" +
   two_col(img(pub="消融阶梯.png", raw=os.path.join(EXP, "naive_vs_trustworthy.png")),
           bl(["<b class='red'>朴素:</b> 4 假发现 + 0 负结果",

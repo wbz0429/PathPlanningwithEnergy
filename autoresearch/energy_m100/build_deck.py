@@ -58,10 +58,13 @@ def tb(s, l, t, w, h, lines, size=16, color=INK, bold=False, align=PP_ALIGN.LEFT
 
 
 def chip(s, l, t, txt, color=TEAL):
-    sh = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, l, t, In(0.5), In(0.5))
+    w = In(0.5) if len(txt) <= 1 else In(0.62 + 0.12 * (len(txt) - 2))   # 多位数加宽
+    sh = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, l, t, w, In(0.5))
     sh.fill.solid(); sh.fill.fore_color.rgb = color; sh.line.fill.background()
-    tf = sh.text_frame; tf.margin_top = tf.margin_bottom = 0
-    r = tf.paragraphs[0].add_run(); r.text = txt; r.font.size = Pt(20); r.font.bold = True
+    tf = sh.text_frame; tf.margin_top = tf.margin_bottom = tf.margin_left = tf.margin_right = 0
+    tf.word_wrap = False
+    fs = 20 if len(txt) <= 1 else (16 if len(txt) == 2 else 13)          # 多位数缩字号
+    r = tf.paragraphs[0].add_run(); r.text = txt; r.font.size = Pt(fs); r.font.bold = True
     r.font.color.rgb = WHITE; _font(r); tf.paragraphs[0].alignment = PP_ALIGN.CENTER
 
 
@@ -284,6 +287,19 @@ def build():
         ("  0% 随机更好 → 显著胜", 16, INK, False),
         ("→ null 由域性质决定,非框架失败", 17, DEEP, True)], space=12)
     cite(s, "significance_test.py / planner_significance.py(随机分布 + z 检验)")
+
+    # ---- 12b 复杂度规律(为什么打平)----
+    s = numbered(); title(s, "为什么打平?引导搜索的优势随搜索空间复杂度增长(文献规律)")
+    fit(s, os.path.join(EXP, "pub", "复杂度规律.png"), In(0.5), In(2.0), In(7.4), In(4.6))
+    tb(s, In(8.1), In(2.1), In(4.9), In(4.8),
+       [("不是框架无能,是规律预测:", 16, INK, True),
+        ("· Bergstra'12:低有效维→随机追平", 14, INK, False),
+        ("· REMBO:~15–20 维临界点", 14, INK, False),
+        ("· FunSearch:巨大程序空间→引导才行", 14, INK, False),
+        ("· 我们能耗域(小)→打平", 15, RED, True),
+        ("· 我们规划器域(大)→胜 27%", 15, MINT, True),
+        ("→ 同框架横跨两端点,亲手印证规律", 15, DEEP, True)], space=9)
+    cite(s, "规律=文献综合;两端点=我们实测。CMU《Hidden Pitfalls》2509.08713 反证可信性为刚需")
 
     # ---- 13 用vs不用 ----
     s = numbered(); title(s, "用 vs 不用:朴素 AI4S 声称 4 项假发现且藏负结果,我们相反")
