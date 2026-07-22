@@ -269,7 +269,7 @@ def build():
     cite(s, "framework_ablation.py / safeguard_ablation.py(每节点一个可复现消融)")
 
     # ---- 11 噪声地板 ----
-    s = numbered(); title(s, "性能被数据噪声封顶:52 项模型也压不下 6 项——不是方法不足")
+    s = numbered(); title(s, "性能上限由数据决定:留出误差 6 项处触底,加到 52 项不再降")
     fit(s, os.path.join(EXP, "domain_value.png"), In(0.55), In(2.0), In(8.6), In(4.5))
     tb(s, In(9.4), In(2.1), In(3.5), In(4.6),
        [("· held-out 6 项即触底 1.88%", 16, INK, False),
@@ -289,14 +289,14 @@ def build():
         ("规划器域(有 headroom):", 17, INK, True),
         ("  loop 显著低于随机,z=−2.38", 16, MINT, True),
         ("  0% 随机更好 → 显著胜", 16, INK, False),
-        ("→ 打平因任务简单,换复杂任务就赢随机", 17, DEEP, True)], space=12)
+        ("→ 优势取决于搜索空间复杂度:小空间相当,大空间显著胜", 16, DEEP, True)], space=12)
     cite(s, "significance_test.py / planner_significance.py(随机分布 + z 检验)")
 
     # ---- 12b 复杂度规律(为什么打平)----
     s = numbered(); title(s, "为什么打平?引导搜索的优势随搜索空间复杂度增长(文献规律)")
     fit(s, os.path.join(EXP, "pub", "复杂度规律.png"), In(0.5), In(2.0), In(7.4), In(4.6))
     tb(s, In(8.1), In(2.1), In(4.9), In(4.8),
-       [("不是框架无能,是规律预测:", 16, INK, True),
+       [("引导搜索优势随空间复杂度增长:", 16, INK, True),
         ("· Bergstra'12:低有效维→随机追平", 14, INK, False),
         ("· REMBO:~15–20 维临界点", 14, INK, False),
         ("· FunSearch:巨大程序空间→引导才行", 14, INK, False),

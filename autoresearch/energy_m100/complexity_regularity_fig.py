@@ -37,7 +37,7 @@ ax.annotate("★我们·规划器域(实测)\n代码空间(大)→胜随机27% z
 
 ax.set_xlabel("搜索空间复杂度(小 → 大)"); ax.set_ylabel("引导搜索相对随机的优势(%)")
 ax.set_xticks([]); ax.set_ylim(-9, 34)
-ax.set_title("引导搜索的优势随搜索空间复杂度增长\n(规律=文献综合;两端点=我们实测——能耗域打平是规律预测的必然)", fontsize=10.5)
+ax.set_title("引导搜索的优势随搜索空间复杂度增长\n(规律=文献综合;两端点=我们实测)", fontsize=10.5)
 ax.legend(loc="upper left", fontsize=8.5)
 plt.tight_layout(); save(fig, "复杂度规律")
 print("图存 pub/复杂度规律")

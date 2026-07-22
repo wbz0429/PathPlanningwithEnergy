@@ -155,7 +155,7 @@ S("<h2><span class='n'>10</span>框架每个节点都“承重”:去掉它,loop
               "报负结果 → 漏 loop≈随机 / 载荷死路"])) +
   "<div class='cite'>framework_ablation.py / safeguard_ablation.py</div>")
 
-S("<h2><span class='n'>11</span>性能被数据噪声封顶:52 项模型也压不下 6 项——不是方法不足</h2>" +
+S("<h2><span class='n'>11</span>性能上限由数据决定:留出误差在 6 项处触底,加到 52 项不再降</h2>" +
   two_col(img(pub="噪声地板.png"),
           bl(["held-out 6 项即触底 1.88%",
               "加到 12/20/52 项不降反升",
@@ -170,12 +170,12 @@ S("<h2><span class='n'>12</span>同框架:有改进空间的域显著胜随机,�
               "loop 1.86% vs 随机 1.87±0.03,z=−0.35 → 打平",
               "<b>规划器域(有 headroom):</b>",
               "<b class='grn'>loop 显著低于随机,z=−2.38 → 显著胜</b>",
-              "<b class='blu'>→ 打平因任务简单,换复杂任务(规划器)就赢随机</b>"])) +
+              "<b class='blu'>→ 优势取决于搜索空间复杂度:小空间相当,大空间显著胜</b>"])) +
   "<div class='cite'>significance_test.py / planner_significance.py(随机分布 + z 检验)</div>")
 
 S("<h2><span class='n'>12b</span>为什么打平?引导搜索的优势随搜索空间复杂度增长(文献规律)</h2>" +
   two_col(img(pub="复杂度规律.png"),
-          bl(["<b>不是框架无能,是规律预测的必然:</b>",
+          bl(["<b>引导搜索的优势随搜索空间复杂度增长:</b>",
               "Bergstra&Bengio'12:低有效维→随机追平",
               "REMBO/贝叶斯:~15–20 维临界点",
               "FunSearch:程序空间>宇宙原子数→引导才行",
