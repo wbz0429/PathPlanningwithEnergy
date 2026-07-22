@@ -47,7 +47,11 @@ def S(html, cls="content"):
 
 
 # 封面
-S("""<div class='cover'>
+_LOGO = b64img(os.path.join(HERE, "assets", "xjtu_logo_white.png"))
+_LOGO_IMG = f"<img src='{_LOGO}' style='height:8vh;margin-bottom:4vh'/>" if _LOGO else ""
+
+S(f"""<div class='cover'>
+{_LOGO_IMG}
 <div class='ctitle'>面向无人机能耗建模与能量感知路径规划的<br><span class='hl'>可信大模型自动化科研框架</span></div>
 <div class='csub'>A Trustworthy LLM-Agent Autoresearch Framework, Instantiated on UAV Energy Modeling and Energy-Aware Path Planning</div>
 <div class='cmeta'>硕士学位论文 · 中期答辩 · 2026</div></div>""", "cover")
@@ -265,9 +269,11 @@ table.pa .src{color:#0563C1;font-weight:700}table.pa tr:nth-child(odd){backgroun
 #hud{position:fixed;bottom:1.5vh;right:2vw;font-size:1.1vw;color:#8899aa;z-index:10;font-family:sans-serif}
 #bar{position:fixed;top:0;left:0;height:.5vh;background:#4472C4;z-index:10;transition:width .3s}
 #hint{position:fixed;bottom:1.5vh;left:2vw;font-size:.95vw;color:#8899aa;z-index:10}
+#brand{position:fixed;top:1.5vh;right:2vw;font-size:1vw;color:#9aa8b8;z-index:10;font-family:"PingFang SC",sans-serif}
 </style></head><body>
 <div id="bar"></div><div id="stage">""" + body + """</div>
 <div id="hud"></div><div id="hint">← → / 空格 翻页　·　F 全屏　·　Esc 退出</div>
+<div id="brand">西安交通大学</div>
 <script>
 var s=document.querySelectorAll('.slide'),i=0,N=s.length;
 function show(k){i=Math.max(0,Math.min(N-1,k));s.forEach(function(e,j){e.classList.toggle('on',j===i)});
