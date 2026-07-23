@@ -134,7 +134,17 @@ S("<h2><span class='n'>7</span>真机验证的能耗代价改变规划决策:避
               "<b>机制三重验证:</b>",
               "留出爬升 +114W vs 预测 +108W(&lt;5%)",
               "因果消融:挖爬升项 → 退回翻墙"])) +
-  "<div class='cite'>效应属 prior art(EcoFlight 2025);区别 = 真机验证代价 + 可信评测</div>")
+  "<div class='cite'>区别 = 真机验证代价 + 可信评测(EcoFlight 2025 等已研究该效应)</div>")
+
+S("<h2><span class='n'>7b</span>翻越 vs 绕行是权衡:墙越宽绕行越贵,临界墙宽决定选谁</h2>" +
+  two_col(img(pub="翻越绕行权衡.png"),
+          bl(["<b>不是“绕行一定省”,而是权衡:</b>",
+              "翻越:少走距离,但付固定爬升罚(≈1233J)",
+              "绕行:不爬升,但随墙宽多走越多",
+              "<b class='blu'>两条线交叉≈半宽 24m:</b>",
+              "窄墙 → 绕行省(M100 选绕行)",
+              "宽墙 → 翻越省(M100 也翻墙)"])) +
+  "<div class='cite'>tradeoff.py;这也是操作包络的物理解释(何时该绕、何时该翻)</div>")
 
 S("<h2><span class='n'>8</span>结论过 RotorPy 动力学与 PX4 真飞控固件栈仍成立(省 14.3%)</h2>" +
   two_col(img(pub="PX4真飞控_AB对比.png") + img(raw=os.path.join(GIF, "px4_flight.gif"), cls="gif"),
@@ -200,7 +210,7 @@ S("<h2><span class='n'>14</span>适用范围:省能收益集中于“障碍逼�
               "→ 结论用统计陈述,不挑单一场景",
               "<b>适用条件(诚实标注):</b>",
               "载荷 ≤500g 时不改变路径;当前止于仿真验证"])) +
-  "<div class='cite'>large_scale_savings.py(n=250);相图见附录 B(何时省能)</div>")
+  "<div class='cite'>large_scale_savings.py(n=250)</div>")
 
 S("""<div class='qbox'><div class='qlab'>结论</div>
 <ol class='concl-list'>
@@ -221,16 +231,6 @@ S("<h2><span class='n'>16</span>参考文献</h2><div class='refs'>" + "<br>".jo
     "Karl et al. Position: Embracing Negative Results in ML. ICML 2024.",
     "Rodrigues et al. DJI M100 energy dataset. Scientific Data 2021.",
     "Di Franco & Buttazzo 2015;Liu 2017;EcoFlight 2025."]) + "</div>")
-
-# 附录
-for t, pub, raw, cap in [
-    ("附录 A:累加消融阶梯", "消融阶梯.png", None, "逐步加回安全机制:假发现 3→0,报告数字保持诚实"),
-    ("附录 A2:翻越/绕行能量权衡", "翻越绕行权衡.png", None, "翻越固定爬升罚 vs 绕行随墙宽增长,交叉≈半宽 24m"),
-    ("附录 B:操作包络相图", "操作包络相图.png", None, "高速+窄障省 22%,低速/宽障归零"),
-    ("附录 C:安全机制消融", None, os.path.join(EXP, "safeguard_ablation.png"), "过拟合探针刷不动;查新门降级 2/3"),
-    ("附录 D:动力学实飞功率剖面", None, os.path.join(EXP, "sim_flight.png"), "翻墙爬升段飙 870W,绕行平稳")]:
-    S(f"<h2 class='apx'>{t}</h2><div class='apxfig'>{img(pub=pub, raw=raw)}</div><div class='cite'>{cap}</div>")
-
 
 def build():
     body = "".join(f"<section class='slide {cls}'>{html}</section>" for cls, html in SLIDES)

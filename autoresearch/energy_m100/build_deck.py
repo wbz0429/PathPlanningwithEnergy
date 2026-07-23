@@ -239,7 +239,19 @@ def build():
         ("· 留出爬升 +114W vs 预测 +108W(<5%)", 15, INK, False),
         ("· 因果消融:挖爬升项→退回翻墙", 15, INK, False),
         ("下方 GIF:城市走廊逐障碍混合决策", 13, MUTED, False)], space=10)
-    cite(s, "效应属 prior art(EcoFlight 2025);区别 = 真机验证代价 + 可信评测")
+    cite(s, "区别 = 真机验证代价 + 可信评测(EcoFlight 2025 等已研究该效应)")
+
+    # ---- 7b 翻越 vs 绕行权衡 ----
+    s = numbered(); title(s, "翻越 vs 绕行是权衡:墙越宽绕行越贵,临界墙宽决定选谁")
+    fit(s, os.path.join(EXP, "pub", "翻越绕行权衡.png"), In(0.5), In(2.0), In(7.8), In(4.5))
+    tb(s, In(8.5), In(2.1), In(4.5), In(4.6),
+       [("不是“绕行一定省”,而是权衡:", 16, INK, True),
+        ("· 翻越:少走距离,但付固定爬升罚(≈1233J)", 15, INK, False),
+        ("· 绕行:不爬升,但随墙宽多走越多", 15, INK, False),
+        ("两条线交叉 ≈ 半宽 24m:", 16, DEEP, True),
+        ("· 窄墙 → 绕行省(M100 选绕行)", 15, MINT, True),
+        ("· 宽墙 → 翻越省(M100 也翻墙)", 15, RED, True)], space=10)
+    cite(s, "tradeoff.py;操作包络的物理解释(何时该绕、何时该翻)")
 
     # ---- 8 PX4 ----
     s = numbered(); title(s, "结论过 RotorPy 动力学与 PX4 真飞控固件栈仍成立(省 14.3%)")
@@ -326,7 +338,7 @@ def build():
         ("· 结论用统计陈述,不挑单一场景", 15, INK, False),
         ("适用条件(诚实标注):", 16, INK, True),
         ("· 载荷 ≤500g 不改变路径;当前止于仿真", 15, MUTED, False)], space=11)
-    cite(s, "large_scale_savings.py(n=250);相图见附录 B(何时省能)")
+    cite(s, "large_scale_savings.py(n=250)")
 
     # ---- 15 结论 ----
     s = numbered(dk=True)
@@ -350,16 +362,6 @@ def build():
             "Rodrigues et al. DJI M100 energy dataset. Scientific Data 2021.",
             "Di Franco & Buttazzo 2015;Liu 2017;EcoFlight 2025."]
     tb(s, In(0.75), In(2.0), In(12.0), In(4.8), [(r, 15, INK, False) for r in refs], space=8)
-
-    # ---- 附录 ----
-    for name, fig_path, cap in [
-        ("附录 A:累加消融阶梯(框架每步都承重)", os.path.join(EXP, "pub", "消融阶梯.png"), "逐步加回安全机制:假发现 3→0(左),报告数字保持诚实不虚低(右)"),
-        ("附录 A2:翻越/绕行能量权衡分解", os.path.join(EXP, "tradeoff.png"), "翻越=固定爬升罚+少走距离,绕行=无爬升+多走距离,交叉≈半宽24m=相图边界物理解释"),
-        ("附录 B:操作包络相图", os.path.join(EXP, "phase_diagram.png"), "高速+窄障省 22%,低速/宽障归零"),
-        ("附录 C:安全机制消融(评测器抗 gaming)", os.path.join(EXP, "safeguard_ablation.png"), "过拟合探针刷不动;查新门降级 2/3"),
-        ("附录 D:动力学实飞功率剖面", os.path.join(EXP, "sim_flight.png"), "翻墙爬升段飙 870W,绕行平稳"),
-        ("附录 E:PX4 真飞控轨迹(俯视/侧视)", os.path.join(PX4, "px4_traj.png"), "翻矮楼 A + 绕高楼 B")]:
-        s = S(); content(s); title(s, name); fit(s, fig_path, In(0.8), In(1.9), In(11.7), In(4.9)); cite(s, cap)
 
     out = os.path.join(EXP, "midterm_defense.pptx"); prs.save(out)
     print(f"生成 {out}")
