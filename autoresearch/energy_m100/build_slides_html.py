@@ -273,7 +273,7 @@ S("<h2>参考文献</h2><div class='refs'>" + "<br>".join([
     "Di Franco & Buttazzo 2015;Liu 2017;EcoFlight 2025."]) + "</div>")
 
 S("""<div class='endpage'><div class='thanks-big'>恳请各位老师批评指正</div>
-<div class='end-sub'>谢谢聆听</div></div>""", "dark")
+<div class="end-sub">谢谢</div></div>""", "dark")
 
 def build():
     body = "".join(f"<section class='slide {cls}'>{html}</section>" for cls, html in SLIDES)
