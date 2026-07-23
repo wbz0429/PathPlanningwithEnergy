@@ -212,16 +212,7 @@ S("<h2><span class='n'>15</span>适用范围:省能收益集中于“障碍逼�
               "载荷 ≤500g 时不改变路径;当前止于仿真验证"])) +
   "<div class='cite'>large_scale_savings.py(n=250)</div>")
 
-S("""<div class='qbox'><div class='qlab'>结论</div>
-<ol class='concl-list'>
-<li>不声称新算法/新效应——三次查新确认均为 prior art,主动引用</li>
-<li class='hl2'>贡献 = 可信自动科研方法学 + 真机数据锚定 + 诚实能力边界</li>
-<li>逐个消融证明每道节点“承重”:去掉即退化/overclaim</li>
-<li>价值 = 在该 overclaim 处不 overclaim,并量化能力边界</li>
-<li>搜索空间大则显著胜随机,空间小(已封顶)则与随机相当</li>
-</ol></div>""", "dark")
-
-S("<h2><span class='n'>16</span>参考文献</h2><div class='refs'>" + "<br>".join([
+S("<h2><span class='n'>15</span>参考文献</h2><div class='refs'>" + "<br>".join([
     "Romera-Paredes et al. FunSearch. Nature 2023.",
     "Novikov et al. AlphaEvolve. DeepMind 2025.",
     "Ma et al. Eureka. ICLR 2024. arXiv:2310.12931.",
@@ -231,6 +222,15 @@ S("<h2><span class='n'>16</span>参考文献</h2><div class='refs'>" + "<br>".jo
     "Karl et al. Position: Embracing Negative Results in ML. ICML 2024.",
     "Rodrigues et al. DJI M100 energy dataset. Scientific Data 2021.",
     "Di Franco & Buttazzo 2015;Liu 2017;EcoFlight 2025."]) + "</div>")
+
+S("""<div class='qbox'><div class='qlab'>结论</div>
+<ol class='concl-list'>
+<li>贡献 = 可信自动科研方法学 + 真机数据锚定 + 诚实能力边界</li>
+<li>真机 M100 能耗建模(误差 6.88%→1.86%)接入规划,动力学/PX4 全栈验证省 14.3%</li>
+<li>逐个消融证明框架每道安全机制都“承重”</li>
+<li>诚实划出适用边界:搜索空间大则显著胜随机,空间小则与随机相当</li>
+</ol>
+<div class='thanks'>恳请各位老师批评指正</div></div>""", "dark")
 
 def build():
     body = "".join(f"<section class='slide {cls}'>{html}</section>" for cls, html in SLIDES)
@@ -264,6 +264,7 @@ ul li:before{content:"·";position:absolute;left:0;color:#4472C4;font-weight:700
 .cover .csub{font-size:1.2vw;color:#D6E4F7;margin-top:3vh;line-height:1.6}
 .cover .cmeta{font-size:1.3vw;margin-top:4vh}
 .qbox{margin:auto 0}.qlab{font-size:1.6vw;color:#5B9BD5;font-weight:700;margin-bottom:3vh}
+.thanks{margin-top:5vh;font-size:1.8vw;color:#fff;text-align:center;letter-spacing:.3vw}
 .qbig{font-size:2.4vw;font-weight:700;line-height:1.7}.qnote{font-size:1.3vw;color:#D6E4F7;margin-top:4vh;line-height:1.7}
 .concl-list{font-size:1.7vw;line-height:2.2;padding-left:2vw}.concl-list li{margin:1.2vh 0}.concl-list .hl2{color:#5B9BD5;font-weight:700}
 table.fw{width:100%;border-collapse:collapse;font-size:1.4vw}

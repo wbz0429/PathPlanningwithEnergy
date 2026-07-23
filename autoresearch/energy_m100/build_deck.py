@@ -340,17 +340,7 @@ def build():
         ("· 载荷 ≤500g 不改变路径;当前止于仿真", 15, MUTED, False)], space=11)
     cite(s, "large_scale_savings.py(n=250)")
 
-    # ---- 15 结论 ----
-    s = numbered(dk=True)
-    tb(s, In(0.9), In(1.3), In(11.5), In(0.7), "结论", 24, MINT, True)
-    tb(s, In(0.9), In(2.3), In(11.7), In(4.4),
-       [("① 不声称新算法/新效应——三次查新确认均为 prior art,主动引用", 21, WHITE, False),
-        ("② 贡献 = 可信自动科研方法学 + 真机数据锚定 + 诚实能力边界", 21, MINT, True),
-        ("③ 逐个消融证明每道节点“承重”:去掉即退化/overclaim", 21, WHITE, False),
-        ("④ 价值 = 在该 overclaim 处不 overclaim,并量化能力边界", 21, WHITE, False),
-        ("⑤ 搜索空间大则显著胜随机,空间小(已封顶)则与随机相当", 21, WHITE, False)], space=16)
-
-    # ---- 16 参考文献 ----
+    # ---- 15 参考文献 ----
     s = numbered(); title(s, "参考文献")
     refs = ["Romera-Paredes et al. FunSearch. Nature 2023.",
             "Novikov et al. AlphaEvolve. DeepMind 2025.",
@@ -362,6 +352,16 @@ def build():
             "Rodrigues et al. DJI M100 energy dataset. Scientific Data 2021.",
             "Di Franco & Buttazzo 2015;Liu 2017;EcoFlight 2025."]
     tb(s, In(0.75), In(2.0), In(12.0), In(4.8), [(r, 15, INK, False) for r in refs], space=8)
+
+    # ---- 16 结论(殿后,答问时常留)----
+    s = numbered(dk=True)
+    tb(s, In(0.9), In(1.2), In(11.5), In(0.7), "结论", 24, MINT, True)
+    tb(s, In(0.9), In(2.1), In(11.7), In(3.7),
+       [("① 贡献 = 可信自动科研方法学 + 真机数据锚定 + 诚实能力边界", 20, MINT, True),
+        ("② 真机 M100 能耗建模(误差 6.88%→1.86%)接入规划,全栈验证省 14.3%", 20, WHITE, False),
+        ("③ 逐个消融证明框架每道安全机制都“承重”", 20, WHITE, False),
+        ("④ 诚实划出适用边界:空间大则显著胜随机,空间小则与随机相当", 20, WHITE, False)], space=16)
+    tb(s, In(0.9), In(6.3), In(11.5), In(0.8), "恳请各位老师批评指正", 24, WHITE, True, align=PP_ALIGN.CENTER)
 
     out = os.path.join(EXP, "midterm_defense.pptx"); prs.save(out)
     print(f"生成 {out}")
