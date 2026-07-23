@@ -93,7 +93,7 @@ S("""<div class='qbox'><div class='qlab'>研究问题</div>
 <div class='qbig'>在一个真实、含噪、无干净真值的工程域(无人机能耗与规划),<br>可信的自动科研框架能“得到什么”、又该“诚实承认什么”?</div>
 <div class='qnote'>核心主张:贡献不是新算法或新发现(均为 prior art),而是方法学 + 真机数据锚定 + 诚实能力边界。</div></div>""", "dark")
 
-S("<h2><span class='n'>3</span>框架总体结构:六个部分</h2>" +
+S("<h2><span class='n'>2</span>框架总体结构:六个部分</h2>" +
   "<table class='fw'><tr class='hd'><td>组成部分</td><td>角色</td><td>说明</td></tr>" +
   "".join(f"<tr><td class='c1'>{a}</td><td class='c2'>{r}</td><td class='c3'>{d}</td></tr>" for a, r, d in [
       ("① 数据与评测", "基础", "以真机功率(P=V·I)为基准的防作弊评测"),
@@ -105,16 +105,16 @@ S("<h2><span class='n'>3</span>框架总体结构:六个部分</h2>" +
   "<div class='sub2'>其中②的可信性由五道安全机制保证:"
   "<b>冻结评测器 · keep/revert · 强制查新门 · 因果消融 · 交叉模型+诚实报负结果</b></div>")
 
-S("<h2><span class='n'>4b</span>框架架构:五节点闭环 + 外搜逃逸支路</h2>" +
+S("<h2><span class='n'>3</span>框架架构:五节点闭环 + 外搜逃逸支路</h2>" +
   f"<div class='apxfig'>{img(pub='框架架构图.png')}</div>" +
   "<div class='cite'>LLM 提议 → Harness 实验 → 冻结评测器 → keep/revert 闭环;撞瓶颈触发外搜;知识库持久化</div>")
 
-S("<h2><span class='n'>5</span>过程即贡献:loop 撞瓶颈 → 触发外搜 → 改向 → 诚实记录</h2>" +
+S("<h2><span class='n'>4</span>过程即贡献:loop 撞瓶颈 → 触发外搜 → 改向 → 诚实记录</h2>" +
   two_col(img(raw=os.path.join(EXP, "loop_process.png")),
           f"<div style='text-align:center'>{img(pub='loop流程图.png')}</div>") +
   "<div class='cite'>左:真实迭代轨迹(卡4.24%→外搜→突破1.9%);右:loop 机制流程。数据 agent_log.jsonl + KNOWLEDGE.md</div>")
 
-S("<h2><span class='n'>5b</span>autoresearch 如何突破阈值:局部搜索卡壳 → 外搜识别方向 → 一步突破</h2>" +
+S("<h2><span class='n'>5</span>autoresearch 如何突破阈值:局部搜索卡壳 → 外搜识别方向 → 一步突破</h2>" +
   f"<div class='apxfig'>{img(pub='突破阈值叙事.png')}</div>" +
   "<div class='cite'>6.88% → 卡在 4.2%(7 变体全卡)→ 外搜识别“加线性 payload” → 1.9%。突破来自框架的外搜环节</div>")
 
@@ -136,7 +136,7 @@ S("<h2><span class='n'>7</span>真机验证的能耗代价改变规划决策:避
               "因果消融:挖爬升项 → 退回翻墙"])) +
   "<div class='cite'>区别 = 真机验证代价 + 可信评测(EcoFlight 2025 等已研究该效应)</div>")
 
-S("<h2><span class='n'>7b</span>翻越 vs 绕行是权衡:墙越宽绕行越贵,临界墙宽决定选谁</h2>" +
+S("<h2><span class='n'>8</span>翻越 vs 绕行是权衡:墙越宽绕行越贵,临界墙宽决定选谁</h2>" +
   two_col(img(pub="翻越绕行权衡.png"),
           bl(["<b>不是“绕行一定省”,而是权衡:</b>",
               "翻越:少走距离,但付固定爬升罚(≈1233J)",
@@ -146,7 +146,7 @@ S("<h2><span class='n'>7b</span>翻越 vs 绕行是权衡:墙越宽绕行越贵,
               "宽墙 → 翻越省(M100 也翻墙)"])) +
   "<div class='cite'>tradeoff.py;这也是操作包络的物理解释(何时该绕、何时该翻)</div>")
 
-S("<h2><span class='n'>8</span>结论过 RotorPy 动力学与 PX4 真飞控固件栈仍成立(省 14.3%)</h2>" +
+S("<h2><span class='n'>9</span>结论过 RotorPy 动力学与 PX4 真飞控固件栈仍成立(省 14.3%)</h2>" +
   two_col(img(pub="PX4真飞控_AB对比.png") + img(raw=os.path.join(GIF, "px4_flight.gif"), cls="gif"),
           bl(["<b>证据链层层加固:</b>",
               "折线预测 4–22%",
@@ -183,7 +183,7 @@ S("<h2><span class='n'>12</span>同框架:有改进空间的域显著胜随机,�
               "<b class='blu'>→ 优势取决于搜索空间复杂度:小空间相当,大空间显著胜</b>"])) +
   "<div class='cite'>significance_test.py / planner_significance.py(随机分布 + z 检验)</div>")
 
-S("<h2><span class='n'>12b</span>为什么打平?引导搜索的优势随搜索空间复杂度增长(文献规律)</h2>" +
+S("<h2><span class='n'>13</span>为什么打平?引导搜索的优势随搜索空间复杂度增长(文献规律)</h2>" +
   two_col(img(pub="复杂度规律.png"),
           bl(["<b>引导搜索的优势随搜索空间复杂度增长:</b>",
               "Bergstra&Bengio'12:低有效维→随机追平",
@@ -194,7 +194,7 @@ S("<h2><span class='n'>12b</span>为什么打平?引导搜索的优势随搜索�
               "<b class='blu'>同框架横跨两端点,亲手印证规律</b>"])) +
   "<div class='cite'>规律来自文献综合;两端点是我们实测。CMU《Hidden Pitfalls》(2509.08713)反证可信性为刚需</div>")
 
-S("<h2><span class='n'>13</span>可信协议的价值:同数据同候选,防住了朴素流程的过度声称</h2>" +
+S("<h2><span class='n'>14</span>可信协议的价值:同数据同候选,防住了朴素流程的过度声称</h2>" +
   two_col(img(pub="消融阶梯.png", raw=os.path.join(EXP, "naive_vs_trustworthy.png")),
           bl(["同样的数据与候选,两种流程产出对比:",
               "<b class='red'>朴素 AI4S:</b> 声称 4 项发现(经查全为已有)、不报局限",
@@ -202,7 +202,7 @@ S("<h2><span class='n'>13</span>可信协议的价值:同数据同候选,防住�
               "<b class='blu'>→ 安全机制把“看似发现”挡在门外,结论更可靠</b>"])) +
   "<div class='cite'>naive_vs_trustworthy.py / ablation_ladder.py(累加消融)</div>")
 
-S("<h2><span class='n'>14</span>适用范围:省能收益集中于“障碍逼出爬升”的几何(可达 4–22%)</h2>" +
+S("<h2><span class='n'>15</span>适用范围:省能收益集中于“障碍逼出爬升”的几何(可达 4–22%)</h2>" +
   two_col(img(pub="省能分布_n250.png"),
           bl(["<b>n=250 随机城市场景统计,划清适用边界:</b>",
               "有障碍逼出爬升的几何:省能 <b class='grn'>3–22%</b>",
