@@ -54,9 +54,29 @@ S(f"""<div class='cover'>
 {_LOGO_IMG}
 <div class='ctitle'>面向无人机能耗建模与能量感知路径规划的<br><span class='hl'>可信大模型自动化科研框架</span></div>
 <div class='csub'>A Trustworthy LLM-Agent Autoresearch Framework, Instantiated on UAV Energy Modeling and Energy-Aware Path Planning</div>
-<div class='cmeta'>硕士学位论文 · 中期答辩 · 2026</div></div>""", "cover")
+<div class='cmeta2'>
+<table class='info'><tr><td>答辩人</td><td>王彬竹</td><td>学号</td><td>3124354082</td></tr>
+<tr><td>导师</td><td>张乐 副教授</td><td></td><td></td></tr>
+<tr><td colspan='4' style='border:none;padding-top:1.2vh'>硕士学位论文 · 中期答辩 · 2026</td></tr></table>
+</div></div>""", "cover")
+
+# === 目录页 ===
+S("""<h2 class='toc-title'>目 录</h2>
+<div class='toc'>
+<div class='toc-row'><span class='toc-n'>1</span><span class='toc-t'>研究背景与问题</span></div>
+<div class='toc-row'><span class='toc-n'>2</span><span class='toc-t'>研究方案:可信自动科研框架</span></div>
+<div class='toc-row'><span class='toc-n'>3</span><span class='toc-t'>主要工作与结果</span></div>
+<div class='toc-row'><span class='toc-n'>4</span><span class='toc-t'>讨论</span></div>
+<div class='toc-row'><span class='toc-n'>5</span><span class="toc-t">结论</span></div>
+</div>""", "toc")
 
 # === 引入页1:研究场景(先落地,别一上来就宏大)===
+def part(num, title, sub):
+    S(f"""<div class='partpage'><div class='partnum'>PART {num}</div>
+<div class='parttitle'>{title}</div><div class='partsub'>{sub}</div></div>""", "part")
+
+part("01", "研究背景与问题", "无人机能耗建模 + 能量感知路径规划")
+
 S("<h2>研究场景:无人机能耗建模 + 能量感知路径规划</h2>" +
   two_col(img(pub="真机代价改变决策.png"),
           bl(["<b>无人机能耗建模</b>:预测无人机飞一段路耗多少电",
@@ -80,7 +100,7 @@ S("<h2>在这个场景上,我们要实现什么</h2>" +
       ])) + "</div>" +
   "<div class='cite'>三件事一条链:数据→能耗模型→规划省电,方法学贯穿全程</div>")
 
-S("<h2><span class='n'>1</span>大模型自动科研正在爆发,但它的“发现”普遍不可信</h2>" +
+S("<h2>大模型自动科研正在爆发,但它的“发现”普遍不可信</h2>" +
   two_col("<div class='stat'><div class='big'>57%</div><div class='cap'>朴素 AI4S 手稿含错误或幻觉数值</div></div>",
           bl(["FunSearch / AlphaEvolve / Eureka 在数学、代码、RL 上确有新发现",
               "但都要求“精确可验证评测器”——作者自认局限",
@@ -89,11 +109,13 @@ S("<h2><span class='n'>1</span>大模型自动科研正在爆发,但它的“发
               "&nbsp;&nbsp;把已发表 prior art 误判为“新颖”"])) +
   "<div class='cite'>Beel, Kan & Baumgart, ACM SIGIR Forum 2025(arXiv:2502.14297)</div>")
 
+part("02", "研究方案", "可信自动科研框架的架构与机制")
+
 S("""<div class='qbox'><div class='qlab'>研究问题</div>
 <div class='qbig'>在一个真实、含噪、无干净真值的工程域(无人机能耗与规划),<br>可信的自动科研框架能“得到什么”、又该“诚实承认什么”?</div>
 <div class='qnote'>核心主张:贡献不是新算法或新发现(均为 prior art),而是方法学 + 真机数据锚定 + 诚实能力边界。</div></div>""", "dark")
 
-S("<h2><span class='n'>2</span>框架总体结构:六个部分</h2>" +
+S("<h2>框架总体结构:六个部分</h2>" +
   "<table class='fw'><tr class='hd'><td>组成部分</td><td>角色</td><td>说明</td></tr>" +
   "".join(f"<tr><td class='c1'>{a}</td><td class='c2'>{r}</td><td class='c3'>{d}</td></tr>" for a, r, d in [
       ("① 数据与评测", "基础", "以真机功率(P=V·I)为基准的防作弊评测"),
@@ -105,20 +127,22 @@ S("<h2><span class='n'>2</span>框架总体结构:六个部分</h2>" +
   "<div class='sub2'>其中②的可信性由五道安全机制保证:"
   "<b>冻结评测器 · keep/revert · 强制查新门 · 因果消融 · 交叉模型+诚实报负结果</b></div>")
 
-S("<h2><span class='n'>3</span>框架架构:五节点闭环 + 外搜逃逸支路</h2>" +
+S("<h2>框架架构:五节点闭环 + 外搜逃逸支路</h2>" +
   f"<div class='apxfig'>{img(pub='框架架构图.png')}</div>" +
   "<div class='cite'>LLM 提议 → Harness 实验 → 冻结评测器 → keep/revert 闭环;撞瓶颈触发外搜;知识库持久化</div>")
 
-S("<h2><span class='n'>4</span>过程即贡献:loop 撞瓶颈 → 触发外搜 → 改向 → 诚实记录</h2>" +
+S("<h2>过程即贡献:loop 撞瓶颈 → 触发外搜 → 改向 → 诚实记录</h2>" +
   two_col(img(raw=os.path.join(EXP, "loop_process.png")),
           f"<div style='text-align:center'>{img(pub='loop流程图.png')}</div>") +
   "<div class='cite'>左:真实迭代轨迹(卡4.24%→外搜→突破1.9%);右:loop 机制流程。数据 agent_log.jsonl + KNOWLEDGE.md</div>")
 
-S("<h2><span class='n'>5</span>autoresearch 如何突破阈值:局部搜索卡壳 → 外搜识别方向 → 一步突破</h2>" +
+S("<h2>autoresearch 如何突破阈值:局部搜索卡壳 → 外搜识别方向 → 一步突破</h2>" +
   f"<div class='apxfig'>{img(pub='突破阈值叙事.png')}</div>" +
   "<div class='cite'>6.88% → 卡在 4.2%(7 变体全卡)→ 外搜识别“加线性 payload” → 1.9%。突破来自框架的外搜环节</div>")
 
-S("<h2><span class='n'>6</span>从真机数据自动建模:能耗预测误差降 73%(6.88% → 1.86%)</h2>" +
+part("03", "主要工作与结果", "能耗建模 → 规划省电 → 动力学与真飞控验证")
+
+S("<h2>从真机数据自动建模:能耗预测误差降 73%(6.88% → 1.86%)</h2>" +
   two_col(img(pub="噪声地板.png", raw=os.path.join(EXP, "fig_summary.png")),
           bl(["冻结评测器 + LLM 每轮改一次能耗公式",
               "iter1–10 全程留出验证 + 保留/回滚",
@@ -127,7 +151,7 @@ S("<h2><span class='n'>6</span>从真机数据自动建模:能耗预测误差降
               "<span style='font-size:1vw;color:#666'>在“未参与训练的飞行”上取平均(防背答案)</span>"])) +
   "<div class='cite'>能量真值 = 机载电压×电流积分;数据:真实 DJI M100(209 航班);评测器 m100_eval.py 冻结</div>")
 
-S("<h2><span class='n'>7</span>真机验证的能耗代价改变规划决策:避开真实存在的爬升能耗</h2>" +
+S("<h2>真机验证的能耗代价改变规划决策:避开真实存在的爬升能耗</h2>" +
   two_col(img(pub="真机代价改变决策.png") + img(raw=os.path.join(GIF, "video_corridor.gif"), cls="gif"),
           bl(["距离/教科书BEMT → 翻墙",
               "<b class='grn'>真机M100 → 绕行,省 5–13%</b>",
@@ -136,7 +160,7 @@ S("<h2><span class='n'>7</span>真机验证的能耗代价改变规划决策:避
               "因果消融:挖爬升项 → 退回翻墙"])) +
   "<div class='cite'>区别 = 真机验证代价 + 可信评测(EcoFlight 2025 等已研究该效应)</div>")
 
-S("<h2><span class='n'>8</span>翻越 vs 绕行是权衡:墙越宽绕行越贵,临界墙宽决定选谁</h2>" +
+S("<h2>翻越 vs 绕行是权衡:墙越宽绕行越贵,临界墙宽决定选谁</h2>" +
   two_col(img(pub="翻越绕行权衡.png"),
           bl(["<b>不是“绕行一定省”,而是权衡:</b>",
               "翻越:少走距离,但付固定爬升罚(≈1233J)",
@@ -146,7 +170,7 @@ S("<h2><span class='n'>8</span>翻越 vs 绕行是权衡:墙越宽绕行越贵,�
               "宽墙 → 翻越省(M100 也翻墙)"])) +
   "<div class='cite'>tradeoff.py;这也是操作包络的物理解释(何时该绕、何时该翻)</div>")
 
-S("<h2><span class='n'>9</span>结论过 RotorPy 动力学与 PX4 真飞控固件栈仍成立(省 14.3%)</h2>" +
+S("<h2>结论过 RotorPy 动力学与 PX4 真飞控固件栈仍成立(省 14.3%)</h2>" +
   two_col(img(pub="PX4真飞控_AB对比.png") + img(raw=os.path.join(GIF, "px4_flight.gif"), cls="gif"),
           bl(["<b>证据链层层加固:</b>",
               "折线预测 4–22%",
@@ -155,7 +179,7 @@ S("<h2><span class='n'>9</span>结论过 RotorPy 动力学与 PX4 真飞控固�
               "(EKF + 位置环 + Gazebo 动力学)"])) +
   "<div class='cite'>PX4 SITL + Gazebo Harmonic;同固件栈同脚本 A/B 对比</div>")
 
-S("<h2><span class='n'>10</span>框架每个节点都“承重”:去掉它,loop 就退化或自欺</h2>" +
+S("<h2>框架每个节点都“承重”:去掉它,loop 就退化或自欺</h2>" +
   two_col(img(pub="框架消融_局部最优.png"),
           bl(["<b>去掉每个节点会怎样:</b>",
               "评测器 → 只报训练误差:探针可刷分",
@@ -165,7 +189,9 @@ S("<h2><span class='n'>10</span>框架每个节点都“承重”:去掉它,loop
               "报负结果 → 漏 loop≈随机 / 载荷死路"])) +
   "<div class='cite'>framework_ablation.py / safeguard_ablation.py</div>")
 
-S("<h2><span class='n'>11</span>性能上限由数据决定:留出误差在 6 项处触底,加到 52 项不再降</h2>" +
+part("04", "讨论与展望", "能力边界的诚实刻画,与未来方向")
+
+S("<h2>性能上限由数据决定:留出误差在 6 项处触底,加到 52 项不再降</h2>" +
   two_col(img(pub="噪声地板.png"),
           bl(["held-out 6 项即触底 1.88%",
               "加到 12/20/52 项不降反升",
@@ -174,7 +200,7 @@ S("<h2><span class='n'>11</span>性能上限由数据决定:留出误差在 6 �
               "<b class='blu'>“数据封顶”从主张变测量</b>"])) +
   "<div class='cite'>domain_value.py;对标 Tseng 多项式(数据集既定最优)</div>")
 
-S("<h2><span class='n'>12</span>同框架:有改进空间的域显著胜随机,噪声封顶的域统计打平</h2>" +
+S("<h2>同框架:有改进空间的域显著胜随机,噪声封顶的域统计打平</h2>" +
   two_col(img(pub="两域显著性.png"),
           bl(["<b>能耗域(封顶):</b>",
               "loop 1.86% vs 随机 1.87±0.03,z=−0.35 → 打平",
@@ -183,7 +209,7 @@ S("<h2><span class='n'>12</span>同框架:有改进空间的域显著胜随机,�
               "<b class='blu'>→ 优势取决于搜索空间复杂度:小空间相当,大空间显著胜</b>"])) +
   "<div class='cite'>significance_test.py / planner_significance.py(随机分布 + z 检验)</div>")
 
-S("<h2><span class='n'>13</span>为什么打平?引导搜索的优势随搜索空间复杂度增长(文献规律)</h2>" +
+S("<h2>为什么打平?引导搜索的优势随搜索空间复杂度增长(文献规律)</h2>" +
   two_col(img(pub="复杂度规律.png"),
           bl(["<b>引导搜索的优势随搜索空间复杂度增长:</b>",
               "Bergstra&Bengio'12:低有效维→随机追平",
@@ -194,7 +220,7 @@ S("<h2><span class='n'>13</span>为什么打平?引导搜索的优势随搜索�
               "<b class='blu'>同框架横跨两端点,亲手印证规律</b>"])) +
   "<div class='cite'>规律来自文献综合;两端点是我们实测。CMU《Hidden Pitfalls》(2509.08713)反证可信性为刚需</div>")
 
-S("<h2><span class='n'>14</span>可信协议的价值:同数据同候选,防住了朴素流程的过度声称</h2>" +
+S("<h2>可信协议的价值:同数据同候选,防住了朴素流程的过度声称</h2>" +
   two_col(img(pub="消融阶梯.png", raw=os.path.join(EXP, "naive_vs_trustworthy.png")),
           bl(["同样的数据与候选,两种流程产出对比:",
               "<b class='red'>朴素 AI4S:</b> 声称 4 项发现(经查全为已有)、不报局限",
@@ -202,7 +228,7 @@ S("<h2><span class='n'>14</span>可信协议的价值:同数据同候选,防住�
               "<b class='blu'>→ 安全机制把“看似发现”挡在门外,结论更可靠</b>"])) +
   "<div class='cite'>naive_vs_trustworthy.py / ablation_ladder.py(累加消融)</div>")
 
-S("<h2><span class='n'>15</span>适用范围:省能收益集中于“障碍逼出爬升”的几何(可达 4–22%)</h2>" +
+S("<h2>适用范围:省能收益集中于“障碍逼出爬升”的几何(可达 4–22%)</h2>" +
   two_col(img(pub="省能分布_n250.png"),
           bl(["<b>n=250 随机城市场景统计,划清适用边界:</b>",
               "有障碍逼出爬升的几何:省能 <b class='grn'>3–22%</b>",
@@ -212,7 +238,30 @@ S("<h2><span class='n'>15</span>适用范围:省能收益集中于“障碍逼�
               "载荷 ≤500g 时不改变路径;当前止于仿真验证"])) +
   "<div class='cite'>large_scale_savings.py(n=250)</div>")
 
-S("<h2><span class='n'>15</span>参考文献</h2><div class='refs'>" + "<br>".join([
+# === 展望页(向上姿态:边界之外还有机会)===
+S("<h2>展望:诚实边界之上,仍有多条可突破的方向</h2>" +
+  "<div class='mech'>" + "".join(
+      f"<div class='mrow'><div class='mnum'>{i+1}</div><div class='mh'>{h}</div><div class='md'>{d}</div></div>"
+      for i, (h, d) in enumerate([
+          ("功率残差归因", "运动学只解释 ~40%,其余 ~60% 的来源(风/电压/控制)待定量归因,突破则进一步降误差"),
+          ("感知闭环", "已知地图 → 深度相机在线建图 + 能量感知滚动重规划,更贴近真实部署"),
+          ("更大搜索空间", "能耗小空间(与随机相当)→ 复杂规划器/程序空间,引导优势更显著"),
+          ("外场实飞验证", "仿真所得省能结论,补充真实无人机飞行实测"),
+      ])) + "</div>" +
+  "<div class='cite'>这些是当前能力边界之外的明确下一步,非宣告上限——中期后继续推进</div>")
+
+part("05", "结论", "主要结论与贡献")
+
+S("""<div class='qbox'><div class='qlab'>结论</div>
+<ol class='concl-list'>
+<li>贡献 = 可信自动科研方法学 + 真机数据锚定 + 诚实能力边界</li>
+<li>真机 M100 能耗建模(误差 6.88%→1.86%)接入规划,动力学/PX4 全栈验证省 14.3%</li>
+<li>逐个消融证明框架每道安全机制都“承重”</li>
+<li>诚实划出适用边界:搜索空间大则显著胜随机,空间小则与随机相当</li>
+<li><b>可复用性</b>:框架域无关,已在规划器/雷达/能耗三类任务验证;换新机型只需该机型的飞行数据即可复用同一流程</li>
+</ol></div>""", "dark")
+
+S("<h2>参考文献</h2><div class='refs'>" + "<br>".join([
     "Romera-Paredes et al. FunSearch. Nature 2023.",
     "Novikov et al. AlphaEvolve. DeepMind 2025.",
     "Ma et al. Eureka. ICLR 2024. arXiv:2310.12931.",
@@ -223,14 +272,8 @@ S("<h2><span class='n'>15</span>参考文献</h2><div class='refs'>" + "<br>".jo
     "Rodrigues et al. DJI M100 energy dataset. Scientific Data 2021.",
     "Di Franco & Buttazzo 2015;Liu 2017;EcoFlight 2025."]) + "</div>")
 
-S("""<div class='qbox'><div class='qlab'>结论</div>
-<ol class='concl-list'>
-<li>贡献 = 可信自动科研方法学 + 真机数据锚定 + 诚实能力边界</li>
-<li>真机 M100 能耗建模(误差 6.88%→1.86%)接入规划,动力学/PX4 全栈验证省 14.3%</li>
-<li>逐个消融证明框架每道安全机制都“承重”</li>
-<li>诚实划出适用边界:搜索空间大则显著胜随机,空间小则与随机相当</li>
-</ol>
-<div class='thanks'>恳请各位老师批评指正</div></div>""", "dark")
+S("""<div class='endpage'><div class='thanks-big'>恳请各位老师批评指正</div>
+<div class='end-sub'>谢谢聆听</div></div>""", "dark")
 
 def build():
     body = "".join(f"<section class='slide {cls}'>{html}</section>" for cls, html in SLIDES)
@@ -263,6 +306,17 @@ ul li:before{content:"·";position:absolute;left:0;color:#4472C4;font-weight:700
 .cover .ctitle{font-size:3vw;font-weight:700;line-height:1.5}.cover .hl{color:#5B9BD5}
 .cover .csub{font-size:1.2vw;color:#D6E4F7;margin-top:3vh;line-height:1.6}
 .cover .cmeta{font-size:1.3vw;margin-top:4vh}
+.cmeta2{margin-top:3.5vh}.cover .info{border-collapse:collapse;font-size:1.35vw}
+.cover .info td{border:1px solid rgba(255,255,255,.35);padding:.8vh 1.4vw;color:#fff}
+.slide.toc{background:#fff}.toc-title{text-align:center;color:#0563C1;font-size:2.6vw;letter-spacing:.5vw;margin-bottom:4vh}
+.toc{margin:0 14vw}.toc-row{display:flex;align-items:baseline;gap:1.5vw;padding:2.2vh 0;border-bottom:1px solid #e2e8ee;font-size:1.7vw}
+.toc-n{color:#0563C1;font-weight:700;font-size:1.4vw}.toc-t{color:#1a2333}
+.slide.part{background:#0563C1;color:#fff;justify-content:center}
+.partpage .partnum{font-size:1.6vw;letter-spacing:.6vw;color:#9ec3f0}
+.partpage .parttitle{font-size:3vw;font-weight:700;margin-top:1.5vh}
+.partpage .partsub{font-size:1.4vw;color:#d6e4f7;margin-top:2vh}
+.slide.part,.slide.dark{display:flex;flex-direction:column;justify-content:center}
+.endpage{margin:auto 0;text-align:center}.endpage .thanks-big{font-size:3vw;font-weight:700;color:#fff;letter-spacing:.4vw}.endpage .end-sub{font-size:1.4vw;color:#9ec3f0;margin-top:3vh}
 .qbox{margin:auto 0}.qlab{font-size:1.6vw;color:#5B9BD5;font-weight:700;margin-bottom:3vh}
 .thanks{margin-top:5vh;font-size:1.8vw;color:#fff;text-align:center;letter-spacing:.3vw}
 .qbig{font-size:2.4vw;font-weight:700;line-height:1.7}.qnote{font-size:1.3vw;color:#D6E4F7;margin-top:4vh;line-height:1.7}
