@@ -194,13 +194,13 @@ S("<h2><span class='n'>12b</span>为什么打平?引导搜索的优势随搜索�
               "<b class='blu'>同框架横跨两端点,亲手印证规律</b>"])) +
   "<div class='cite'>规律来自文献综合;两端点是我们实测。CMU《Hidden Pitfalls》(2509.08713)反证可信性为刚需</div>")
 
-S("<h2><span class='n'>13</span>用 vs 不用:朴素 AI4S 声称 4 项假发现且藏负结果,我们相反</h2>" +
+S("<h2><span class='n'>13</span>可信协议的价值:同数据同候选,防住了朴素流程的过度声称</h2>" +
   two_col(img(pub="消融阶梯.png", raw=os.path.join(EXP, "naive_vs_trustworthy.png")),
-          bl(["<b class='red'>朴素:</b> 4 假发现 + 0 负结果",
-              "<b class='grn'>我们:</b> 0 真新 + 4 负结果",
-              "一个自信但错,",
-              "一个 humbler 但对。"])) +
-  "<div class='cite'>naive_vs_trustworthy.py / ablation_ladder.py</div>")
+          bl(["同样的数据与候选,两种流程产出对比:",
+              "<b class='red'>朴素 AI4S:</b> 声称 4 项发现(经查全为已有)、不报局限",
+              "<b class='grn'>本框架:</b> 查新门/留出门过滤后如实报告,并记录 4 项边界",
+              "<b class='blu'>→ 安全机制把“看似发现”挡在门外,结论更可靠</b>"])) +
+  "<div class='cite'>naive_vs_trustworthy.py / ablation_ladder.py(累加消融)</div>")
 
 S("<h2><span class='n'>14</span>适用范围:省能收益集中于“障碍逼出爬升”的几何(可达 4–22%)</h2>" +
   two_col(img(pub="省能分布_n250.png"),

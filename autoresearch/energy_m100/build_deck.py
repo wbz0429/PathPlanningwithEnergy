@@ -320,12 +320,12 @@ def build():
     cite(s, "规律=文献综合;两端点=我们实测。CMU《Hidden Pitfalls》2509.08713 反证可信性为刚需")
 
     # ---- 13 用vs不用 ----
-    s = numbered(); title(s, "用 vs 不用:朴素 AI4S 声称 4 项假发现且藏负结果,我们相反")
+    s = numbered(); title(s, "可信协议的价值:同数据同候选,防住了朴素流程的过度声称")
     fit(s, os.path.join(EXP, "naive_vs_trustworthy.png"), In(0.6), In(2.0), In(9.2), In(4.4))
-    tb(s, In(10.0), In(2.2), In(2.9), In(4.4),
-       [("朴素:", 16, RED, True), ("4 假发现 + 0 负结果", 15, INK, False),
-        ("我们:", 16, MINT, True), ("0 真新 + 4 负结果", 15, INK, False),
-        ("一个自信但错,", 15, INK, False), ("一个 humbler 但对。", 15, INK, True)], space=12)
+    tb(s, In(9.9), In(2.2), In(3.0), In(4.4),
+       [("朴素 AI4S:", 16, RED, True), ("声称 4 项发现", 15, INK, False), ("(经查全为已有)、不报局限", 14, MUTED, False),
+        ("本框架:", 16, MINT, True), ("查新/留出过滤后", 15, INK, False), ("如实报告 + 记 4 项边界", 14, MUTED, False),
+        ("→ 安全机制把“看似发现”挡在门外", 14, DEEP, True)], space=10)
     cite(s, "naive_vs_trustworthy.py(同数据同候选,端到端产出对照)")
 
     # ---- 14 诚实边界 ----
