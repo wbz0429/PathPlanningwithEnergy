@@ -29,16 +29,18 @@ def main():
         paths[nm] = np.array([np.asarray(w, float).reshape(-1)[:3] for w in p])
 
     fig, (axz, axy, axb) = plt.subplots(1, 3, figsize=(16, 4.3))
-    # 侧视 XZ(高度)
+    # 红橙路径(距离/BEMT)决策相同(均翻越,同长70m)——画成一条,注明路径相同
     axz.add_patch(Rectangle((39, 0), 3, HGT, color="gray", alpha=.6, label="墙(12m高)"))
-    for nm, _, c in conds:
-        P = paths[nm]; axz.plot(P[:, 0], -P[:, 2], color=c, lw=2.2, label=nm)
-    axz.set_xlabel("x (m)"); axz.set_ylabel("高度 (m)"); axz.set_title("侧视:距离/BEMT 翻墙,M100 不爬")
-    axz.legend(fontsize=8); axz.set_ylim(0, 16)
+    axz.plot(paths["距离最短"][:, 0], -paths["距离最短"][:, 2], color="tab:red", lw=2.2,
+             label="距离最短/教科书BEMT(路径相同,均翻越)")
+    axz.plot(paths["真机M100"][:, 0], -paths["真机M100"][:, 2], color="tab:green", lw=2.2,
+             label="真机M100(绕行)")
+    axz.set_xlabel("x (m)"); axz.set_ylabel("高度 (m)"); axz.set_title("侧视:传统代价翻越,M100 绕行")
+    axz.legend(fontsize=7.5); axz.set_ylim(0, 16)
     # 俯视 XY(横向绕行)
     axy.add_patch(Rectangle((39, -HALF_Y), 3, 2 * HALF_Y, color="gray", alpha=.6))
-    for nm, _, c in conds:
-        P = paths[nm]; axy.plot(P[:, 0], P[:, 1], color=c, lw=2.2, label=nm)
+    axy.plot(paths["距离最短"][:, 0], paths["距离最短"][:, 1], color="tab:red", lw=2.2)
+    axy.plot(paths["真机M100"][:, 0], paths["真机M100"][:, 1], color="tab:green", lw=2.2)
     axy.set_xlabel("x (m)"); axy.set_ylabel("y (m)"); axy.set_title("俯视:M100 横向绕行避爬升")
     # 能耗柱状(M100 真机尺)
     names = [c[0] for c in conds]
