@@ -164,11 +164,13 @@ def hero():
         p, _ = pe.energy_astar(vg, esdf, em, s, g, velocity=8., safety_margin=0.6, max_expand=1500000)
         P[nm] = np.array([np.asarray(w, float).reshape(-1)[:3] for w in p])
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(6.8, 2.7))
-    cols = {"距离": PAL["red"], "BEMT": PAL["orange"], "M100": PAL["green"]}
     a1.add_patch(Rectangle((39, 0), 3, 12, color=PAL["gray"], alpha=.4))
     a2.add_patch(Rectangle((39, -16), 3, 32, color=PAL["gray"], alpha=.3))
-    for nm, X in P.items():
-        a1.plot(X[:, 0], -X[:, 2], color=cols[nm], lw=1.5, label=nm); a2.plot(X[:, 0], X[:, 1], color=cols[nm], lw=1.5)
+    # 距离/BEMT 决策相同(均翻越、同长)——合成一条画,避免"两条不同路"的误导
+    a1.plot(P["距离"][:, 0], -P["距离"][:, 2], color=PAL["red"], lw=1.8, label="距离/BEMT(同一决策:翻越)")
+    a1.plot(P["M100"][:, 0], -P["M100"][:, 2], color=PAL["green"], lw=1.8, label="真机M100(绕行)")
+    a2.plot(P["距离"][:, 0], P["距离"][:, 1], color=PAL["red"], lw=1.8)
+    a2.plot(P["M100"][:, 0], P["M100"][:, 1], color=PAL["green"], lw=1.8)
     a1.set_xlabel("x(m)"); a1.set_ylabel("高度(m)"); a1.set_title("侧视:距离/BEMT 翻墙,M100 绕行", fontsize=9.5); a1.legend(fontsize=8.5)
     a2.set_xlabel("x(m)"); a2.set_ylabel("y(m)"); a2.set_title("俯视:M100 横向绕行", fontsize=9.5)
     save(fig, "真机代价改变决策")
