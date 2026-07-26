@@ -154,7 +154,7 @@ S("<h2>autoresearch 如何突破阈值:局部搜索卡壳 → 外搜识别方向
 part("03", "主要工作与结果", "能耗建模 → 规划省电 → 动力学与真飞控验证")
 
 S("<h2>从真机数据自动建模:能耗预测误差降 73%(6.88% → 1.86%)</h2>" +
-  two_col(img(pub="噪声地板.png", raw=os.path.join(EXP, "fig_summary.png")),
+  two_col(img(pub="误差阶梯.png", raw=os.path.join(EXP, "fig_summary.png")),
           bl(["冻结评测器 + LLM 每轮改一次能耗公式",
               "iter1–10 全程留出验证 + 保留/回滚",
               "<b>误差 6.88% → 1.86%,相对提升约 73%</b>",
@@ -172,9 +172,11 @@ S("<h2>能耗模型对比:教科书 BEMT vs 我们的模型 vs 随机搜索最�
   "<div class='cite'>同冻结评测器、同留出集对比。我们的模型拟合精度与随机模型相当(1.86% vs 1.91%),但<b>含爬升不对称项</b>——这是它区别于纯多项式、能指导规划决策的物理价值。iter8 为随机搜索在纯线性库上的最优。</div>")
 
 S("<h2>真机验证的能耗代价改变规划决策:避开真实存在的爬升能耗</h2>" +
-  two_col(img(pub="真机代价改变决策.png") + img(raw=os.path.join(GIF, "video_corridor.gif"), cls="gif"),
-          bl(["距离/教科书BEMT → 翻墙",
-              "<b class='grn'>真机M100 → 绕行,省 5–13%</b>",
+  two_col(img(pub="城市走廊_混合决策.png") + img(raw=os.path.join(GIF, "video_corridor.gif"), cls="gif"),
+          bl(["单墙场景:距离/教科书BEMT → 翻墙;<b class='grn'>真机M100 → 绕行,省 5–13%</b>",
+              "<b>城市走廊(上图):逐障碍混合决策</b>",
+              "&nbsp;&nbsp;矮楼A(5m)照样翻越,高楼B(12m)才绕行",
+              "&nbsp;&nbsp;→ 不是“一律绕行”,是按爬升代价逐个算",
               "<b>机制三重验证:</b>",
               "留出爬升 +114W vs 预测 +108W(&lt;5%)",
               "因果消融:挖爬升项 → 退回翻墙"])) +

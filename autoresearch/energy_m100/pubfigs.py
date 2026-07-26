@@ -176,10 +176,32 @@ def hero():
     save(fig, "真机代价改变决策")
 
 
+def error_ladder():
+    """能耗建模页专用:留出 ARE 从教科书 BEMT 6.88% 逐步降到 loop 的 1.86%(−73%)。"""
+    from matplotlib.patches import FancyArrowPatch
+    labels = ["教科书 BEMT\n(1, v, v²)", "纯物理\n(BEMT 非线性)", "+ 载荷 payload 项", "loop 最终模型\n(物理骨架+真机拟合)"]
+    vals = [6.88, 4.24, 2.25, 1.86]
+    cols = [PAL["gray"], PAL["red"], PAL["orange"], PAL["green"]]
+    fig, ax = plt.subplots(figsize=(6.0, 3.1))
+    bars = ax.bar(labels, vals, color=cols, width=.62)
+    for b, v in zip(bars, vals):
+        ax.text(b.get_x() + b.get_width() / 2, v + .16, f"{v}%", ha="center", fontsize=10, fontweight="bold")
+    ax.axhline(1.88, ls=(0, (4, 3)), color=PAL["green"], lw=1.2)
+    ax.text(0.02, 1.62, "数据地板 ≈1.9%", fontsize=8.5, ha="left", va="top", color=PAL["green"])
+    ax.annotate("", xy=(3, 2.6), xytext=(0, 6.6),
+                arrowprops=dict(arrowstyle="->", color="#444", lw=1.4,
+                                connectionstyle="arc3,rad=-0.18"))
+    ax.text(1.5, 5.6, "−73%", fontsize=13, fontweight="bold", color="#444", ha="center")
+    ax.set_ylabel("留出能量 ARE (%)"); ax.set_ylim(0, 7.9)
+    ax.set_title("自动迭代把能耗预测误差从 6.88% 降到 1.86%(留出,未参与训练的飞行)", fontsize=10)
+    ax.tick_params(axis="x", labelsize=8.5)
+    save(fig, "误差阶梯")
+
+
 def main():
     print("重绘顶会级中文图 → experiments/pub/")
     noise_floor(); framework_ablation(); savings_dist(); tradeoff()
-    phase_diagram(); px4_ab(); corridor(); crossdomain_sig(); hero()
+    phase_diagram(); px4_ab(); corridor(); crossdomain_sig(); hero(); error_ladder()
     print("完成。")
 
 
