@@ -331,7 +331,7 @@ h2.apx{color:#0563C1}
 .two .left{flex:1.35;display:flex;flex-direction:column;gap:1.5vh;align-items:center;justify-content:center}
 .two .right{flex:1;font-size:1.35vw;line-height:2}
 img.fig{max-width:100%;max-height:62vh;border:1px solid #e0e0e0;border-radius:.4vw}
-img.gif{max-width:70%;max-height:22vh;border:1px solid #ddd;border-radius:.4vw}
+img.gif{max-width:100%;max-height:34vh;border:1px solid #ddd;border-radius:.4vw}
 .apxfig{flex:1;display:flex;align-items:center;justify-content:center}.apxfig img{max-width:82%;max-height:70vh}
 ul{list-style:none}ul li{margin:.9vh 0;padding-left:1.3vw;position:relative}
 ul li:before{content:"·";position:absolute;left:0;color:#4472C4;font-weight:700}

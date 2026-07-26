@@ -24,7 +24,8 @@ def draw_box(ax, x0, x1, y0, y1, h, color="gray", alpha=.45):
     ax.add_collection3d(Poly3DCollection([v[f] for f in faces], color=color, alpha=alpha, linewidths=.3))
 
 
-def render(npz_path, boxes, pairs, title, out_name, step=5):
+def render(npz_path, boxes, pairs, title, out_name, step=5, dpi=100, fs=1.0):
+    """fs = 字号放大系数(投影用建议 1.8);dpi 提高使线条与文字更锐利。"""
     D = np.load(npz_path)
     # 对齐两条轨迹长度(取最长,短的用最后位置补)
     series = {}
@@ -40,20 +41,23 @@ def render(npz_path, boxes, pairs, title, out_name, step=5):
     lines, dots, plines = {}, {}, {}
     for base, c in pairs:
         t, x, P = series[base]
-        lines[base], = ax.plot([], [], [], color=c, lw=2, label=base)
-        dots[base], = ax.plot([], [], [], "o", color=c, ms=7)
-        plines[base], = axp.plot([], [], color=c, lw=1.4,
+        lines[base], = ax.plot([], [], [], color=c, lw=2 * fs, label=base)
+        dots[base], = ax.plot([], [], [], "o", color=c, ms=7 * fs)
+        plines[base], = axp.plot([], [], color=c, lw=1.4 * fs,
                                  label=f"{base}(均{P.mean():.0f}W)")
     allx = np.vstack([series[b][1] for b, _ in pairs])
     ax.set_xlim(allx[:, 0].min() - 2, allx[:, 0].max() + 2)
     ax.set_ylim(allx[:, 1].min() - 4, allx[:, 1].max() + 4)
     ax.set_zlim(0, max(15, allx[:, 2].max() + 1))
-    ax.set_xlabel("x(m)"); ax.set_ylabel("y(m)"); ax.set_zlabel("alt(m)")
-    ax.legend(fontsize=8, loc="upper left"); ax.view_init(elev=22, azim=-60)
+    ax.set_xlabel("x(m)", fontsize=10 * fs); ax.set_ylabel("y(m)", fontsize=10 * fs)
+    ax.set_zlabel("alt(m)", fontsize=10 * fs)
+    ax.tick_params(labelsize=8.5 * fs)
+    ax.legend(fontsize=8 * fs, loc="upper left"); ax.view_init(elev=22, azim=-60)
     axp.set_xlim(0, T); axp.set_ylim(0, 900)
-    axp.set_xlabel("t (s)"); axp.set_ylabel("M100 功率 (W)")
-    axp.legend(fontsize=8); axp.set_title("飞行瞬时功率(真机模型)")
-    fig.suptitle(title); fig.tight_layout()
+    axp.set_xlabel("t (s)", fontsize=10 * fs); axp.set_ylabel("M100 功率 (W)", fontsize=10 * fs)
+    axp.tick_params(labelsize=8.5 * fs)
+    axp.legend(fontsize=8 * fs); axp.set_title("飞行瞬时功率(真机模型)", fontsize=11 * fs)
+    fig.suptitle(title, fontsize=12 * fs); fig.tight_layout()
     frames = range(0, n, step)
 
     def update(fi):
@@ -69,9 +73,9 @@ def render(npz_path, boxes, pairs, title, out_name, step=5):
 
     ani = FuncAnimation(fig, update, frames=frames, blit=False)
     out = os.path.join(HERE, "experiments", out_name)
-    ani.save(out, writer=FFMpegWriter(fps=20, bitrate=2200))
+    ani.save(out, writer=FFMpegWriter(fps=20, bitrate=2200), dpi=dpi)
     plt.close(fig)
-    print(f"视频存 {out}  (时长~{len(list(frames))/20:.0f}s)")
+    print(f"视频存 {out}  (时长~{len(list(frames))/20:.0f}s, dpi={dpi})")
 
 
 if __name__ == "__main__":
