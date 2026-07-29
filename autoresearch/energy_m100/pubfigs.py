@@ -179,7 +179,7 @@ def hero():
 def error_ladder():
     """能耗建模页专用:留出 ARE 从教科书 BEMT 6.88% 逐步降到 loop 的 1.86%(−73%)。"""
     from matplotlib.patches import FancyArrowPatch
-    labels = ["教科书 BEMT\n(1, v, v²)", "纯物理\n(BEMT 非线性)", "+ 载荷 payload 项", "loop 最终模型\n(物理骨架+真机拟合)"]
+    labels = ["教科书稳态 BEMT\n(1, v, v²)", "纯物理\n(BEMT 非线性)", "+ 载荷 payload 项", "loop 最终模型\n(物理骨架+真机拟合)"]
     vals = [6.88, 4.24, 2.25, 1.86]
     cols = [PAL["gray"], PAL["red"], PAL["orange"], PAL["green"]]
     fig, ax = plt.subplots(figsize=(6.0, 3.1))

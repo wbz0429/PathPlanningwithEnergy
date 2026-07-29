@@ -8,8 +8,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import font_manager
 
-# 选一个可用的干净中文无衬线
-for _f in ("PingFang HK", "PingFang SC", "Heiti TC", "Hiragino Sans GB", "Arial Unicode MS"):
+# 选一个可用的干净中文无衬线(PingFang HK 缺「杂/稳」等字形,放后面;STHeiti 优先)
+for _f in ("STHeiti", "Heiti TC", "Hiragino Sans GB", "Songti SC", "Arial Unicode MS", "PingFang SC", "PingFang HK"):
     if any(_f in x.name for x in font_manager.fontManager.ttflist):
         _CJK = _f; break
 else:
