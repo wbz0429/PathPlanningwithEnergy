@@ -169,6 +169,10 @@ S("<h2>能耗模型对比:教科书 BEMT vs 我们的模型 vs 随机搜索最�
       ("教科书 BEMT", "稳态物理公式:仅 1, v, v²", "6.88%", "理论推导,无真实数据验证"),
       ("我们的模型(loop)", "动量核 T^1.5 + T²/V + v³ + 爬升/下降不对称 + 载荷 payload", "<b>1.86%</b>", "物理结构 + 真机数据拟合,含爬升项→指导规划"),
       ("随机搜索最优(iter8)", "纯多项式:v, v², v³, payload, v·pay, v²·pay, climb+, |az|, ah, omega", "1.91%", "无物理骨架,纯数据多项式")]) + "</table>" +
+  "<div class='eqwrap'>"
+  "<div class='eqline'><span class='eq'>P&nbsp;=&nbsp;<i>w</i><sub>0</sub>&nbsp;+&nbsp;<i>w</i><sub>1</sub>·<i>T</i><sup>1.5</sup>&nbsp;+&nbsp;<i>w</i><sub>2</sub>·<i>T</i><sup>2</sup>/<i>V</i><sub>eff</sub>&nbsp;+&nbsp;<i>w</i><sub>3</sub>·<i>v</i><sub>h</sub><sup>2</sup>&nbsp;+&nbsp;<i>w</i><sub>4</sub>·<i>T</i>·<i>v</i><sub>h</sub><sup>2</sup>&nbsp;+&nbsp;<i>w</i><sub>5</sub>·<i>v</i><sub>h</sub><sup>3</sup>&nbsp;+&nbsp;<i>w</i><sub>6</sub>·max(<i>v</i><sub>z</sub>,0)&nbsp;+&nbsp;<i>w</i><sub>7</sub>·min(<i>v</i><sub>z</sub>,0)&nbsp;+&nbsp;<i>w</i><sub>8</sub>·<i>p</i></span><span class='eqn'>(1)</span></div>"
+  "<div class='eqline'><span class='eq'><i>T</i>&nbsp;=&nbsp;<i>m</i>(<i>g</i>+<i>a</i><sub>z</sub>),&nbsp;&nbsp;&nbsp;<i>m</i>&nbsp;=&nbsp;2.4&nbsp;+&nbsp;<i>p</i>/1000&nbsp;(kg),&nbsp;&nbsp;&nbsp;<i>V</i><sub>eff</sub>&nbsp;=&nbsp;√(<i>v</i><sub>h</sub><sup>2</sup>+1)</span><span class='eqn'>(2)</span></div>"
+  "<div class='eqnote'>系数 <i>w</i><sub>0..8</sub> 由真机 209 航班在训练集上岭回归拟合,留出集(未参与训练的飞行)检验;能量 E&nbsp;=&nbsp;∫P&nbsp;dt。max(<i>v</i><sub>z</sub>,0)/min(<i>v</i><sub>z</sub>,0) 为<b>爬升/下降不对称项</b>——区别纯多项式、能指导规划决策的关键物理结构。</div></div>" +
   "<div class='cite'>同冻结评测器、同留出集对比。iter8 为随机搜索在纯线性库上的最优。<b>我们的模型独有爬升/下降不对称项</b>——这是它区别于纯多项式、能指导规划决策的物理价值(下一页)。</div>")
 
 S("<h2>真机验证的能耗代价改变规划决策:避开真实存在的爬升能耗</h2>" +
@@ -360,6 +364,12 @@ table.fw td{border:1px solid #dde3e8;padding:1.4vh 1.2vw}
 table.fw .c1{font-weight:700;color:#1a2333;width:22%}.fw .c2{color:#4472C4;font-weight:700;width:18%}.fw .c3{color:#6b7a8d}
 table.fw tr:nth-child(odd){background:#eef4f7}
 table.fw tr.hd td{background:#0563C1;color:#fff;font-weight:700;font-size:1.15vw}
+.eqwrap{margin:2vh auto 0;background:#f7fafd;border:1px solid #dbe4ef;border-radius:.5vw;padding:1.8vh 2vw;width:92%}
+.eqline{display:flex;justify-content:space-between;align-items:center;margin:.6vh 0}
+.eqline .eq{font-size:1.45vw;color:#14213d;font-family:'STSong','Songti SC',serif;letter-spacing:.02em}
+.eqline .eq i{font-style:italic}
+.eqline .eqn{font-size:1.15vw;color:#8899aa;font-family:serif}
+.eqnote{margin-top:1.2vh;font-size:1.02vw;color:#5b6b7d;line-height:1.6;border-top:1px dashed #dbe4ef;padding-top:1vh}
 .sub2{margin-top:2.5vh;font-size:1.25vw;color:#333;line-height:1.7}.sub2 b{color:#0563C1}
 .mech{display:flex;flex-direction:column;gap:1.6vh;margin-top:1vh}
 .mrow{display:flex;align-items:center;gap:1.2vw}
