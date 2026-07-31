@@ -1,0 +1,53 @@
+{
+  "budget": 30,
+  "seeds": 6,
+  "temp": 0.5,
+  "fair": "same action space, utility-weighted vs uniform",
+  "rows": [
+    {
+      "K": 10,
+      "space": "2^10",
+      "guided_ARE": 1.926,
+      "guided_std": 0.09,
+      "random_ARE": 1.916,
+      "random_std": 0.084,
+      "advantage_pp": -0.01
+    },
+    {
+      "K": 20,
+      "space": "2^20",
+      "guided_ARE": 1.976,
+      "guided_std": 0.013,
+      "random_ARE": 1.976,
+      "random_std": 0.013,
+      "advantage_pp": 0.0
+    },
+    {
+      "K": 40,
+      "space": "2^40",
+      "guided_ARE": 1.927,
+      "guided_std": 0.084,
+      "random_ARE": 1.939,
+      "random_std": 0.082,
+      "advantage_pp": 0.013
+    },
+    {
+      "K": 70,
+      "space": "2^70",
+      "guided_ARE": 2.36,
+      "guided_std": 0.676,
+      "random_ARE": 2.36,
+      "random_std": 0.676,
+      "advantage_pp": -0.0
+    },
+    {
+      "K": 110,
+      "space": "2^110",
+      "guided_ARE": 2.153,
+      "guided_std": 0.135,
+      "random_ARE": 2.28,
+      "random_std": 0.451,
+      "advantage_pp": 0.127
+    }
+  ]
+}
