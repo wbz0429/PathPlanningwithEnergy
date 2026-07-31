@@ -247,16 +247,16 @@ S("<h2>同框架:有改进空间的域显著胜随机,噪声封顶的域统计�
               "<b class='blu'>→ 优势取决于搜索空间复杂度:小空间相当,大空间显著胜</b>"])) +
   "<div class='cite'>significance_test.py / planner_significance.py(随机分布 + z 检验)</div>")
 
-S("<h2>为什么打平?引导搜索的优势随搜索空间复杂度增长(文献规律)</h2>" +
+S("<h2>为什么打平?引导搜索的优势取决于「有效组合复杂度」</h2>" +
   two_col(img(pub="复杂度规律.png"),
-          bl(["<b>引导搜索的优势随搜索空间复杂度增长:</b>",
+          bl(["<b>不是名义空间大小,是有效组合复杂度:</b>",
               "Bergstra&Bengio'12:低有效维→随机追平",
               "REMBO/贝叶斯:~15–20 维临界点",
-              "FunSearch:程序空间>宇宙原子数→引导才行",
-              "<b class='red'>我们能耗域(小)→打平</b>",
-              "<b class='grn'>我们规划器域(大)→胜 27%</b>",
-              "<b class='blu'>同框架横跨两端点,亲手印证规律</b>"])) +
-  "<div class='cite'>规律来自文献综合;两端点是我们实测。CMU《Hidden Pitfalls》(2509.08713)反证可信性为刚需</div>")
+              "FunSearch:程序空间→引导才行",
+              "<b class='red'>我们能耗域(低有效维)→打平 z=−0.35</b>",
+              "<b class='red'>负控制:名义 K 膨胀(10→110)优势仍≈0(受控实验)</b>",
+              "<b class='grn'>我们规划器域(代码结构)→胜随机 8.1%,z=−2.38</b>"])) +
+  "<div class='cite'>规律=文献综合;两端点=我们实测;负控制=我们受控实验。CMU《Hidden Pitfalls》(2509.08713)反证可信性为刚需</div>")
 
 S("<h2>可信协议的价值:同数据同候选,防住了朴素流程的过度声称</h2>" +
   two_col(img(pub="消融阶梯.png", raw=os.path.join(EXP, "naive_vs_trustworthy.png")),
