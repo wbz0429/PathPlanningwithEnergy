@@ -101,13 +101,15 @@
   },
   "C_necessity": {
     "planner": {
-      "loop": 2046,
-      "random": 2805,
-      "loop_wins_pct": 27
+      "loop": 2882.0,
+      "random": 3135.2,
+      "loop_wins_pct": 8.1,
+      "z": -2.38
     },
     "energy": {
-      "loop": 1.86,
-      "random": 1.86,
+      "loop_ARE%": 1.859,
+      "random_mean%": 1.869,
+      "z": -0.35,
       "ties": true
     }
   }

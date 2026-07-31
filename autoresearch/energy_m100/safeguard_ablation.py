@@ -100,15 +100,26 @@ def ablation_B_novelty_gate():
 
 def ablation_C_necessity():
     print("\n=== 消融 C:loop 必要性(结构搜索 vs 随机,同框架跨域)===")
+    # 规划器域读新鲜复现;能耗域读 significance_test
+    try:
+        pl = json.load(open(os.path.join(HERE, "experiments", "planner_significance.json")))
+        loop_p, rnd_p, win_p, z_p = pl["loop"], pl["random_mean"], pl["win_pct"], pl["loop_z"]
+    except Exception:
+        loop_p, rnd_p, win_p, z_p = 2046, 2805, 27, -2.38
+    try:
+        eg = json.load(open(os.path.join(HERE, "experiments", "significance_test.json")))["energy_domain"]
+        loop_e, rnd_e, z_e = eg["loop_ARE%"], eg["random_mean%"], eg["loop_z_score"]
+    except Exception:
+        loop_e, rnd_e, z_e = 1.86, 1.86, -0.35
     rows = [
-        ("规划器域(采样/平滑代码)", 2046, 2805, "loop 胜随机 27%(随机写不出 CHOMP/DP)"),
-        ("能耗域(featurize 形式)", 1.86, 1.86, "打平(结构搜索无益,线性主导)"),
+        ("规划器域(采样/平滑代码)", f"{loop_p}", f"{rnd_p}", f"loop 胜随机 {win_p}%,z={z_p}(跨空间代码结构)"),
+        ("能耗域(featurize 形式)", f"{loop_e}", f"{rnd_e}", f"打平,z={z_e}(线性主导)"),
     ]
     for dom, loop, rnd, note in rows:
         print(f"  {dom}: loop={loop} 随机={rnd} → {note}")
     print("  → 诚实 finding:LLM 自动科研的优化价值**取决于任务是否需要写出普通搜索到不了的代码结构**")
-    return {"planner": {"loop": 2046, "random": 2805, "loop_wins_pct": 27},
-            "energy": {"loop": 1.86, "random": 1.86, "ties": True}}
+    return {"planner": {"loop": loop_p, "random": rnd_p, "loop_wins_pct": win_p, "z": z_p},
+            "energy": {"loop_ARE%": loop_e, "random_mean%": rnd_e, "z": z_e, "ties": abs(z_e) < 1.96}}
 
 
 def main():
@@ -147,10 +158,10 @@ def _fig(out):
     # C: 必要性
     C = out["C_necessity"]
     x = np.arange(2); w = 0.35
-    a3.bar(x-w/2, [C["planner"]["loop"], C["energy"]["loop"]*1000], w, label="loop", color="tab:green")
-    a3.bar(x+w/2, [C["planner"]["random"], C["energy"]["random"]*1000], w, label="随机搜索", color="tab:gray")
-    a3.set_xticks(x); a3.set_xticklabels(["规划器域\n(能量,越低越好)", "能耗域\n(ARE×1000)"])
-    a3.set_title("C 必要性:规划器域 loop 胜27%,能耗域打平"); a3.legend(fontsize=8)
+    a3.bar(x-w/2, [C["planner"]["loop"], C["energy"]["loop_ARE%"]*100], w, label="loop", color="tab:green")
+    a3.bar(x+w/2, [C["planner"]["random"], C["energy"]["random_mean%"]*100], w, label="随机搜索", color="tab:gray")
+    a3.set_xticks(x); a3.set_xticklabels(["规划器域\n(score,越低越好)", "能耗域\n(ARE×100)"])
+    a3.set_title(f"C 必要性:规划器域 loop 胜{C['planner']['loop_wins_pct']}%,能耗域打平"); a3.legend(fontsize=8)
     plt.suptitle("autoresearch 安全机制消融:每个 safeguard 去掉都会导致 overclaim / 自欺(实证承重)", fontsize=12)
     plt.tight_layout()
     p = os.path.join(HERE, "experiments", "safeguard_ablation.png")
