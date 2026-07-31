@@ -1,13 +1,13 @@
 {
-  "iteration": 11,
+  "iteration": 12,
   "phase": "m100_energy_model",
   "best": {
     "src": "best_featurize.py",
-    "search_ARE": 0.020080161079709422,
-    "val_ARE": 0.019289395545069785,
-    "val_r2": 0.4387519242363211,
-    "n_feat": 9,
-    "name": "physics core + bare linear payload"
+    "search_ARE": 0.019912757935883454,
+    "val_ARE": 0.019033748323770416,
+    "val_r2": 0.42413231804336754,
+    "n_feat": 10,
+    "name": "Tseng 2022 polynomial (knowledge-base winner)"
   },
   "cadence": {
     "episode_cap": 10,
@@ -25,8 +25,8 @@
       7
     ]
   },
-  "plateau_count": 0,
+  "plateau_count": 1,
   "episode": 2,
   "bottleneck": "per-flight energy ARE",
-  "note": "iter10 = capstone milestone (forced at convergence); loop paused for review"
+  "note": "前置知识库选定起点:Tseng 2022 多项式(留出 1.90%),loop 从此起点继续"
 }
