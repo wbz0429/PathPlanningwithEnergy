@@ -1,0 +1,59 @@
+{
+  "rows": [
+    {
+      "K": 10,
+      "n_pool": 10,
+      "spread": 1.4529,
+      "rel_spread": 0.643,
+      "best_single": 2.2604,
+      "best_subset": 1.9615,
+      "synergy": 0.2988,
+      "headroom": 0.0,
+      "predicted": "tie"
+    },
+    {
+      "K": 20,
+      "n_pool": 20,
+      "spread": 1.0772,
+      "rel_spread": 0.477,
+      "best_single": 2.2604,
+      "best_subset": 1.9473,
+      "synergy": 0.3131,
+      "headroom": 0.0,
+      "predicted": "tie"
+    },
+    {
+      "K": 40,
+      "n_pool": 40,
+      "spread": 0.7916,
+      "rel_spread": 0.35,
+      "best_single": 2.2604,
+      "best_subset": 2.1151,
+      "synergy": 0.1453,
+      "headroom": 0.0,
+      "predicted": "tie"
+    },
+    {
+      "K": 70,
+      "n_pool": 70,
+      "spread": 0.9124,
+      "rel_spread": 0.404,
+      "best_single": 2.2604,
+      "best_subset": 2.2,
+      "synergy": 0.0604,
+      "headroom": 0.0,
+      "predicted": "tie"
+    },
+    {
+      "K": 110,
+      "n_pool": 110,
+      "spread": 1.0023,
+      "rel_spread": 0.443,
+      "best_single": 2.2604,
+      "best_subset": 2.6006,
+      "synergy": -0.3402,
+      "headroom": 0.151,
+      "predicted": "guided-wins"
+    }
+  ]
+}
