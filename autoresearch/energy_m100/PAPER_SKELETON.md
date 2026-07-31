@@ -63,6 +63,19 @@ Large language model (LLM) agents promise autonomous scientific discovery (FunSe
 
 **Stage 5 — Capability-boundary quantification.** Statistical: loop vs random distribution in each domain. Controlled: fair complexity sweep (same action space, utility-weighted vs uniform). → ties in energy, wins in planning.
 
+**Algorithm 1 — Headroom Diagnostic (pre-loop prediction of whether guided search helps).**
+
+```
+Input: candidate pool P, frozen evaluator E (search split only), budget B
+1. For each term t ∈ P:  u_t ← E(score of {1, t})          # single-term utility (lower=better)
+2. spread     ← std({u_t});  best_single ← min({u_t})
+3. best_comb  ← best of B random subsets (uniform sampling)
+4. synergy    ← best_single − best_comb                   # combination gain over single term
+5. rel_spread ← spread / best_single;  headroom ← max(0,−synergy)/best_single
+6. predict ← "tie" if (rel_spread > 0.3 ∧ headroom < 0.05) else "guided-wins"
+```
+Claim: the diagnostic predicts, before running the loop, whether guided search beats random. Empirically correct at all 5 controlled K levels in energy (tie where adv≈0, guided-wins at K=110 where adv=+0.13pp) and, with the planning validation, on the code-structure domain.
+
 ## 6. Experiments / figures plan (money figures first)
 
 - **Fig 1 (money)**: Two-domain significance — energy (loop = random center, z=−0.35) vs planning (loop far left, z=−2.38). Exists as `pub/两域显著性.png`; must add the fair-sweep flat line as negative control.
@@ -71,8 +84,10 @@ Large language model (LLM) agents promise autonomous scientific discovery (FunSe
 - **Fig 4**: Per-state instant power error — our loop vs Tseng vs BEMT per climb-rate bin; BEMT misses climb by −131W (the planning-decision root cause). NEW (`pub/瞬时功率误差.png`).
 - **Fig 5**: Safeguard ablation ladder (framework_ablation master table + local-optimum escape 4.2%→1.9%).
 - **Fig 6**: Effective-complexity law — x-axis = effective combinatorial complexity (energy under K-inflation = flat; planning = win), literature markers. REWORK of `复杂度规律.png` to include the controlled negative control.
+- **Fig 7 (money)**: Headroom diagnostic predicted-vs-observed — per K level (energy) and per domain (planning), the predicted verdict vs the observed z/advantage. NEW.
 - **Table 1**: All 14 models with as-published vs refit ARE.
 - **Table 2**: Ablation ladder (7 nodes).
+- **Table 3**: Headroom diagnostic predictions vs observations across all settings.
 
 ## 7. Honest boundaries (explicitly stated in paper)
 
