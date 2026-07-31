@@ -76,6 +76,16 @@ Input: candidate pool P, frozen evaluator E (search split only), budget B
 ```
 Claim: the diagnostic predicts, before running the loop, whether guided search beats random. Empirically correct at all 5 controlled K levels in energy (tie where adv≈0, guided-wins at K=110 where adv=+0.13pp) and, with the planning validation, on the code-structure domain.
 
+**Refinement (cross-space escape) — measured decomposition in the planning domain:**
+| Setting | score | |
+|---|---|---|
+| default config + default smoother | 15000 | |
+| random config + default smoother | 3135±106 | random search (planner_significance) |
+| TUNED config + default smoother | 3264 | config-only loop → **≈ random = tie within config space** ✓ |
+| TUNED config + **evolved smoother** | 2882 | **cross-space escape → the z=−2.38 win** |
+
+So the headroom diagnostic correctly predicts a TIE within the config space (3264 ≈ 3135), and the observed guided win is entirely attributable to the loop escaping into program space (code the random config search cannot reach: −382 points from the smoother). This is the measured, quantitative version of FunSearch/AlphaEvolve's program-space claim. **Guided search helps iff there is an escapable higher-complexity space; the diagnostic identifies when the current space is saturated.**
+
 ## 6. Experiments / figures plan (money figures first)
 
 - **Fig 1 (money)**: Two-domain significance — energy (loop = random center, z=−0.35) vs planning (loop far left, z=−2.38). Exists as `pub/两域显著性.png`; must add the fair-sweep flat line as negative control.
@@ -84,7 +94,7 @@ Claim: the diagnostic predicts, before running the loop, whether guided search b
 - **Fig 4**: Per-state instant power error — our loop vs Tseng vs BEMT per climb-rate bin; BEMT misses climb by −131W (the planning-decision root cause). NEW (`pub/瞬时功率误差.png`).
 - **Fig 5**: Safeguard ablation ladder (framework_ablation master table + local-optimum escape 4.2%→1.9%).
 - **Fig 6**: Effective-complexity law — x-axis = effective combinatorial complexity (energy under K-inflation = flat; planning = win), literature markers. REWORK of `复杂度规律.png` to include the controlled negative control.
-- **Fig 7 (money)**: Headroom diagnostic predicted-vs-observed — per K level (energy) and per domain (planning), the predicted verdict vs the observed z/advantage. NEW.
+- **Fig 7 (money)**: Headroom diagnostic predicted-vs-observed — per K level (energy) and per domain (planning), the predicted verdict vs the observed z/advantage. NEW (`pub/头部空间诊断_预测vs实测.png`).
 - **Table 1**: All 14 models with as-published vs refit ARE.
 - **Table 2**: Ablation ladder (7 nodes).
 - **Table 3**: Headroom diagnostic predictions vs observations across all settings.

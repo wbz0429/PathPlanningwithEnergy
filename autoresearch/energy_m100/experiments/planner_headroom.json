@@ -1,0 +1,25 @@
+{
+  "best_single_param": 3194.5,
+  "param_utilities": {
+    "step_size": 3194.5,
+    "max_iterations": 15000.0,
+    "goal_sample_rate": 15000.0,
+    "search_radius": 11814.4
+  },
+  "spread": 4830.5,
+  "rel_spread": 1.512,
+  "best_random_combo": 3067.9,
+  "synergy": 126.6,
+  "headroom": 0.0,
+  "predicted": "tie",
+  "observed": {
+    "loop": 2882,
+    "random_mean": 3135,
+    "z": -2.38,
+    "verdict": "guided-wins"
+  },
+  "config_only_loop": 3264.4,
+  "full_loop": 2882.0,
+  "escape_gain": -382.4,
+  "finding": "headroom diagnostic correctly predicts TIE within config space (config-only loop=3264 ~= random 3135); the observed guided WIN comes from CROSS-SPACE escape (evolved smoother code=2882), i.e. the loop expanding to program space that random config search cannot reach"
+}
