@@ -36,9 +36,10 @@ Large language model (LLM) agents promise autonomous scientific discovery (FunSe
 
 1. **Empirical: zero-shot transfer of literature models fails on real data (53–76% ARE), and the failure is systematic** — motivates an explicit refit stage. Not assumed; measured.
 2. **Method: a four-stage trustworthy autoresearch protocol** (knowledge base → zero-fit benchmark → cheat-proof loop → boundary quantification) for domains without ground truth.
-3. **Empirical capability law**: guided-search advantage depends on **effective combinatorial complexity, not nominal space size** — ties random in low-effective-dim energy (even under K inflation), beats random in code-structure planning. Supported by 2 real domains + 1 controlled negative control + literature (Bergstra'12, REMBO, FunSearch).
-4. **Safeguards are load-bearing**: ablation ladder shows removing any one node → the loop overclaims or collapses (novelty gate stops prior-art misjudgment; held-out ruler stops reward-hacking; causal ablation proves climb is the decision cause).
-5. **Application**: real-data energy cost changes planning decisions (detour over climb), validated end-to-end (dynamics + PX4 firmware, 14.3% saving).
+3. **Algorithmic — Headroom Diagnostic**: a cheap pre-loop predictor of whether guided search beats random, from single-term utility spread + combination synergy. Correctly predicts the observed outcome at all 5 controlled complexity levels (tie at K=10–70 where observed adv≈0; guided-wins at K=110 where observed +0.13pp). Turns "we report a boundary" into "we provide a tool to predict the boundary." (`headroom_diagnostic.py`)
+4. **Empirical capability law**: guided-search advantage depends on **effective combinatorial complexity, not nominal space size** — ties random in low-effective-dim energy (even under K inflation), beats random in code-structure planning. Supported by 2 real domains + 1 controlled negative control + literature (Bergstra'12, REMBO, FunSearch).
+5. **Safeguards are load-bearing**: ablation ladder shows removing any one node → the loop overclaims or collapses (novelty gate stops prior-art misjudgment; held-out ruler stops reward-hacking; causal ablation proves climb is the decision cause).
+6. **Application**: real-data energy cost changes planning decisions (detour over climb), validated end-to-end (dynamics + PX4 firmware, 14.3% saving).
 
 ## 4. Related work (must cite; do NOT claim priority)
 
