@@ -1,0 +1,39 @@
+{
+  "generated": "2026-07-31 19:25",
+  "n_test_flights": 50,
+  "results": [
+    {
+      "code": "momentum_hover",
+      "name": "动量理论悬停(as-published,零拟合)",
+      "source": "动量理论 P=W^1.5/√(2ρA),代入 M100 质量+桨盘面积,无任何自由系数",
+      "rmse_W": 390.7616290164744,
+      "mape_pct": 72.3450299954561,
+      "energy_ARE_pct": 72.66177460337633,
+      "mean_true_W": 521.9545227242836,
+      "mean_pred_W": 142.55028650461674,
+      "refit_ARE_pct": null
+    },
+    {
+      "code": "momentum_forward",
+      "name": "动量理论前飞诱导(as-published,零拟合)",
+      "source": "诱导速度 v_i 满足 v_i·√(v_h²+v_i²)=W/(2ρA);P=W·v_i。仅诱导功率(下限)",
+      "rmse_W": 408.03663275938374,
+      "mape_pct": 75.85552535915122,
+      "energy_ARE_pct": 76.26517405054054,
+      "mean_true_W": 521.9545227242836,
+      "mean_pred_W": 124.96239885915229,
+      "refit_ARE_pct": null
+    },
+    {
+      "code": "tseng_simplified",
+      "name": "Tseng 简化回归(论文报告系数)",
+      "source": "Muli/Park/Liu arXiv:2206.01609 报告的简化式 P=−2.595·va+0.197·m3+251.7。注:可能为归一化尺度,直接套用于展示跨平台迁移偏差",
+      "rmse_W": 297.0608950078412,
+      "mape_pct": 55.05916663483179,
+      "energy_ARE_pct": 53.170433018760534,
+      "mean_true_W": 521.9545227242836,
+      "mean_pred_W": 241.6791653761178,
+      "refit_ARE_pct": null
+    }
+  ]
+}
