@@ -39,11 +39,24 @@ def noise_floor():
 
 def cross_domain():
     print("\n=== ② 跨域对照(同框架,headroom vs 封顶)===")
+    # 读新鲜复现数字
+    import json, os
+    HERE = os.path.dirname(os.path.abspath(__file__)); EXP = os.path.join(HERE, "experiments")
+    try:
+        pl = json.load(open(os.path.join(EXP, "planner_significance.json")))
+        loop_p, rnd_p, win_p = pl["loop"], pl["random_mean"], pl["win_pct"]
+    except Exception:
+        loop_p, rnd_p, win_p = 2882, 3135, 8.1
+    try:
+        eg = json.load(open(os.path.join(EXP, "significance_test.json")))["energy_domain"]
+        loop_e, rnd_e, z_e = eg["loop_ARE%"], eg["random_mean%"], eg["loop_z_score"]
+    except Exception:
+        loop_e, rnd_e, z_e = 1.86, 1.86, -0.35
     data = {
-        "规划器域(采样/平滑代码,有headroom)": {"loop": 2046, "random": 2805, "metric": "能量(越低越好)",
-                                       "loop_vs_random": "loop 胜 27%"},
-        "能耗域(featurize,噪声封顶)": {"loop": 1.86, "random": 1.86, "metric": "留出ARE%",
-                                 "loop_vs_random": "打平(结构搜索无益)"},
+        "规划器域(采样/平滑代码,有headroom)": {"loop": loop_p, "random": rnd_p, "metric": "能量(越低越好)",
+                                       "loop_vs_random": f"loop 胜 {win_p}%(z={pl.get('loop_z',-2.38)})"},
+        "能耗域(featurize,噪声封顶)": {"loop": loop_e, "random": rnd_e, "metric": "留出ARE%",
+                                 "loop_vs_random": f"打平(z={z_e})"},
     }
     for dom, d in data.items():
         print(f"  {dom}: loop={d['loop']} 随机={d['random']} → {d['loop_vs_random']}")

@@ -43,16 +43,16 @@
   },
   "cross_domain": {
     "规划器域(采样/平滑代码,有headroom)": {
-      "loop": 2046,
-      "random": 2805,
+      "loop": 2882.0,
+      "random": 3135.2,
       "metric": "能量(越低越好)",
-      "loop_vs_random": "loop 胜 27%"
+      "loop_vs_random": "loop 胜 8.1%(z=-2.38)"
     },
     "能耗域(featurize,噪声封顶)": {
-      "loop": 1.86,
-      "random": 1.86,
+      "loop": 1.859,
+      "random": 1.869,
       "metric": "留出ARE%",
-      "loop_vs_random": "打平(结构搜索无益)"
+      "loop_vs_random": "打平(z=-0.35)"
     }
   },
   "thesis_claim": "AI4S 价值域相关:需可验证评测器+真实headroom;能耗域产正确null,规划器域产正值(胜随机27%)"
