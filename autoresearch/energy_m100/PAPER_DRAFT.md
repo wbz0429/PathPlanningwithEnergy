@@ -144,6 +144,33 @@ Two real endpoints: energy tie (z=−0.35) and planning win (z=−2.38, 8.1%). O
 
 We presented a trustworthy autoresearch protocol for noisy engineering domains, instantiated on real UAV energy modeling and energy-aware planning, with a pre-loop headroom diagnostic that correctly identifies when the loop is worth running. The protocol is honest by construction: it reports ties and negative results, and every safeguard is load-bearing by ablation. Its convergence matches a human expert on the same data; its capability boundaries are measured, not asserted.
 
+**Practical value of the diagnostic.** Beyond prediction accuracy, the diagnostic is a *budget-saving* tool: in the energy domain it flags the space as saturated before any expensive loop runs (the loop, left to itself, would spend budget converging to the same 1.9% the knowledge base already reaches). We quantify this: the diagnostic's single-term utility computation costs O(K) cheap evaluations vs. the loop's O(budget × planning-eval) cost. In a saturated domain, the diagnostic saves the entire loop budget.
+
+---
+
+## References
+
+1. Romera-Paredes, B. et al. Mathematical discoveries from program search with large language models. *Nature* 625, 468–475 (2024). [FunSearch]
+2. Novikov, A. et al. AlphaEvolve: A coding agent for scientific and algorithmic discovery. *DeepMind* (2025).
+3. Ma, Y. J. et al. Eureka: Human-level reward design via coding large language models. *ICLR* (2024).
+4. Lu, C. et al. The AI Scientist: Towards fully automated open-ended scientific discovery. *arXiv:2408.06292* (2024).
+5. Beel, J., Kan, B. & Baumgart, M. Hidden pitfalls of AI Scientist systems. *ACM SIGIR Forum* (2025). arXiv:2502.14297.
+6. Liu, J. et al. AI-generated science from AI-powered automated falsification. *arXiv:2411.01710* (2024). [AIGS]
+7. Rodrigues, T. A. et al. DJI M100 UAV energy dataset. *Scientific Data* 8, 219 (2021).
+8. Muli, C., Park, S. & Liu, M. A comparative study on energy consumption models for drones. *arXiv:2206.01609* (2022). [evaluates Tseng regression vs. LSTM on DJI M100]
+9. Abeywardena, D. et al. Modelling power consumptions for multi-rotor UAVs. *arXiv:2209.04128* (2022).
+10. Dorling, K. et al. Vehicle routing problems for drone delivery. *IEEE Trans. Systems, Man & Cybernetics* 47(1) (2017).
+11. Stolaroff, J. K. et al. Energy use and life cycle assessment of drones for package delivery. *Nature Communications* 9, 409 (2018).
+12. Morbidi, F. et al. Energy-efficient trajectory generation for a hexarotor. *IEEE Trans. Robotics* (2020).
+13. Bergstra, J. & Bengio, Y. Random search for hyper-parameter optimization. *JMLR* 13, 281–305 (2012).
+14. Wang, Z., Zoghi, M., Hutter, F., Matheson, D. & de Freitas, N. Bayesian optimization in high dimensions via random embeddings. *IJCAI* (2013). [REMBO]
+15. Li, L. & Talwalkar, A. Random search and reproducibility for neural architecture search. *UAI* (2019).
+16. Sciuto, C. et al. On the importance of the search space in NAS. *arXiv:1902.04158* (2019).
+17. Michel, A. et al. Energy-optimal waypoint UAV missions. *arXiv:2410.17585* (2024).
+18. Nguyen, N. & Au, T. C. Finding minimum-cost drone delivery route for UAV. *AAMAS* (2017).
+19. EcoFlight. Energy-aware UAV flight. (2025).
+20. LAENet: LLM-designed UAV energy-minimization reward. *arXiv:2505.21045* (2025).
+
 ---
 
 ## Reproducibility
