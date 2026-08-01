@@ -142,6 +142,11 @@ S("<h2>框架架构:五节点闭环 + 外搜逃逸支路</h2>" +
   f"<div class='apxfig'>{img(pub='框架架构图.png')}</div>" +
   "<div class='cite'>LLM 提议 → Harness 实验 → 冻结评测器 → keep/revert 闭环;撞瓶颈触发外搜;知识库持久化</div>")
 
+# 协议总览(四阶段 + 诊断,论文 Fig1 版)
+S("<h2>协议总览:知识库 → 零拟合证明 refit 必需 → refit 选起点 → 防作弊 loop → 能力边界</h2>" +
+  f"<div class='apxfig'>{img(pub='协议总览_Fig1.png')}</div>" +
+  "<div class='cite'>每阶段带实测数字;右下=头部空间诊断(跑 loop 前预测是否值得,饱和空间跳过省预算)</div>")
+
 S("<h2>过程即贡献:loop 撞瓶颈 → 触发外搜 → 改向 → 诚实记录</h2>" +
   two_col(img(raw=os.path.join(EXP, "loop_process.png")),
           f"<div style='text-align:center'>{img(pub='loop流程图.png')}</div>") +
