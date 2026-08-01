@@ -4,6 +4,7 @@ Paper: *"When Does Guided Search Help? A Trustworthy LLM-Agent Autoresearch Prot
 
 ## Contents
 - `PAPER_DRAFT.md` (in `..`) — full manuscript
+- `../paper_submission/neurips_2026.tex` — NeurIPS 2026 LaTeX source (submission format)
 - `figures/` — all paper figures (18 PNG, publication-quality, `pubstyle.py`)
 - `scripts/` — every experiment script (version-controlled, deterministic)
 - `results/` — every result JSON (from the frozen evaluator `m100_eval.py`)
