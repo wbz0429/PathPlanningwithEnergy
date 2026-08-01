@@ -222,3 +222,24 @@ We presented a trustworthy autoresearch protocol for noisy engineering domains, 
 - Safeguard ablation: `safeguard_ablation.py`
 - Figures: `pubfigs.py` + figure scripts → `experiments/pub/`
 - All numbers trace to committed JSONs; every script is version-controlled.
+
+
+---
+
+## Figure Captions
+
+**Fig. 1 — Protocol overview.** The four-stage trustworthy autoresearch protocol instantiated on real DJI M100 UAV energy modeling and energy-aware path planning, with measured numbers per stage: (i) a knowledge base of 14 published models; (ii) a zero-fit transfer benchmark showing all as-published models fail on the target platform (energy ARE 53-76%), motivating refit; (iii) a refit leaderboard selecting Tseng's polynomial (1.90%) as the loop's start; (iv) the cheat-proof loop; plus the quantified capability boundaries (energy tie, planning win) and the pre-loop headroom diagnostic. (pub/协议总览_Fig1.png)
+
+**Fig. 2 — Knowledge-base leaderboard.** All 14 literature UAV energy models, refit on the frozen M100 evaluator (energy ARE, lower is better). Data-driven models (Tseng 1.90%, linear LIB 1.91%) dominate; all physics forms stay 6.7-7.0% even after refit. (pub/模型知识库排行榜.png)
+
+**Fig. 3 — Zero-fit vs. refit.** As-published (zero-fit) models fail on the target platform (energy ARE 53-76%, predicted power far below measured 522 W), while the same forms after refit reach ~2% -- the measured justification for an explicit refit stage. (pub/as_published_vs_refit.png)
+
+**Fig. 4 — Per-state instantaneous power error.** Mean predicted vs. measured power per climb-rate bin on held-out flights, for our loop, Tseng's polynomial, and textbook BEMT. At climb, BEMT misses by -13% to -20% (-131 W at steep climb) -- the mechanism behind the planning decision; our loop is within +-5% on all climb states. (pub/瞬时功率误差.png)
+
+**Fig. 5 — Safeguard ablations.** Removing any one mechanism makes the loop overclaim: (A) the frozen ruler resists a gaming probe (2.13% > honest 1.99%); (B) the novelty gate demotes 2 of 3 "discoveries" to known prior art; (C) the loop's value is domain-dependent (planning win vs. energy tie). (safeguard_ablation.py + pub/框架消融_局部最优.png)
+
+**Fig. 6 — Effective-complexity law.** Guided-search advantage depends on effective combinatorial complexity, not nominal space size. Two measured endpoints: energy tie (z=-0.35) at low effective dimension, planning win (z=-2.38) in code space; the controlled negative control (nominal K inflation 8->200 -> advantage ~0) is embedded as an inset. Literature markers for context. (pub/两域显著性.png + pub/复杂度规律.png)
+
+**Fig. 7 — Headroom diagnostic: prediction vs. observation.** Each setting plotted at its observed advantage (pp); color = the diagnostic's pre-loop prediction (gray = tie, green = guided-wins). All predictions match observations. (pub/头部空间诊断_预测vs实测.png)
+
+**Fig. 8 — Three-domain diagnostic validation.** Summary of the diagnostic across all tested settings: energy 9 K-levels (tie, gray), planning config-space (tie) vs. cross-space code escape (+8.1%, green), and a synthetic third search domain with controlled effective dimension (low -> tie, high -> guided-wins). Every prediction matches the observed outcome. (pub/头部空间诊断_三域验证.png)
