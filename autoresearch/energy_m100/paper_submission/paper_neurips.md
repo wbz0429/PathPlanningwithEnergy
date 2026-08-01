@@ -154,6 +154,8 @@ Two real endpoints: energy tie (z=−0.35) and planning win (z=−2.38, 8.1%). O
 
 **Cross-space escape as the real lever.** The planning win is the counterpoint: within a saturated config space the loop ties random (3264 ≈ 3135), but the LLM can *write code* (a smoother) that random config search cannot reach. This is the measured, quantitative version of the FunSearch/AlphaEvolve program-space claim, and it is why an LLM agent — which proposes in program space — is valuable precisely when the current space is exhausted.
 
+**Toward a principled answer to "when does guided search help?"** The two findings together resolve a tension in the autoresearch literature. FunSearch and AlphaEvolve operate in program spaces so vast that guided search is clearly necessary; Bergstra and the NAS literature show random search ties guided search in low-effective-dimension spaces. Between these extremes, no prior work quantifies the transition. Our controlled sweep (energy domain, nominal-space inflation does not help) locates the "random-ties" regime precisely, and our cross-space decomposition locates the "guided-wins" regime: the advantage appears exactly when the LLM can escape the current (saturated) space into a higher-complexity one it can propose in. The headroom diagnostic operationalizes this — it reads the spread/synergy signature of the search space to predict, before spending budget, which regime the task is in. This is, to our knowledge, the first measured account of the transition between these regimes, on real hardware data.
+
 ---
 
 ## 8. Conclusion

@@ -1,16 +1,9 @@
-<!DOCTYPE html>
-<html><head><meta charset="utf-8">
-<style>
-body { max-width: 900px; margin: 40px auto; font-family: Georgia, serif; font-size: 13pt; line-height: 1.55; color: #111; }
-h1 { font-size: 22pt; text-align: center; }
-h2 { font-size: 16pt; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-top: 30px; }
-h3 { font-size: 13pt; margin-top: 22px; }
-p { margin: 10px 0; text-align: justify; }
-li { margin: 4px 0; }
-hr { border: none; border-top: 1px solid #ddd; margin: 20px 0; }
-code, pre { font-family: Menlo, monospace; font-size: 10pt; background: #f5f5f5; }
-pre { padding: 8px; overflow-x: auto; }
-</style></head><body><hr/>
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+body{max-width:900px;margin:40px auto;font-family:Georgia,serif;font-size:13pt;line-height:1.55;color:#111}
+h1{font-size:22pt;text-align:center} h2{font-size:16pt;border-bottom:1px solid #ccc;padding-bottom:4px;margin-top:30px}
+h3{font-size:13pt;margin-top:22px} p{margin:10px 0;text-align:justify} li{margin:4px 0}
+hr{border:none;border-top:1px solid #ddd;margin:20px 0} code,pre{font-family:Menlo,monospace;font-size:10pt;background:#f5f5f5}
+pre{padding:8px;overflow-x:auto}</style></head><body><hr/>
 <p>title: &quot;When Does Guided Search Help?&quot;</p>
 <p>subtitle: &quot;A Trustworthy LLM-Agent Autoresearch Protocol for Noisy Engineering Domains, with a Pre-Loop Headroom Diagnostic&quot;</p>
 <p>author: Binzhu Wang</p>
@@ -112,6 +105,7 @@ pre { padding: 8px; overflow-x: auto; }
 <h2>7. Discussion</h2>
 <p><b>Why nominal space size does not predict guided advantage.</b> Bergstra and the NAS results suggest the lever is *effective* dimensionality. Our controlled sweep confirms it directly: inflating the nominal pool from 8 to 200 terms did not make guided search pull ahead, because the real signal concentrates in a handful of terms. The headroom diagnostic operationalizes this — it reads utility spread, not pool size.</p>
 <p><b>Cross-space escape as the real lever.</b> The planning win is the counterpoint: within a saturated config space the loop ties random (3264 ≈ 3135), but the LLM can *write code* (a smoother) that random config search cannot reach. This is the measured, quantitative version of the FunSearch/AlphaEvolve program-space claim, and it is why an LLM agent — which proposes in program space — is valuable precisely when the current space is exhausted.</p>
+<p><b>Toward a principled answer to &quot;when does guided search help?&quot;</b> The two findings together resolve a tension in the autoresearch literature. FunSearch and AlphaEvolve operate in program spaces so vast that guided search is clearly necessary; Bergstra and the NAS literature show random search ties guided search in low-effective-dimension spaces. Between these extremes, no prior work quantifies the transition. Our controlled sweep (energy domain, nominal-space inflation does not help) locates the &quot;random-ties&quot; regime precisely, and our cross-space decomposition locates the &quot;guided-wins&quot; regime: the advantage appears exactly when the LLM can escape the current (saturated) space into a higher-complexity one it can propose in. The headroom diagnostic operationalizes this — it reads the spread/synergy signature of the search space to predict, before spending budget, which regime the task is in. This is, to our knowledge, the first measured account of the transition between these regimes, on real hardware data.</p>
 <hr/>
 <h2>8. Conclusion</h2>
 <p>We presented a trustworthy autoresearch protocol for noisy engineering domains, instantiated on real UAV energy modeling and energy-aware planning, with a pre-loop headroom diagnostic that correctly identifies when the loop is worth running. The protocol is honest by construction: it reports ties and negative results, and every safeguard is load-bearing by ablation. Its convergence matches a human expert on the same data; its capability boundaries are measured, not asserted.</p>
