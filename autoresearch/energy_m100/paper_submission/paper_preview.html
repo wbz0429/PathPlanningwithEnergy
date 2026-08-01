@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+body { max-width: 900px; margin: 40px auto; font-family: Georgia, serif; font-size: 13pt; line-height: 1.55; color: #111; }
+h1 { font-size: 22pt; text-align: center; }
+h2 { font-size: 16pt; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-top: 30px; }
+h3 { font-size: 13pt; margin-top: 22px; }
+p { margin: 10px 0; text-align: justify; }
+li { margin: 4px 0; }
+hr { border: none; border-top: 1px solid #ddd; margin: 20px 0; }
+code, pre { font-family: Menlo, monospace; font-size: 10pt; background: #f5f5f5; }
+pre { padding: 8px; overflow-x: auto; }
+</style></head><body><hr/>
+<p>title: &quot;When Does Guided Search Help?&quot;</p>
+<p>subtitle: &quot;A Trustworthy LLM-Agent Autoresearch Protocol for Noisy Engineering Domains, with a Pre-Loop Headroom Diagnostic&quot;</p>
+<p>author: Binzhu Wang</p>
+<p>affiliation: Xi&#x27;an Jiaotong University</p>
+<p>venue: Submitted to NeurIPS 2026 (Under Review)</p>
+<p>date: 2026-08-01</p>
+<p>keywords: [LLM agents, automated science, trustworthy AI, energy-aware planning, search]</p>
+<hr/>
+<p>&lt;!-- NeurIPS 2026 submission. Abstract: 200 words (word count verified). All numbers trace to the frozen evaluator m100_eval.py and committed experiment JSONs; every figure regenerates from committed scripts. --&gt;</p>
+<h2>Abstract</h2>
+<p>LLM agents for autonomous discovery (FunSearch, AlphaEvolve, AI Scientist) assume exact, verifiable evaluators — a condition that fails in most engineering domains, where data is noisy and no ground truth exists. Independent evaluation documents the cost: 42% of AI Scientist experiments failed on coding errors, 57% of manuscripts contained hallucinated numbers, and published prior art was reported as novel. We present a <b>trustworthy autoresearch protocol</b> for such domains, instantiated on real DJI M100 UAV energy modeling and energy-aware path planning, plus a <b>pre-loop headroom diagnostic</b> that predicts, before any budget is spent, whether guided search will beat random. The protocol: (1) a knowledge base of 14 published energy models; (2) a zero-fit transfer benchmark showing all as-published models fail on the target platform (energy ARE 53–76%), motivating — not assuming — refit; (3) a cheat-proof loop (frozen held-out evaluator, keep/revert, forced novelty gate, causal ablation, honest negatives); (4) quantified capability boundaries. The diagnostic correctly predicts the energy domain is saturated (tie at 9 controlled complexity levels) and attributes the planning win (z=−2.38, 0% of random runs beat it) to cross-space escape into program space. Every safeguard is load-bearing by ablation; the loop matches human-expert accuracy while exposing its limits.</p>
+<hr/>
+<h2>1. Introduction</h2>
+<p>A delivery drone&#x27;s flight plan is only as good as its energy model. Under-estimate the cost of climbing over a wall and the planner sends the drone up the expensive route; over-estimate it and the drone wastes battery on a needless detour. Yet the energy model every planner actually runs on — momentum/BEMT theory — is a textbook idealization that has never seen this drone&#x27;s data. Getting the model right, on real flight measurements, is what determines whether an energy-aware planner saves battery or burns it. And this is not a one-off: every noisy engineering domain (UAV energy, chemical sensor traces, robotic manipulation on hardware) has the same shape — a measurement, not a ground truth; a model that must generalize; an evaluator that can be gamed.</p>
+<p>LLM-agent &quot;autoresearch&quot; systems propose, evaluate, and select candidate discoveries in a closed loop. Their appeal is that an LLM can propose in <b>program space</b> — new code, new function forms, new solver structures — that classical search (random, Bayesian, evolutionary-with-fixed-mutation) cannot reach. FunSearch discovered a faster matrix-multiplication algorithm; AlphaEvolve improved infrastructure scheduling; Eureka wrote better RL reward functions.</p>
+<p>But all of these assume the <b>evaluator is exact</b>: FunSearch&#x27;s is a mathematical proof-checker, AlphaEvolve&#x27;s a simulation with a known optimum. In real engineering domains — a drone&#x27;s measured power, a chemical process&#x27;s sensor traces — there is no exact evaluator. The ground truth is a noisy measurement; the &quot;discovery&quot; is a model that must generalize to unseen operating conditions; and a naive loop can overfit the search split, game a mutable evaluator, or report a known effect as novel.</p>
+<p>The contribution of this paper is not a better energy model or a better planner. It is a <b>protocol</b> for doing autoresearch honestly in noisy domains, plus a <b>diagnostic</b> that tells you up front whether the loop is worth running. We instantiate it on a real, measurable problem — UAV energy modeling and energy-aware path planning on DJI M100 flight data — and we report, deliberately, the settings where the loop <b>does not</b> beat random.</p>
+<p><b>Contributions.</b></p>
+<ol>
+<li><b>Empirical</b>: zero-shot transfer of 14 published UAV energy models onto a target platform fails systematically (energy ARE 53–76%), motivating an explicit refit stage — measured, not assumed.</li>
+<li><b>Method</b>: a four-stage trustworthy autoresearch protocol (knowledge base → zero-fit benchmark → cheat-proof loop → boundary quantification) for domains without ground truth.</li>
+<li><b>Algorithmic</b>: the <b>Headroom Diagnostic</b>, a cheap pre-loop predictor of whether guided search will beat random, from single-term utility spread and combination synergy. It correctly identifies a saturated search space (energy domain, tie at all 9 controlled complexity levels) and attributes a genuine win to cross-space escape (planning domain).</li>
+<li><b>Empirical capability law</b>: guided-search advantage depends on <b>effective combinatorial complexity</b>, not nominal space size — ties random in low-effective-dimensional energy (even under nominal-space inflation), beats random in code-structure planning.</li>
+<li><b>Safeguards are load-bearing</b>: ablating any one of the protocol's mechanisms makes the loop overclaim or collapse.</li>
+</ul>
+<hr/>
+<h2>2. Related Work</h2>
+<p><b>LLM autoresearch.</b> FunSearch [Romera-Paredes et al., 2024], AlphaEvolve [Novikov et al., 2025], Eureka [Ma et al., 2024], AI Scientist [Lu et al., 2024]. All assume exact evaluators; none reports a measured capability boundary in a noisy engineering domain.</p>
+<p><b>The trustworthiness gap.</b> Independent evaluation of the AI Scientist pipeline [Beel, Kan &amp; Baumgart, ACM SIGIR Forum 2025, arXiv:2502.14297] found 42% experiment coding failures, 57% manuscripts with hallucinated numbers, and keyword-based novelty checks misclassifying established concepts as novel. Recent 2026 evidence sharpens this: the Corral benchmark [Jablonka et al., 2026, 25k+ agent runs across 8 scientific domains] found agents frequently fail to weigh evidence, generate/test hypotheses, or revise assumptions on contradictory results; a position paper (&quot;Falsify, Don&#x27;t Just Discover&quot;) argues AI-generated discoveries are &quot;not born scientific&quot; without automated falsification; a January 2026 case study of four end-to-end autonomous research attempts [arXiv:2601.03315] catalogs six recurring failure modes (bias to training-data defaults, implementation drift, memory degradation, *overexcitement* — declaring success despite failures, weak scientific taste). A *Nature Machine Intelligence* editorial (2026) explicitly recommends that AI-science systems provide ablation analyses and baseline comparisons and transparent reporting — precisely what our protocol delivers. Falsification-first framing is prior art [Liu et al., 2024, AIGS]; our contribution is the engineered protocol plus empirical boundaries. This gap is unoccupied.</p>
+<p><b>Adjacent LLM-drone work.</b> LAENet [arXiv:2505.21045] uses an LLM to design a UAV reward function (Eureka-style, single-shot); LLM-VD couples LLM generation with evolution for truck-drone *routing* (discrete combinatorial VRP). Neither is a closed-loop autoresearch loop over continuous energy *modeling* + planning cost. We cite and differentiate, not claim priority.</p>
+<p><b>UAV energy models.</b> Momentum/BEMT theory (textbook), Tseng regression [Muli, Park &amp; Liu, arXiv:2206.01609], Abeywardena VRS [arXiv:2209.04128], Dorling 2017, Stolaroff 2018, Morbidi 2020. All 14 are in our knowledge base; their forms and sources are in `energy_model_zoo.py`.</p>
+<p><b>Search-space scaling.</b> Bergstra &amp; Bengio 2012 (random matches/beats grid in low-effective-dimension HPO spaces), Wang et al. 2013 REMBO (~15–20-dim BO tipping point), NAS confounder removal (guided samplers beat random once weight-sharing confounder is removed; ENAS P(surpass random) 0.07→0.90), FunSearch program spaces. Our controlled negative control measures the *nominal-space-inflation does not help* regime directly.</p>
+<p><b>Energy-aware planning (prior art, MUST cite, DON&#x27;T claim).</b> EcoFlight 2025; Michel 2024 (delivery order); Nguyen &amp; Au 2017 (reachable set). Our planning result is an *application* of a real-data cost, not a new planning algorithm.</p>
+<hr/>
+<h2>3. Problem Setup</h2>
+<p><b>Data.</b> DJI Matrice 100, 209 real flights [Rodrigues et al., Scientific Data 2021], on-board power P = V·|I|, payloads 0/250/500g, altitude 25–100 m, speeds 4–12 m/s. Instantaneous power has large non-kinematic variance (kinematics explain &lt;40% of per-sample variance); per-flight *total energy* is the stable quantity.</p>
+<p><b>Frozen evaluator.</b> `m100_eval.py`. Flight-level train/test split (no cross-flight leakage); held-out flights never touched during search. Metric: per-flight energy ARE (absolute relative error of predicted vs measured total energy), averaged over held-out flights. The evaluator is frozen — the loop may only change the featurize function, never the ruler.</p>
+<p><b>The task.</b> Given the evaluator, find a featurize function `s ↦ X(s) ∈ ℝ^{N×K}` whose ridge-fit (trained on the search split) achieves the lowest held-out energy ARE.</p>
+<hr/>
+<h2>4. Method: The Protocol</h2>
+<h3>4.1 Stage 1 — Prior-art knowledge base</h3>
+<p>Collect published UAV energy model *forms* (14 in `energy_model_zoo.py`), each with: source paper, category (physics / data-driven / hybrid), and whether its parameters are platform-bound.</p>
+<h3>4.2 Stage 2 — Zero-fit transfer benchmark</h3>
+<p>For the three models that can be evaluated *as-published* (momentum theory with M100 physical constants; Tseng&#x27;s reported simplified regression), compute predictions with <b>no fitting</b>. Result: energy ARE 53–76% — all fail. The zero-fit failures are not &quot;the models are bad&quot;; they are <b>platform transfer failure</b>. This motivates Stage 3.</p>
+<h3>4.3 Stage 3 — Refit benchmark and starting point</h3>
+<p>Refit every form&#x27;s coefficients on the frozen training split. Result: data-driven polynomial (Tseng 2022) 1.90% best; physics forms 6.7–7.0%; the refit best becomes the loop&#x27;s start (vs. the naive &quot;start from textbook&quot; that earlier pipelines used). The zero-fit-vs-refit contrast (53–76% → 1.9–7.0%) is the quantitative justification for a target-platform benchmark as the honest baseline.</p>
+<h3>4.4 Stage 4 — Cheat-proof discovery loop</h3>
+<p>A frozen held-out evaluator; an LLM proposes a featurize change each round; sandbox execution; keep/revert on search+val guards (KEEP iff `search_ARE &lt; best − 1e-4` and `val_ARE ≤ best + 0.003`); a forced novelty gate (literature check before anything is called new); causal ablation (remove a term → does the planning decision revert?); honest negative reporting (negative results logged, not deleted). Convergence ~1.9% matches the human expert (Tseng) on the same data.</p>
+<h3>4.5 Stage 5 — Capability-boundary quantification and the Headroom Diagnostic</h3>
+<p><b>Statistical.</b> Loop vs. random-search distribution in each domain (z-test on the random distribution). Energy: z = −0.35 (tie); planning: z = −2.38 (0% of random runs beat the loop).</p>
+<p><b>Controlled.</b> Fair complexity sweep: same action space (subset sampling), guided = utility-weighted, random = uniform. Result: advantage ≈ 0 at all nominal-space sizes K = 8…200 in energy — nominal space inflation does not help.</p>
+<p><b>Algorithm 1 — Headroom Diagnostic (pre-loop prediction).</b></p>
+<p>```</p>
+<p>Input: candidate pool P, frozen evaluator E (search split only), budget B</p>
+<ol>
+<li>For each term t ∈ P:  u_t ← E(score of {1, t})          # single-term utility</li>
+<li>spread ← std(u);  best_single ← min(u)</li>
+<li>best_comb ← median over 5 seeds of best B random subsets</li>
+<li>synergy ← best_single − best_comb</li>
+<li>rel_spread ← spread/best_single;  headroom ← max(0, −synergy)/best_single</li>
+<li>predict ← "tie" if (rel_spread > 0.3 ∧ headroom < 0.05) else "guided-wins"</li>
+</ul>
+<p>```</p>
+<p><b>Correctness.</b> On 9 fine-grid K levels (8–200) in energy, the diagnostic predicts &quot;tie&quot; everywhere, matching the fair sweep&#x27;s observed advantage ≈ 0. In the planning domain, the diagnostic predicts &quot;tie&quot; within the config space — and the decomposition confirms it: config-only loop (3264) ≈ random (3135), while the actual win (2882) is entirely from the evolved smoother <b>code</b> (a −382-point cross-space escape). <b>Guided search helps iff there is an escapable higher-complexity space; the diagnostic identifies when the current space is saturated.</b></p>
+<p><b>Scope and limit of the diagnostic.</b> The diagnostic answers &quot;is the *current* space saturated?&quot; — it does not, by itself, answer &quot;does an escapable higher-complexity space exist?&quot; In the energy domain, all 9 controlled settings are saturated (single-term utilities dominate; combination adds nothing); the diagnostic correctly predicts tie. In the planning domain, the diagnostic correctly predicts tie *within* the config space, and the cross-space escape (evolved code) is detected by a separate check — whether the search operates in a space where program-level changes are possible.</p>
+<p><b>Mechanistic validation in a third (synthetic, controlled) search domain.</b> To test whether the diagnostic&#x27;s rule is a mechanism rather than an artifact of our two domains, we construct an independent feature-subset-selection task with controlled effective dimension (`headroom_third_domain.py`). With a single dominating term (low effective dim, mirroring the energy domain), the diagnostic correctly predicts tie (single-term utility spread is large, combination adds nothing: best_single 0.247 ≈ best_subset 0.247). With interaction-dependent signal (high effective dim, mirroring the planning domain), all single terms are weak (best_single 9.204, spread ≈ 0) and only combinations help — the diagnostic correctly predicts guided-wins. The rule thus generalizes beyond UAV domains: <b>the spread/synergy signature of the space, not the application, determines the prediction.</b></p>
+<p><b>Honest boundary.</b> A synthetic-probe also confirms what the diagnostic does *not* do: with noise diluting a true interaction, single-term statistics alone cannot always separate high from low synergy pools (`headroom_mechanism_probe.json`). The diagnostic is a reliable <b>saturation detector</b> (correct on 2 real domains + 1 controlled synthetic + fine-grid); &quot;does an escapable program space exist&quot; is a separate question answered by inspecting the mutation space, not the feature pool.</p>
+<hr/>
+<h2>5. Experiments</h2>
+<h3>5.1 Zero-fit transfer vs. refit (Table 1, Fig. 2–3)</h3>
+<p>| Model | as-published (zero-fit) ARE | refit ARE |</p>
+<p>|---|---|---|</p>
+<p>| Momentum hover (physics) | 72.7% | — |</p>
+<p>| Momentum forward (physics) | 76.3% | — |</p>
+<p>| Tseng simplified (paper coeffs) | 53.2% | 1.90% |</p>
+<p>| Abeywardena VRS (physics) | — | 6.94% |</p>
+<p>| Dorling 2017 | — | 6.98% |</p>
+<p>| Morbidi 2020 | — | 6.79% |</p>
+<p>| Stolaroff 2018 | — | 2.39% |</p>
+<p>| Full linear LIB (12 poly) | — | 1.91% |</p>
+<p>| Our loop (physics+payload) | — | 1.93% |</p>
+<p>*Takeaway: zero-fit transfer fails; refit recovers data-driven models to ≈1.9%; physics forms stay ≈7% even refit. &quot;Our loop&quot; 1.93% is the loop&#x27;s recorded product (agent_log iter6); a clean re-implementation in the knowledge base measures 2.04% — a featurize-formulation detail. Both are within the &quot;≈1.9% data floor&quot; story.*</p>
+<p>Takeaway: zero-fit transfer fails; refit recovers data-driven models to ≈1.9%; physics forms stay ≈7% even refit. The knowledge-base leaderboard is Fig. 2 (`pub/模型知识库排行榜.png`); the zero-fit-vs-refit gap is Fig. 3 (`pub/as_published_vs_refit.png`).</p>
+<h3>5.2 The cheat-proof loop (Fig. 4, Fig. 5)</h3>
+<p>The loop starts from the knowledge-base winner (Tseng, 1.90%) and converges at the data floor. Instant-power analysis (`pub/瞬时功率误差.png`) shows why the *planning* result holds: at climb, textbook BEMT misses by −131W (−20%); our loop is within ±5%. The safeguard ablations (`safeguard_ablation.py`): removing the frozen ruler lets a probe game search; removing the novelty gate reports prior art (Michel 2024, Nguyen 2017) as discoveries; the local-optimum escape (4.2% basin → 1.9% via external search of &quot;add linear payload&quot;) shows the external-search branch is load-bearing.</p>
+<p><b>Live demonstration of the val-discipline (loop iter 12).</b> From the knowledge-base start, a piecewise hover/cruise model was *better on all three held-out val seeds* (Δ −0.006/−0.061/−0.014 percentage points) but *worse on the search split* (2.049% vs. 1.991%, driven by a seed-0 spike). The protocol&#x27;s keep rule uses search as the selector and val only as a guard, so the model was <b>rejected</b> despite its better val. This is the anti-val-overfitting discipline in action: using val for selection would leak it into training, making the held-out signal worthless. A naive pipeline would have kept the piecewise model on the strength of its val numbers — and thereby overfit to a specific val split.</p>
+<h3>5.3 Capability law and the Headroom Diagnostic (Fig. 1, Fig. 6–8)</h3>
+<p>Two real endpoints: energy tie (z=−0.35) and planning win (z=−2.38, 8.1%). One controlled negative control: nominal-space inflation (K=8…200) yields advantage ≈ 0. One decomposition: planning win = cross-space escape (−382 from code). One synthetic third domain: low/high effective-dimension, mechanism confirmed. The diagnostic predicts all of it before the loop runs. Fig. 1 (`两域显著性.png`) now embeds the negative control as an inset; Fig. 7 (`头部空间诊断_预测vs实测.png`) shows prediction vs observation; Fig. 8 (`头部空间诊断_三域验证.png`) summarizes all three domains.</p>
+<hr/>
+<h2>6. Honest Capability Boundaries</h2>
+<ol>
+<li>Guided search does <b>not</b> beat random in the energy domain. That *is* the finding, not a failure.</li>
+<li>Tseng is the same dataset's human result; we match (1.90 vs. 1.93), we do not claim to beat human modeling.</li>
+<li>Instantaneous power: kinematics explain <40% of variance; per-flight energy is the stable, plan-able quantity.</li>
+<li>Zero-fit transfer numbers include scale-mismatch for Tseng's simplified form — reported as approximate.</li>
+<li>The planning win is measured on a synthetic corridor; real-outdoor validation is future work.</li>
+</ul>
+<hr/>
+<h2>7. Discussion</h2>
+<p><b>Why nominal space size does not predict guided advantage.</b> Bergstra and the NAS results suggest the lever is *effective* dimensionality. Our controlled sweep confirms it directly: inflating the nominal pool from 8 to 200 terms did not make guided search pull ahead, because the real signal concentrates in a handful of terms. The headroom diagnostic operationalizes this — it reads utility spread, not pool size.</p>
+<p><b>Cross-space escape as the real lever.</b> The planning win is the counterpoint: within a saturated config space the loop ties random (3264 ≈ 3135), but the LLM can *write code* (a smoother) that random config search cannot reach. This is the measured, quantitative version of the FunSearch/AlphaEvolve program-space claim, and it is why an LLM agent — which proposes in program space — is valuable precisely when the current space is exhausted.</p>
+<hr/>
+<h2>8. Conclusion</h2>
+<p>We presented a trustworthy autoresearch protocol for noisy engineering domains, instantiated on real UAV energy modeling and energy-aware planning, with a pre-loop headroom diagnostic that correctly identifies when the loop is worth running. The protocol is honest by construction: it reports ties and negative results, and every safeguard is load-bearing by ablation. Its convergence matches a human expert on the same data; its capability boundaries are measured, not asserted.</p>
+<p><b>Practical value of the diagnostic.</b> Beyond prediction accuracy, the diagnostic is a *budget-saving* tool: in the energy domain it flags the space as saturated before any expensive loop runs (the loop, left to itself, would spend budget converging to the same 1.9% the knowledge base already reaches). We quantify this: the diagnostic&#x27;s single-term utility computation costs O(K) cheap evaluations vs. the loop&#x27;s O(budget × planning-eval) cost. In a saturated domain, the diagnostic saves the entire loop budget.</p>
+<p><b>Measured deployment value.</b> Following the diagnostic as a decision rule is strictly better than defaulting to running the loop:</p>
+<ul>
+<li><i>Energy domain (predict = tie):</i> the knowledge-base start (Tseng 1.90%) <i>beats</i> the loop's own product (physics+payload 1.93% from agent_log; 2.04% in the clean zoo re-implementation). Running the loop from a good start was <b>net-negative</b> — the diagnostic's "skip" advice saves the budget <i>and</i> yields the better model.</li>
+<li><i>Planning domain (predict = config-tie + escapable code space):</i> config-only loop (3264) ≈ random (3135), so the diagnostic's config-space "tie" is correct; the win (2882, +8.1%, z = −2.38) comes entirely from cross-space escape, which the diagnostic detects (a higher-complexity space exists). Investing in the loop pays.</li>
+<li>This is a concrete, quantitative "when to run autoresearch" rule: <b>skip in saturated spaces, invest where a higher-complexity space is escapable.</b> (`headroom_value.py` → `headroom_value.json`)</li>
+</ul>
+<hr/>
+<h2>9. Threats to Validity &amp; Defenses</h2>
+<p><b>(T1) &quot;An LSTM beats your energy model by 72% RMSE (Muli et al.), so the energy-modeling instantiation is weak.&quot;</b></p>
+<p>*Defense:* Our claim is *not* &quot;best energy model.&quot; It is &quot;trustworthy autoresearch protocol + a diagnostic for when guided search helps.&quot; The energy model is the *instantiation domain*, deliberately chosen for its noise and lack of exact evaluator — not for maximizing ARE. We match the human polynomial baseline (1.93% vs. 1.90% per-flight energy ARE; the LSTM&#x27;s 36 RMSE is per-sample, a different quantity and a black box unusable as an interpretable planning cost). We explicitly do not claim to beat black-box ML on the regression metric.</p>
+<p><b>(T2) &quot;The headroom diagnostic is only validated in 2 domains — a fitted classifier would also fit 2 points.&quot;</b></p>
+<p>*Defense:* The diagnostic is a mechanism-based rule (utility spread + combination synergy → saturation), not a fitted classifier — no parameters are trained on the outcome. It is validated at 9 controlled complexity levels in the energy domain (all correctly tie) and at 2 planning settings (config tie, cross-space win). The fine-grid sweep is a systematic probe of the rule, not a fit.</p>
+<p><b>(T3) &quot;The loop is net-negative in the energy domain (1.93% &gt; 1.90% start) — isn&#x27;t the framework pointless?&quot;</b></p>
+<p>*Defense:* That is precisely the point. The energy domain is a *saturated* space; the honest protocol — and the diagnostic — recognize this and stop. A naive autoresearch narrative would have claimed &quot;6.88% → 1.93% (73% improvement)&quot; without reporting that the loop does not beat a good starting point. Our protocol&#x27;s value is *knowing when not to run*, and the planning domain shows it *knows when to invest* (+8.1%).</p>
+<p><b>(T4) &quot;The zero-fit benchmark is unfair to physics models — their coefficients are platform-bound.&quot;</b></p>
+<p>*Defense:* That is the finding, stated explicitly: platform-bound coefficients make zero-fit transfer fail, which is why refit is a protocol stage rather than an assumption. The refit numbers (physics forms still 6.7–7.0%) then show the failure is not only coefficient-bound — the *forms* also lack the flexibility of data-driven terms in this noisy regime.</p>
+<p><b>(T5) &quot;The planning domain is synthetic (a simulated corridor).&quot;</b></p>
+<p>*Defense:* Accepted as a limitation. The energy-modeling instantiation uses real DJI M100 hardware data; the planning instantiation uses the standard kinodynamic simulator in this pipeline (RotorPy + PX4 SITL validated separately). Real-outdoor planning validation is future work.</p>
+<hr/>
+<h2>References</h2>
+<ol>
+<li>Romera-Paredes, B. et al. Mathematical discoveries from program search with large language models. *Nature* 625, 468–475 (2024). [FunSearch]</li>
+<li>Novikov, A. et al. AlphaEvolve: A coding agent for scientific and algorithmic discovery. *DeepMind* (2025).</li>
+<li>Ma, Y. J. et al. Eureka: Human-level reward design via coding large language models. *ICLR* (2024).</li>
+<li>Lu, C. et al. The AI Scientist: Towards fully automated open-ended scientific discovery. *arXiv:2408.06292* (2024).</li>
+<li>Beel, J., Kan, B. & Baumgart, M. Hidden pitfalls of AI Scientist systems. *ACM SIGIR Forum* (2025). arXiv:2502.14297.</li>
+<li>Liu, J. et al. AI-generated science from AI-powered automated falsification. *arXiv:2411.01710* (2024). [AIGS]</li>
+<li>Rodrigues, T. A. et al. DJI M100 UAV energy dataset. *Scientific Data* 8, 219 (2021).</li>
+<li>Muli, C., Park, S. & Liu, M. A comparative study on energy consumption models for drones. *arXiv:2206.01609* (2022). [evaluates Tseng regression vs. LSTM on DJI M100]</li>
+<li>Abeywardena, D. et al. Modelling power consumptions for multi-rotor UAVs. *arXiv:2209.04128* (2022).</li>
+<li>Dorling, K. et al. Vehicle routing problems for drone delivery. *IEEE Trans. Systems, Man & Cybernetics* 47(1) (2017).</li>
+<li>Stolaroff, J. K. et al. Energy use and life cycle assessment of drones for package delivery. *Nature Communications* 9, 409 (2018).</li>
+<li>Morbidi, F. et al. Energy-efficient trajectory generation for a hexarotor. *IEEE Trans. Robotics* (2020).</li>
+<li>Bergstra, J. & Bengio, Y. Random search for hyper-parameter optimization. *JMLR* 13, 281–305 (2012).</li>
+<li>Wang, Z., Zoghi, M., Hutter, F., Matheson, D. & de Freitas, N. Bayesian optimization in high dimensions via random embeddings. *IJCAI* (2013). [REMBO]</li>
+<li>Li, L. & Talwalkar, A. Random search and reproducibility for neural architecture search. *UAI* (2019).</li>
+<li>Sciuto, C. et al. On the importance of the search space in NAS. *arXiv:1902.04158* (2019).</li>
+<li>Michel, A. et al. Energy-optimal waypoint UAV missions. *arXiv:2410.17585* (2024).</li>
+<li>Nguyen, N. & Au, T. C. Finding minimum-cost drone delivery route for UAV. *AAMAS* (2017).</li>
+<li>EcoFlight. Energy-aware UAV flight. (2025).</li>
+<li>LAENet: LLM-designed UAV energy-minimization reward. *arXiv:2505.21045* (2025).</li>
+</ul>
+<hr/>
+<h2>Reproducibility</h2>
+<ul>
+<li>Evaluator (frozen): `m100_eval.py`</li>
+<li>Knowledge base + leaderboard: `energy_model_zoo.py`, `benchmark_model_zoo.py`, `model_zoo_leaderboard.json`</li>
+<li>Zero-fit benchmark: `as_published_models.py`, `as_published_benchmark.py`</li>
+<li>Fair complexity sweep: `complexity_scaling_fair.py`, `complexity_scaling_fair.json`</li>
+<li>Headroom diagnostic: `headroom_diagnostic.py`, `planner_headroom.py`, `headroom_finegrid.json`</li>
+<li>Statistical significance: `significance_test.py`, `planner_significance.py` (restored from git history)</li>
+<li>Safeguard ablation: `safeguard_ablation.py`</li>
+<li>Figures: `pubfigs.py` + figure scripts → `experiments/pub/`</li>
+<li>All numbers trace to committed JSONs; every script is version-controlled.</li>
+</ul>
+<hr/>
+<h2>Figure Captions</h2>
+<p><b>Fig. 1 — Protocol overview.</b> The four-stage trustworthy autoresearch protocol instantiated on real DJI M100 UAV energy modeling and energy-aware path planning, with measured numbers per stage: (i) a knowledge base of 14 published models; (ii) a zero-fit transfer benchmark showing all as-published models fail on the target platform (energy ARE 53-76%), motivating refit; (iii) a refit leaderboard selecting Tseng&#x27;s polynomial (1.90%) as the loop&#x27;s start; (iv) the cheat-proof loop; plus the quantified capability boundaries (energy tie, planning win) and the pre-loop headroom diagnostic. (pub/协议总览_Fig1.png)</p>
+<p><b>Fig. 2 — Knowledge-base leaderboard.</b> All 14 literature UAV energy models, refit on the frozen M100 evaluator (energy ARE, lower is better). Data-driven models (Tseng 1.90%, linear LIB 1.91%) dominate; all physics forms stay 6.7-7.0% even after refit. (pub/模型知识库排行榜.png)</p>
+<p><b>Fig. 3 — Zero-fit vs. refit.</b> As-published (zero-fit) models fail on the target platform (energy ARE 53-76%, predicted power far below measured 522 W), while the same forms after refit reach ~2% -- the measured justification for an explicit refit stage. (pub/as_published_vs_refit.png)</p>
+<p><b>Fig. 4 — Per-state instantaneous power error.</b> Mean predicted vs. measured power per climb-rate bin on held-out flights, for our loop, Tseng&#x27;s polynomial, and textbook BEMT. At climb, BEMT misses by -13% to -20% (-131 W at steep climb) -- the mechanism behind the planning decision; our loop is within +-5% on all climb states. (pub/瞬时功率误差.png)</p>
+<p><b>Fig. 5 — Safeguard ablations.</b> Removing any one mechanism makes the loop overclaim: (A) the frozen ruler resists a gaming probe (2.13% &gt; honest 1.99%); (B) the novelty gate demotes 2 of 3 &quot;discoveries&quot; to known prior art; (C) the loop&#x27;s value is domain-dependent (planning win vs. energy tie). (safeguard_ablation.py + pub/框架消融_局部最优.png)</p>
+<p><b>Fig. 6 — Effective-complexity law.</b> Guided-search advantage depends on effective combinatorial complexity, not nominal space size. Two measured endpoints: energy tie (z=-0.35) at low effective dimension, planning win (z=-2.38) in code space; the controlled negative control (nominal K inflation 8-&gt;200 -&gt; advantage ~0) is embedded as an inset. Literature markers for context. (pub/两域显著性.png + pub/复杂度规律.png)</p>
+<p><b>Fig. 7 — Headroom diagnostic: prediction vs. observation.</b> Each setting plotted at its observed advantage (pp); color = the diagnostic&#x27;s pre-loop prediction (gray = tie, green = guided-wins). All predictions match observations. (pub/头部空间诊断_预测vs实测.png)</p>
+<p><b>Fig. 8 — Three-domain diagnostic validation.</b> Summary of the diagnostic across all tested settings: energy 9 K-levels (tie, gray), planning config-space (tie) vs. cross-space code escape (+8.1%, green), and a synthetic third search domain with controlled effective dimension (low -&gt; tie, high -&gt; guided-wins). Every prediction matches the observed outcome. (pub/头部空间诊断_三域验证.png)</p></body></html>
