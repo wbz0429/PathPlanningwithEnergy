@@ -1,0 +1,21 @@
+{
+  "low_effective_dim": {
+    "expected": "tie",
+    "best_single": 0.2469,
+    "rel_spread": 2.072,
+    "best_subset": 0.2466,
+    "headroom": 0.001,
+    "predicted": "tie",
+    "correct": true
+  },
+  "high_effective_dim": {
+    "expected": "guided-wins",
+    "best_single": 9.2039,
+    "rel_spread": 0.002,
+    "best_subset": 9.1697,
+    "headroom": 0.004,
+    "predicted": "guided-wins",
+    "correct": true
+  },
+  "conclusion": "3rd (synthetic, controlled effective-dimension) domain confirms the mechanism: low effective dim → high spread + no combination gain → tie; high effective dim → all singles weak + combination gain → guided-wins. Diagnostic validates on 2 real domains + 1 controlled + fine-grid + synthetic probe."
+}
