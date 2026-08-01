@@ -127,7 +127,7 @@ The loop starts from the knowledge-base winner (Tseng, 1.90%) and converges at t
 
 ### 5.3 Capability law and the Headroom Diagnostic (Fig 1, 6–7)
 
-Two real endpoints: energy tie (z=−0.35) and planning win (z=−2.38, 8.1%). One controlled negative control: nominal-space inflation (K=8…200) yields advantage ≈ 0. One decomposition: planning win = cross-space escape (−382 from code). The diagnostic predicts all of it before the loop runs. Fig 1 (`两域显著性.png`) now embeds the negative control as an inset; Fig 7 (`头部空间诊断_预测vs实测.png`) shows prediction vs observation.
+Two real endpoints: energy tie (z=−0.35) and planning win (z=−2.38, 8.1%). One controlled negative control: nominal-space inflation (K=8…200) yields advantage ≈ 0. One decomposition: planning win = cross-space escape (−382 from code). One synthetic third domain: low/high effective-dimension, mechanism confirmed. The diagnostic predicts all of it before the loop runs. Fig 1 (`两域显著性.png`) now embeds the negative control as an inset; Fig 7 (`头部空间诊断_预测vs实测.png`) shows prediction vs observation; Fig 8 (`头部空间诊断_三域验证.png`) summarizes all three domains.
 
 ---
 
