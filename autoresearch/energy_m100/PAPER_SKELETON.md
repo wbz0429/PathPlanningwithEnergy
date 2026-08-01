@@ -74,7 +74,7 @@ Input: candidate pool P, frozen evaluator E (search split only), budget B
 5. rel_spread ← spread / best_single;  headroom ← max(0,−synergy)/best_single
 6. predict ← "tie" if (rel_spread > 0.3 ∧ headroom < 0.05) else "guided-wins"
 ```
-Claim: the diagnostic predicts, before running the loop, whether guided search beats random. Empirically correct at all 5 controlled K levels in energy (tie where adv≈0, guided-wins at K=110 where adv=+0.13pp) and, with the planning validation, on the code-structure domain.
+Claim: the diagnostic predicts, before running the loop, whether guided search beats random. Empirically correct at all 9 fine-grid K levels in energy (8–200, all predict TIE, matching fair-sweep observed advantage ≈ 0 everywhere) and, in the planning domain, correctly identifies the config space as saturated (tie) while the win is attributed to cross-space escape into program space.
 
 **Refinement (cross-space escape) — measured decomposition in the planning domain:**
 | Setting | score | |
