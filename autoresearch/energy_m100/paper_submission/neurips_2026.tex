@@ -278,6 +278,16 @@ single dominating term (low effective dim), the diagnostic correctly predicts ti
 interaction-dependent signal (high effective dim), it correctly predicts guided-wins. The
 rule generalizes beyond UAV domains.
 
+\textbf{Honest boundary.} A synthetic probe confirms what the diagnostic does \emph{not}
+do: with noise diluting a true interaction, single-term statistics alone cannot always
+separate high from low synergy pools. Calibration across all settings shows the
+\emph{magnitude} of the headroom score is small and overlapping (energy-domain
+0.000--0.048; synthetic low-dim 0.001 vs.\ high-dim 0.004). The diagnostic is a reliable
+\textbf{direction} predictor (tie vs.\ guided-wins, correct on 2 real domains + 1
+controlled synthetic + fine-grid), not a \textbf{magnitude} predictor of how much guided
+search wins. ``Does an escapable program space exist'' is a separate question answered by
+inspecting the mutation space, not the feature pool.
+
 % =============================================================================
 \section{Experiments}
 \label{sec:exp}
