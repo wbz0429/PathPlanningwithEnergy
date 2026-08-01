@@ -1,5 +1,5 @@
 {
-  "iteration": 12,
+  "iteration": 13,
   "phase": "m100_energy_model",
   "best": {
     "src": "best_featurize.py",
@@ -25,7 +25,7 @@
       7
     ]
   },
-  "plateau_count": 1,
+  "plateau_count": 2,
   "episode": 2,
   "bottleneck": "per-flight energy ARE",
   "note": "前置知识库选定起点:Tseng 2022 多项式(留出 1.90%),loop 从此起点继续"
