@@ -457,11 +457,11 @@ data; its capability boundaries are measured, not asserted.
 % =============================================================================
 \section{Threats to Validity and Defenses}
 \label{sec:threats}
-\paragraph{T1: ``An LSTM beats your energy model by 72\% RMSE (Muli et al.).''}
+\paragraph{T1: ``An LSTM beats your energy model by 72\% RMSE (Muli et al.\ \citep{muli2022}).''}
 Our claim is not ``best energy model.'' It is ``trustworthy autoresearch protocol + a
 diagnostic for when guided search helps.'' We match the human polynomial baseline (1.93\%
-vs.\ 1.90\% per-flight energy ARE; the LSTM's 36 RMSE is per-sample, a different quantity
-and a black box unusable as an interpretable planning cost).
+vs.\ 1.90\% per-flight energy ARE; the LSTM's 36 RMSE in \citep{muli2022} is per-sample, a
+different quantity and a black box unusable as an interpretable planning cost).
 
 \paragraph{T2: ``The headroom diagnostic is only validated in a few domains.''}
 The diagnostic is a mechanism-based rule (utility spread + combination synergy), not a
