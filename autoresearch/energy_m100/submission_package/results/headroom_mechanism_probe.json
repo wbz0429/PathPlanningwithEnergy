@@ -1,0 +1,21 @@
+{
+  "seeds": "multi-seed median",
+  "note": "mechanistic boundary probe",
+  "high_synergy": {
+    "best_single%": 2.26,
+    "spread": 1.116,
+    "rel_spread": 0.494,
+    "best_subset%": 2.15,
+    "headroom": 0.049,
+    "predicted": "tie"
+  },
+  "low_synergy": {
+    "best_single%": 2.26,
+    "spread": 0.964,
+    "rel_spread": 0.426,
+    "best_subset%": 2.101,
+    "headroom": 0.071,
+    "predicted": "guided-wins"
+  },
+  "conclusion": "single-term utility spread signal is directionally correct (high-synergy rel_spread larger), but with noise diluting the interaction, spread+subset alone cannot reliably separate high/low synergy pools → diagnostic answers 'current space saturated' (correct on energy 9 levels), not 'escapable higher-complexity space exists' (needs program-level mutation-space check)."
+}

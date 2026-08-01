@@ -1,0 +1,25 @@
+{
+  "energy_domain": {
+    "loop_ARE%": 1.859,
+    "random_mean%": 1.869,
+    "random_std%": 0.029,
+    "random_min%": 1.802,
+    "random_max%": 1.922,
+    "loop_z_score": -0.35,
+    "pct_random_better": 52.5,
+    "statistical_tie": true,
+    "random_mean_95CI": [
+      1.86,
+      1.877
+    ],
+    "R": 40,
+    "baseline%": 6.877
+  },
+  "planner_domain": {
+    "loop": 2046,
+    "random_single": 2805,
+    "loop_wins_pct": 27,
+    "robustness": "v* 扰动 0.6–1.5× 下 loop 优势 +26~33% 全程稳(MS2 已记录)"
+  },
+  "verdict": "能耗域 loop 与随机统计打平(|z|<1.96),规划器域 loop 显著胜随机 27% → null 是域性质非框架失败"
+}

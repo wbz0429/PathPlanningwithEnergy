@@ -1,0 +1,329 @@
+{
+  "generated": "2026-07-30 23:21",
+  "num_models": 14,
+  "best_model": "tseng_2022",
+  "results": [
+    {
+      "code": "dai_m100",
+      "name": "Dai M100([!]占位符,不计排行)",
+      "paper": "(论文待检索)",
+      "category": "data-driven",
+      "rankable": false,
+      "search_ARE_percent": 1.996394258757778,
+      "val_ARE_percent": 1.8196292924580888,
+      "val_r2": 0.35026078639954655,
+      "n_feat": 7,
+      "n_test_flights": 50,
+      "search_seeds": [
+        2.010164118576915,
+        1.7366575128296469,
+        2.2423611448667717
+      ],
+      "val_seeds": [
+        1.6500018503992444,
+        1.987783721522018,
+        1.821102305453004
+      ],
+      "time_sec": 0.2
+    },
+    {
+      "code": "tseng_2022",
+      "name": "Tseng 2022(9项多项式)",
+      "paper": "arXiv:2206.01609",
+      "category": "data-driven",
+      "rankable": true,
+      "search_ARE_percent": 1.9912757935883454,
+      "val_ARE_percent": 1.9033748323770416,
+      "val_r2": 0.42413231804336754,
+      "n_feat": 10,
+      "n_test_flights": 50,
+      "search_seeds": [
+        1.989892275682267,
+        1.7610622108013743,
+        2.222872894281395
+      ],
+      "val_seeds": [
+        1.7237836795838508,
+        2.013566411915721,
+        1.9727744056315526
+      ],
+      "time_sec": 0.2
+    },
+    {
+      "code": "full_linear_lib",
+      "name": "全线性库 LIB(12项,随机天花)",
+      "paper": "our baseline",
+      "category": "data-driven",
+      "rankable": true,
+      "search_ARE_percent": 1.9766409367104159,
+      "val_ARE_percent": 1.9090791780271743,
+      "val_r2": 0.457870681116835,
+      "n_feat": 14,
+      "n_test_flights": 50,
+      "search_seeds": [
+        2.093615613295635,
+        1.6784561133556877,
+        2.1578510834799247
+      ],
+      "val_seeds": [
+        1.7481249011364381,
+        1.9658648857690382,
+        2.0132477471760466
+      ],
+      "time_sec": 0.2
+    },
+    {
+      "code": "zhang_ml",
+      "name": "Zhang(ML功率模型)",
+      "paper": "(期刊待检索)",
+      "category": "data-driven",
+      "rankable": true,
+      "search_ARE_percent": 2.015938695985867,
+      "val_ARE_percent": 1.986695628092221,
+      "val_r2": 0.3752332596898406,
+      "n_feat": 8,
+      "n_test_flights": 50,
+      "search_seeds": [
+        2.207374110354364,
+        1.6524269228909256,
+        2.188015054712311
+      ],
+      "val_seeds": [
+        1.690232702515264,
+        2.177822132822242,
+        2.0920320489391573
+      ],
+      "time_sec": 0.2
+    },
+    {
+      "code": "physics_plus_payload",
+      "name": "物理核 + 线性 payload",
+      "paper": "our loop iter6",
+      "category": "hybrid",
+      "rankable": true,
+      "search_ARE_percent": 2.094375400314638,
+      "val_ARE_percent": 2.043505314917362,
+      "val_r2": 0.3671765717142492,
+      "n_feat": 9,
+      "n_test_flights": 50,
+      "search_seeds": [
+        2.291852123674295,
+        1.7812781639597426,
+        2.2099959133098777
+      ],
+      "val_seeds": [
+        1.7282108106890866,
+        2.3356415804673762,
+        2.0666635535956246
+      ],
+      "time_sec": 0.2
+    },
+    {
+      "code": "minimal_workable",
+      "name": "最简管用(6项)",
+      "paper": "our diagnostic",
+      "category": "data-driven",
+      "rankable": true,
+      "search_ARE_percent": 2.194323943883327,
+      "val_ARE_percent": 2.1026421353135705,
+      "val_r2": 0.2886430922240181,
+      "n_feat": 6,
+      "n_test_flights": 50,
+      "search_seeds": [
+        2.3569423132715492,
+        2.0088335773670707,
+        2.217195941011361
+      ],
+      "val_seeds": [
+        1.9326829168129316,
+        2.3213564370070943,
+        2.053887052120685
+      ],
+      "time_sec": 0.2
+    },
+    {
+      "code": "stolaroff_2018",
+      "name": "Stolaroff 2018(生命周期)",
+      "paper": "Nature Comm. 9",
+      "category": "physics",
+      "rankable": true,
+      "search_ARE_percent": 2.3753395286206747,
+      "val_ARE_percent": 2.386185927247711,
+      "val_r2": 0.3340327668787233,
+      "n_feat": 5,
+      "n_test_flights": 50,
+      "search_seeds": [
+        2.537751478430595,
+        2.2426248704189304,
+        2.3456422370124987
+      ],
+      "val_seeds": [
+        2.21304309943962,
+        2.5132905615974135,
+        2.4322241207060995
+      ],
+      "time_sec": 0.2
+    },
+    {
+      "code": "morbidi_2020",
+      "name": "Morbidi 2020(能量最优轨迹)",
+      "paper": "IEEE T-RO,2020",
+      "category": "physics",
+      "rankable": true,
+      "search_ARE_percent": 7.171684539146124,
+      "val_ARE_percent": 6.793132428291608,
+      "val_r2": 0.2631874806982951,
+      "n_feat": 6,
+      "n_test_flights": 50,
+      "search_seeds": [
+        6.913424555197972,
+        7.36016558664266,
+        7.241463475597739
+      ],
+      "val_seeds": [
+        5.834093904275428,
+        7.005417795581765,
+        7.539885585017633
+      ],
+      "time_sec": 0.2
+    },
+    {
+      "code": "poly_v_deg5",
+      "name": "纯速度多项式(deg5)",
+      "paper": "教科书",
+      "category": "data-driven",
+      "rankable": true,
+      "search_ARE_percent": 7.041276985595234,
+      "val_ARE_percent": 6.85909090555728,
+      "val_r2": 0.011643960335813682,
+      "n_feat": 6,
+      "n_test_flights": 50,
+      "search_seeds": [
+        6.624903470202044,
+        7.506389570500102,
+        6.992537916083551
+      ],
+      "val_seeds": [
+        5.948929702083879,
+        6.9429735941070465,
+        7.685369420480914
+      ],
+      "time_sec": 0.2
+    },
+    {
+      "code": "bemt_physics_core",
+      "name": "物理 BEMT 核(8项,非线性)",
+      "paper": "Leishman 动量理论",
+      "category": "physics",
+      "rankable": true,
+      "search_ARE_percent": 7.30010326357065,
+      "val_ARE_percent": 6.869211591011625,
+      "val_r2": 0.20410651217606815,
+      "n_feat": 8,
+      "n_test_flights": 50,
+      "search_seeds": [
+        7.018379342029174,
+        7.517142040246107,
+        7.364788408436667
+      ],
+      "val_seeds": [
+        5.937806757793636,
+        7.089582828361409,
+        7.580245186879832
+      ],
+      "time_sec": 0.2
+    },
+    {
+      "code": "bemt_steady",
+      "name": "教科书稳态 BEMT",
+      "paper": "教科书",
+      "category": "physics",
+      "rankable": true,
+      "search_ARE_percent": 7.040523920780196,
+      "val_ARE_percent": 6.877334959011732,
+      "val_r2": 0.004009623273451668,
+      "n_feat": 3,
+      "n_test_flights": 50,
+      "search_seeds": [
+        6.609218775098068,
+        7.498038880002519,
+        7.014314107240007
+      ],
+      "val_seeds": [
+        6.009088047478394,
+        6.974344236007559,
+        7.64857259354924
+      ],
+      "time_sec": 0.2
+    },
+    {
+      "code": "abeywardena_2022",
+      "name": "Abeywardena 2022(VRS涡环)",
+      "paper": "arXiv:2209.04128",
+      "category": "physics",
+      "rankable": true,
+      "search_ARE_percent": 7.388056737957347,
+      "val_ARE_percent": 6.935481739949677,
+      "val_r2": 0.2255846355074205,
+      "n_feat": 7,
+      "n_test_flights": 50,
+      "search_seeds": [
+        7.110917179585817,
+        7.629704908939655,
+        7.423548125346569
+      ],
+      "val_seeds": [
+        6.008962038085766,
+        7.148037854198748,
+        7.649445327564516
+      ],
+      "time_sec": 0.2
+    },
+    {
+      "code": "wind_coupled",
+      "name": "风耦合空速(quadrature)",
+      "paper": "Tseng spl.",
+      "category": "hybrid",
+      "rankable": true,
+      "search_ARE_percent": 7.263119833833427,
+      "val_ARE_percent": 6.936575225465945,
+      "val_r2": 0.04337838969463722,
+      "n_feat": 4,
+      "n_test_flights": 50,
+      "search_seeds": [
+        6.926514329464655,
+        7.649325827525844,
+        7.213519344509785
+      ],
+      "val_seeds": [
+        6.008392134433677,
+        7.030050434559955,
+        7.7712831074042015
+      ],
+      "time_sec": 0.2
+    },
+    {
+      "code": "dorling_2017",
+      "name": "Dorling 2017(配送能耗)",
+      "paper": "IEEE T-SMC 47(1)",
+      "category": "physics",
+      "rankable": true,
+      "search_ARE_percent": 7.104362052199796,
+      "val_ARE_percent": 6.979890030155203,
+      "val_r2": -0.0004101347211967754,
+      "n_feat": 2,
+      "n_test_flights": 50,
+      "search_seeds": [
+        6.687400288886152,
+        7.595101559806452,
+        7.030584307906784
+      ],
+      "val_seeds": [
+        6.144588540981556,
+        7.064465273807608,
+        7.7306162756764465
+      ],
+      "time_sec": 0.2
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "A_frozen_ruler": {
+    "candidates": [
+      {
+        "name": "base",
+        "search": 7.04,
+        "val": 6.88
+      },
+      {
+        "name": "iter1",
+        "search": 4.56,
+        "val": 4.25
+      },
+      {
+        "name": "iter2",
+        "search": 4.93,
+        "val": 4.91
+      },
+      {
+        "name": "iter3",
+        "search": 4.54,
+        "val": 4.24
+      },
+      {
+        "name": "iter4",
+        "search": 4.54,
+        "val": 4.23
+      },
+      {
+        "name": "iter5",
+        "search": 4.54,
+        "val": 4.38
+      },
+      {
+        "name": "iter6",
+        "search": 2.01,
+        "val": 1.93
+      },
+      {
+        "name": "iter7",
+        "search": 2.01,
+        "val": 1.93
+      },
+      {
+        "name": "iter8",
+        "search": 1.99,
+        "val": 1.96
+      },
+      {
+        "name": "iter9",
+        "search": 2.0,
+        "val": 1.96
+      },
+      {
+        "name": "过拟合探针",
+        "search": 2.13,
+        "val": 2.03
+      }
+    ],
+    "probe_search%": 2.13,
+    "best_honest_search%": 1.99,
+    "probe_resisted": true,
+    "max_search_val_gap_pp": 0.31
+  },
+  "B_novelty_gate": {
+    "no_gate_claims": 3,
+    "gated_claims": 1,
+    "downgraded": 2,
+    "findings": [
+      {
+        "h": "H1 配送顺序翻转",
+        "raw": "SUPPORTED",
+        "gated": "TAKEN",
+        "prior_art": "Michel 2024 arXiv 2410.17585"
+      },
+      {
+        "h": "H3 电池可达集扩大",
+        "raw": "SUPPORTED",
+        "gated": "mostly TAKEN",
+        "prior_art": "Nguyen & Au AAMAS 2017"
+      },
+      {
+        "h": "H5 省能分布",
+        "raw": "SUPPORTED",
+        "gated": "SUPPORTED(未撞车)",
+        "prior_art": "—"
+      },
+      {
+        "h": "H2 风扰鲁棒",
+        "raw": "REFUTED",
+        "gated": "REFUTED",
+        "prior_art": "—"
+      },
+      {
+        "h": "H4 借重力",
+        "raw": "REFUTED",
+        "gated": "REFUTED",
+        "prior_art": "—"
+      }
+    ]
+  },
+  "C_necessity": {
+    "planner": {
+      "loop": 2882.0,
+      "random": 3135.2,
+      "loop_wins_pct": 8.1,
+      "z": -2.38
+    },
+    "energy": {
+      "loop_ARE%": 1.859,
+      "random_mean%": 1.869,
+      "z": -0.35,
+      "ties": true
+    }
+  }
+}
