@@ -175,6 +175,18 @@ S("<h2>能耗模型对比:教科书 BEMT vs 我们的模型 vs 随机搜索最�
   "<div class='eqnote'>系数 <i>w</i><sub>0..8</sub> 由真机 209 航班在训练集上岭回归拟合,留出集(未参与训练的飞行)检验;能量 E&nbsp;=&nbsp;∫P&nbsp;dt。max(<i>v</i><sub>z</sub>,0)/min(<i>v</i><sub>z</sub>,0) 为<b>爬升/下降不对称项</b>——区别纯多项式、能指导规划决策的关键物理结构。</div></div>" +
   "<div class='cite'>同冻结评测器、同留出集对比。iter8 为随机搜索在纯线性库上的最优。<b>我们的模型独有爬升/下降不对称项</b>——这是它区别于纯多项式、能指导规划决策的物理价值(下一页)。</div>")
 
+# 前置知识库:文献模型系统评测(先测全体,选最优做起点)
+S("<h2>前置知识库:14 个文献模型在 M100 上系统评测,最优做 loop 起点</h2>" +
+  two_col(img(pub="模型知识库排行榜.png"),
+          bl(["<b>零调整直接迁移全部失败(ARE 53–76%)</b>——系数平台专属",
+              "&nbsp;&nbsp;→ 证明必须先在目标数据上重拟合(refit)",
+              "<b>refit 后系统排行:</b>",
+              "&nbsp;&nbsp;数据驱动(Tseng 多项式 1.90%)≫ 纯物理(6.7–7.0%)",
+              "&nbsp;&nbsp;物理模型即使重拟合也垫底 → 形式灵活性是瓶颈",
+              "<b>最优做起点:</b> loop 从 Tseng 1.90% 出发,而非教科书 BEMT",
+              "<b>→ 框架前置环节:文献检索 → 评测 → 选基线 → 迭代</b>"])) +
+  "<div class='cite'>14 个文献模型:动量理论/BEMT/Tseng回归/Dorling/Stolaroff/Abeywardena VRS/Morbidi 等;评测器 m100_eval.py 冻结,同口径对比</div>")
+
 S("<h2>真机验证的能耗代价改变规划决策:避开真实存在的爬升能耗</h2>" +
   two_col(img(pub="城市走廊_混合决策.png") + img(raw=os.path.join(GIF, "video_corridor.gif"), cls="gif"),
           bl(["单墙场景:距离/教科书BEMT → 翻墙;<b class='grn'>真机M100 → 绕行,省 5–13%</b>",
