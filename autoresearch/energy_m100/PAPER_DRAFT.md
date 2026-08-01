@@ -153,6 +153,25 @@ We presented a trustworthy autoresearch protocol for noisy engineering domains, 
 
 ---
 
+## 9. Threats to Validity & Defenses
+
+**(T1) "An LSTM beats your energy model by 72% RMSE (Muli et al.), so the energy-modeling instantiation is weak."**
+*Defense:* Our claim is *not* "best energy model." It is "trustworthy autoresearch protocol + a diagnostic for when guided search helps." The energy model is the *instantiation domain*, deliberately chosen for its noise and lack of exact evaluator — not for maximizing ARE. We match the human polynomial baseline (1.93% vs. 1.90% per-flight energy ARE; the LSTM's 36 RMSE is per-sample, a different quantity and a black box unusable as an interpretable planning cost). We explicitly do not claim to beat black-box ML on the regression metric.
+
+**(T2) "The headroom diagnostic is only validated in 2 domains — a fitted classifier would also fit 2 points."**
+*Defense:* The diagnostic is a mechanism-based rule (utility spread + combination synergy → saturation), not a fitted classifier — no parameters are trained on the outcome. It is validated at 9 controlled complexity levels in the energy domain (all correctly tie) and at 2 planning settings (config tie, cross-space win). The fine-grid sweep is a systematic probe of the rule, not a fit.
+
+**(T3) "The loop is net-negative in the energy domain (1.93% > 1.90% start) — isn't the framework pointless?"**
+*Defense:* That is precisely the point. The energy domain is a *saturated* space; the honest protocol — and the diagnostic — recognize this and stop. A naive autoresearch narrative would have claimed "6.88% → 1.93% (73% improvement)" without reporting that the loop does not beat a good starting point. Our protocol's value is *knowing when not to run*, and the planning domain shows it *knows when to invest* (+8.1%).
+
+**(T4) "The zero-fit benchmark is unfair to physics models — their coefficients are platform-bound."**
+*Defense:* That is the finding, stated explicitly: platform-bound coefficients make zero-fit transfer fail, which is why refit is a protocol stage rather than an assumption. The refit numbers (physics forms still 6.7–7.0%) then show the failure is not only coefficient-bound — the *forms* also lack the flexibility of data-driven terms in this noisy regime.
+
+**(T5) "The planning domain is synthetic (a simulated corridor)."**
+*Defense:* Accepted as a limitation. The energy-modeling instantiation uses real DJI M100 hardware data; the planning instantiation uses the standard kinodynamic simulator in this pipeline (RotorPy + PX4 SITL validated separately). Real-outdoor planning validation is future work.
+
+---
+
 ## References
 
 1. Romera-Paredes, B. et al. Mathematical discoveries from program search with large language models. *Nature* 625, 468–475 (2024). [FunSearch]
