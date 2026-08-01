@@ -146,6 +146,11 @@ We presented a trustworthy autoresearch protocol for noisy engineering domains, 
 
 **Practical value of the diagnostic.** Beyond prediction accuracy, the diagnostic is a *budget-saving* tool: in the energy domain it flags the space as saturated before any expensive loop runs (the loop, left to itself, would spend budget converging to the same 1.9% the knowledge base already reaches). We quantify this: the diagnostic's single-term utility computation costs O(K) cheap evaluations vs. the loop's O(budget × planning-eval) cost. In a saturated domain, the diagnostic saves the entire loop budget.
 
+**Measured deployment value.** Following the diagnostic as a decision rule is strictly better than defaulting to running the loop:
+- *Energy domain (predict = tie):* the knowledge-base start (Tseng 1.90%) *beats* the loop's own product (physics+payload 1.93% from agent_log; 2.04% in the clean zoo re-implementation). Running the loop from a good start was **net-negative** — the diagnostic's "skip" advice saves the budget *and* yields the better model.
+- *Planning domain (predict = config-tie + escapable code space):* config-only loop (3264) ≈ random (3135), so the diagnostic's config-space "tie" is correct; the win (2882, +8.1%, z = −2.38) comes entirely from cross-space escape, which the diagnostic detects (a higher-complexity space exists). Investing in the loop pays.
+- This is a concrete, quantitative "when to run autoresearch" rule: **skip in saturated spaces, invest where a higher-complexity space is escapable.** (`headroom_value.py` → `headroom_value.json`)
+
 ---
 
 ## References

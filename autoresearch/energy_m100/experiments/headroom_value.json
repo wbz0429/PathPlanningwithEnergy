@@ -1,0 +1,28 @@
+{
+  "diagnostic_rule": "if predict==tie → skip loop (save budget); if detect escapable space → invest",
+  "energy_domain": {
+    "diagnostic": "tie (space saturated)",
+    "knowledge_base_start_ARE%": 1.9033748323770416,
+    "loop_product_ARE%_agentlog": 1.93,
+    "loop_product_ARE%_zoo": 2.043505314917362,
+    "verdict": "loop from a good start was net-negative (product 1.93-2.04% > start 1.90%); following the diagnostic saves the loop budget with no loss",
+    "loop_budget_saved": "O(10) loop iterations × O(1) eval each, vs diagnostic O(K) single-term evals"
+  },
+  "planning_domain": {
+    "config_space": {
+      "diagnostic": "tie (config space saturated)",
+      "config_only_loop": 3264.0,
+      "random_mean": 3135.2,
+      "verdict": "config-only loop ≈ random → tie, diagnostic correct"
+    },
+    "cross_space_escape": {
+      "detection": "escapable program space exists (smoother code)",
+      "full_loop": 2882.0,
+      "escape_gain": -382.0,
+      "win_pct": 8.1,
+      "z": -2.38,
+      "verdict": "investing in the loop across space pays +8.1%"
+    }
+  },
+  "summary": "headroom diagnostic = a deployment rule: skip the loop in saturated spaces, invest where a higher-complexity space is escapable"
+}
