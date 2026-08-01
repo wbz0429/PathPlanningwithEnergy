@@ -126,7 +126,7 @@ def corridor():
 
 def crossdomain_sig():
     e = J("significance_test.json")["energy_domain"]; p = J("planner_significance.json")
-    fig, (a1, a2) = plt.subplots(1, 2, figsize=(6.6, 2.6))
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(7.0, 2.7))
     # 能耗域
     m, sd, lp = e["random_mean%"], e["random_std%"], e["loop_ARE%"]
     a1.axvspan(m-1.96*sd, m+1.96*sd, color=PAL["blue"], alpha=.12)
@@ -136,7 +136,14 @@ def crossdomain_sig():
     a1.text(lp-0.006, .78, f"loop {lp}%\nz={e['loop_z_score']}", transform=a1.get_xaxis_transform(), fontsize=8.5,
             ha="right", color=PAL["green"], bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.85))
     a1.set_xlim(m-3.2*sd, m+3.2*sd); a1.set_yticks([]); a1.set_xlabel("留出 ARE(%)")
-    a1.set_title("能耗域(封顶)→ 打平", fontsize=10)
+    a1.set_title("能耗域(低有效维度)→ 打平 z=−0.35", fontsize=9.5)
+    # 负控制内嵌:名义 K 膨胀,优势 ≈ 0(受控实验)
+    fair = J("complexity_scaling_fair.json")["rows"]
+    a1in = a1.inset_axes([0.05, 0.55, 0.42, 0.38])
+    a1in.axhline(0, color=PAL["gray"], lw=.8, ls=(0, (4, 3)))
+    a1in.plot([r["K"] for r in fair], [r["advantage_pp"] for r in fair], "o-", color=PAL["blue"], lw=1.3, ms=3.5)
+    a1in.set_ylim(-0.3, 0.5); a1in.set_xticks([10, 110]); a1in.tick_params(labelsize=5.5)
+    a1in.set_title("负控制:名义K膨胀无优势", fontsize=6.5, color="#444")
     # 规划器域
     m2, sd2, lp2 = p["random_mean"], p["random_std"], p["loop"]
     a2.axvspan(m2-1.96*sd2, m2+1.96*sd2, color=PAL["blue"], alpha=.12)
@@ -145,7 +152,7 @@ def crossdomain_sig():
     a2.text(lp2+12, .78, f"loop {lp2:.0f}\nz={p['loop_z']}", transform=a2.get_xaxis_transform(), fontsize=8.5,
             ha="left", color=PAL["green"], bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.85))
     a2.set_xlim(min(lp2, m2-3.2*sd2)-40, m2+3.2*sd2); a2.set_yticks([]); a2.set_xlabel("能耗 score")
-    a2.set_title("规划器域(有改进空间)→ 显著胜", fontsize=10)
+    a2.set_title("规划器域(代码结构)→ 显著胜 8.1%", fontsize=9.5)
     for a in (a1, a2): a.spines["left"].set_visible(False)
     save(fig, "两域显著性")
 
