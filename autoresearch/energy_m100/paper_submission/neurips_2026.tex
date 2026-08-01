@@ -123,9 +123,19 @@ domain.
 \paragraph{The trustworthiness gap.} Independent evaluation of the AI Scientist pipeline
 \citep{beel2025} found 42\% experiment coding failures, 57\% manuscripts with
 hallucinated numbers, and keyword-based novelty checks misclassifying established
-concepts as novel. Falsification-first framing is prior art \citep{aigs}; our
-contribution is the engineered protocol plus empirical boundaries. This gap is
-unoccupied.
+concepts as novel. Recent 2026 evidence sharpens this: the Corral benchmark
+\citep{corral2026} (25k+ agent runs across 8 scientific domains) found agents frequently
+fail to weigh evidence, generate/test hypotheses, or revise assumptions on contradictory
+results; a position paper (``Falsify, Don't Just Discover'') argues AI-generated
+discoveries are ``not born scientific'' without automated falsification \citep{falsify2026};
+a January 2026 case study of four end-to-end autonomous research attempts
+\citep{foureattempts2026} catalogs six recurring failure modes, including
+\emph{overexcitement}---declaring success despite failures. A \emph{Nature Machine
+Intelligence} editorial (2026) explicitly recommends that AI-science systems provide
+ablation analyses and baseline comparisons and transparent reporting \citep{naturemi2026}
+--- precisely what our protocol delivers. Falsification-first framing is prior art
+\citep{aigs}; our contribution is the engineered protocol plus empirical boundaries. This
+gap is unoccupied.
 
 \paragraph{Adjacent LLM-drone work.} LAENet \citep{laenet} uses an LLM to design a UAV
 reward function (Eureka-style, single-shot); LLM-VD couples LLM generation with evolution
@@ -457,6 +467,24 @@ The AI Scientist: Towards fully automated open-ended scientific discovery.
 J.~Beel, B.~Kan, and M.~Baumgart.
 Hidden pitfalls of AI Scientist systems.
 \emph{ACM SIGIR Forum}, 2025. arXiv:2502.14297.
+
+\bibitem[Jablonka et al.(2026)]{corral2026}
+K.~M. Jablonka et al.
+Corral: A benchmark of 25k agent runs for scientific reasoning.
+\emph{arXiv}, 2026.
+
+\bibitem[Position paper(2026)]{falsify2026}
+Falsify, don't just discover: A position paper on automated falsification for
+AI-driven science.
+\emph{arXiv}, 2026.
+
+\bibitem[Case study(2026)]{foureattempts2026}
+Why LLMs aren't scientists yet: Lessons from four autonomous research attempts.
+\emph{arXiv:2601.03315}, 2026.
+
+\bibitem[Nature MI Editorial(2026)]{naturemi2026}
+Multi-agent AI systems need transparency.
+\emph{Nature Machine Intelligence}, 2026.
 
 \bibitem[Liu et al.(2024)]{aigs}
 J.~Liu et al.
