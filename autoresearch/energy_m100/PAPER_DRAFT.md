@@ -113,7 +113,7 @@ Input: candidate pool P, frozen evaluator E (search split only), budget B
 
 *Takeaway: zero-fit transfer fails; refit recovers data-driven models to ≈1.9%; physics forms stay ≈7% even refit. "Our loop" 1.93% is the loop's recorded product (agent_log iter6); a clean re-implementation in the knowledge base measures 2.04% — a featurize-formulation detail. Both are within the "≈1.9% data floor" story.*
 
-Takeaway: zero-fit transfer fails; refit recovers data-driven models to ≈1.9%; physics forms stay ≈7% even refit. The knowledge-base leaderboard is `pub/模型知识库排行榜.png`; the zero-fit-vs-refit gap is `pub/as_published_vs_refit.png`.
+Takeaway: zero-fit transfer fails; refit recovers data-driven models to ≈1.9%; physics forms stay ≈7% even refit. The knowledge-base leaderboard is Fig 2 (`pub/模型知识库排行榜.png`); the zero-fit-vs-refit gap is Fig 3 (`pub/as_published_vs_refit.png`).
 
 ### 5.2 The cheat-proof loop (Fig 4–5)
 
