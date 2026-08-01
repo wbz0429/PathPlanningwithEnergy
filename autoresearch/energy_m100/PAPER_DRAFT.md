@@ -91,6 +91,8 @@ Input: candidate pool P, frozen evaluator E (search split only), budget B
 ```
 **Correctness.** On 9 fine-grid K levels (8–200) in energy, the diagnostic predicts "tie" everywhere, matching the fair sweep's observed advantage ≈ 0. In the planning domain, the diagnostic predicts "tie" within the config space — and the decomposition confirms it: config-only loop (3264) ≈ random (3135), while the actual win (2882) is entirely from the evolved smoother **code** (a −382-point cross-space escape). **Guided search helps iff there is an escapable higher-complexity space; the diagnostic identifies when the current space is saturated.**
 
+**Scope and limit of the diagnostic.** The diagnostic answers "is the *current* space saturated?" — it does not, by itself, answer "does an escapable higher-complexity space exist?" In the energy domain, all 9 controlled settings are saturated (single-term utilities dominate; combination adds nothing); the diagnostic correctly predicts tie. In the planning domain, the diagnostic correctly predicts tie *within* the config space, and the cross-space escape (evolved code) is detected by a separate check — whether the search operates in a space where program-level changes are possible. A mechanistic probe confirms this boundary: constructing synthetic pools with high vs. low combination synergy, the single-term-utility spread signal alone cannot reliably separate them once noise terms dilute the interaction; the distinguishing signal is the *existence of a program-level mutation space*, not the feature-pool statistics. We state this limitation explicitly rather than overclaiming the diagnostic as a general "when to run" oracle.
+
 ---
 
 ## 5. Experiments
