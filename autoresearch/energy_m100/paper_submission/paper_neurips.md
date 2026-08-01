@@ -227,6 +227,46 @@ We presented a trustworthy autoresearch protocol for noisy engineering domains, 
 - Figures: `pubfigs.py` + figure scripts → `experiments/pub/`
 - All numbers trace to committed JSONs; every script is version-controlled.
 
+---
+
+## Implementation Details (Appendix)
+
+**Data split.** 209 DJI M100 flights, flight-level 70/30 train/test split (no cross-flight
+leakage). Search uses seeds 0,1,2; held-out validation uses seeds 5,6,7. Held-out flights
+are never touched during search — they enter only for final evaluation.
+
+**Evaluator.** Per-flight energy ARE = mean over held-out flights of |E_pred − E_true| /
+E_true, where E = ∫P dt with P = V·|I| (on-board measurement). Feature columns are z-scored
+on the training split; ridge regression with λ = 10⁻⁴·tr(XᵀX)/K.
+
+**Knowledge-base benchmark.** 14 models (`energy_model_zoo.py`), each refit with the above
+ridge protocol; zero-fit models (`as_published_benchmark.py`) use no fitting.
+
+**Fair complexity sweep (`complexity_scaling_fair.py`).** Candidate pools of size
+K ∈ {10,20,40,70,110} (fine-grid 8–200 in the diagnostic probe); budget 30; 6 seeds;
+guided = single-term-utility-weighted sampling (softmax temperature 0.5), random =
+uniform; both use the same subset-sampling action space. Advantage measured as random −
+guided (held-out ARE).
+
+**Headroom diagnostic (`headroom_diagnostic.py`, Algorithm 1).** Single-term utilities on
+the search split; best-combination = median of best budget-30 random subsets over 5 seeds
+(median removes single-seed noise). Thresholds: tie iff rel_spread > 0.3 and headroom <
+0.05.
+
+**Planning significance (`planner_significance.py`).** R=12 random config searches × B=15
+budget each, default smoother; loop = tuned config + evolved smoother. Config space:
+step_size ∈ [1,5], max_iterations ∈ [3000,8000], goal_sample_rate ∈ [0.1,0.6],
+search_radius ∈ [3,7], use_rrt_connect random. Score = physics_eval.evaluate(overrides,
+runs=3, seed0=0)["score"]. Cross-space decomposition: config-only loop = tuned config +
+default smoother (3264); full loop adds evolved smoother (2882).
+
+**Safeguard ablations (`safeguard_ablation.py`).** Frozen-ruler: overfit probe (35 spurious
+terms) vs. honest models on search ARE. Novelty gate: 5 planning hypotheses adjudicated
+with vs. without literature gate. Local-optimum: 7 physics variants vs. external-search
+escape.
+
+All seeds are fixed; every number in the paper traces to the committed JSONs.
+
 
 ---
 

@@ -510,6 +510,49 @@ planning instantiation uses the standard kinodynamic simulator. Real-outdoor pla
 validation is future work.
 
 % =============================================================================
+\section*{Implementation Details}
+\label{app:impl}
+
+\textbf{Data split.} 209 DJI M100 flights, flight-level 70/30 train/test split (no
+cross-flight leakage). Search uses seeds 0,1,2; held-out validation uses seeds 5,6,7.
+Held-out flights are never touched during search---they enter only for final evaluation.
+
+\textbf{Evaluator.} Per-flight energy ARE = mean over held-out flights of
+$|E_{\mathrm{pred}} - E_{\mathrm{true}}| / E_{\mathrm{true}}$, where $E = \int P\,dt$ with
+$P = V\cdot|I|$ (on-board measurement). Feature columns are z-scored on the training
+split; ridge regression with $\lambda = 10^{-4}\,\mathrm{tr}(X^\top X)/K$.
+
+\textbf{Knowledge-base benchmark.} 14 models (\texttt{energy\_model\_zoo.py}), each refit
+with the above ridge protocol; zero-fit models (\texttt{as\_published\_benchmark.py}) use
+no fitting.
+
+\textbf{Fair complexity sweep (\texttt{complexity\_scaling\_fair.py}).} Candidate pools of
+size $K \in \{10,20,40,70,110\}$ (fine-grid 8--200 in the diagnostic probe); budget 30;
+6 seeds; guided = single-term-utility-weighted sampling (softmax temperature 0.5),
+random = uniform; both use the same subset-sampling action space. Advantage measured as
+random $-$ guided (held-out ARE).
+
+\textbf{Headroom diagnostic (\texttt{headroom\_diagnostic.py}, Algorithm~\ref{alg:headroom}).}
+Single-term utilities on the search split; best-combination = median of best budget-30
+random subsets over 5 seeds (median removes single-seed noise). Thresholds: tie iff
+rel\_spread $> 0.3$ and headroom $< 0.05$.
+
+\textbf{Planning significance (\texttt{planner\_significance.py}).} $R{=}12$ random
+config searches $\times$ $B{=}15$ budget each, default smoother; loop = tuned config +
+evolved smoother. Config space: step\_size $\in [1,5]$, max\_iterations $\in [3000,8000]$,
+goal\_sample\_rate $\in [0.1,0.6]$, search\_radius $\in [3,7]$, use\_rrt\_connect random.
+Score = \texttt{physics\_eval.evaluate(overrides, runs=3, seed0=0)["score"]}. Cross-space
+decomposition: config-only loop = tuned config + default smoother (3264); full loop adds
+evolved smoother (2882).
+
+\textbf{Safeguard ablations (\texttt{safeguard\_ablation.py}).} Frozen-ruler: overfit probe
+(35 spurious terms) vs.\ honest models on search ARE. Novelty gate: 5 planning hypotheses
+adjudicated with vs.\ without literature gate. Local-optimum: 7 physics variants vs.\
+external-search escape.
+
+All seeds are fixed; every number in the paper traces to the committed JSONs.
+
+% =============================================================================
 \section*{Acknowledgements}
 % TODO: add funding/grant info before submission.
 We thank the anonymous reviewers of earlier drafts for comments that improved the
