@@ -69,6 +69,16 @@ human-expert accuracy while exposing its limits.
 \section{Introduction}
 \label{sec:intro}
 
+A delivery drone's flight plan is only as good as its energy model. Under-estimate the
+cost of climbing over a wall and the planner sends the drone up the expensive route;
+over-estimate it and the drone wastes battery on a needless detour. Yet the energy model
+every planner actually runs on---momentum/BEMT theory---is a textbook idealization that has
+never seen this drone's data. Getting the model right, on real flight measurements, is
+what determines whether an energy-aware planner saves battery or burns it. And this is not
+a one-off: every noisy engineering domain (UAV energy, chemical sensor traces, robotic
+manipulation on hardware) has the same shape---a measurement, not a ground truth; a model
+that must generalize; an evaluator that can be gamed.
+
 LLM-agent ``autoresearch'' systems propose, evaluate, and select candidate discoveries in
 a closed loop. Their appeal is that an LLM can propose in \emph{program space}---new
 code, new function forms, new solver structures---that classical search (random,
