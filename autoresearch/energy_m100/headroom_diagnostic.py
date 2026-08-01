@@ -33,16 +33,19 @@ def single_term_utilities(pool):
     return {t: _search_are(pool, [t]) for t in pool}
 
 
-def best_random_subset(pool, budget=30, seed=0):
-    """预算内均匀抽子集的最优 search ARE(随机搜索天花板)。"""
-    rng = np.random.default_rng(1000 + seed)
-    keys = np.array(list(pool))
-    best = 1e9
-    for _ in range(budget):
-        k = int(rng.integers(1, min(len(keys), 8) + 1))
-        terms = list(rng.choice(keys, size=k, replace=False))
-        best = min(best, _search_are(pool, terms))
-    return best
+def best_random_subset(pool, budget=30, seeds=(0,1,2,3,4)):
+    """预算内均匀抽子集的最优 search ARE。多 seed 取中位数(稳定,去单次噪声)。"""
+    bests = []
+    for seed in seeds:
+        rng = np.random.default_rng(1000 + seed)
+        keys = np.array(list(pool))
+        best = 1e9
+        for _ in range(budget):
+            k = int(rng.integers(1, min(len(keys), 8) + 1))
+            terms = list(rng.choice(keys, size=k, replace=False))
+            best = min(best, _search_are(pool, terms))
+        bests.append(best)
+    return float(np.median(bests))
 
 
 def diagnostic(pool, budget=30):

@@ -1,0 +1,103 @@
+{
+  "rows": [
+    {
+      "K": 8,
+      "n_pool": 10,
+      "spread": 1.4529,
+      "rel_spread": 0.643,
+      "best_single": 2.2604,
+      "best_subset": 1.9615,
+      "synergy": 0.2988,
+      "headroom": 0.0,
+      "predicted": "tie"
+    },
+    {
+      "K": 15,
+      "n_pool": 15,
+      "spread": 1.2065,
+      "rel_spread": 0.534,
+      "best_single": 2.2604,
+      "best_subset": 1.9837,
+      "synergy": 0.2767,
+      "headroom": 0.0,
+      "predicted": "tie"
+    },
+    {
+      "K": 30,
+      "n_pool": 30,
+      "spread": 0.8945,
+      "rel_spread": 0.396,
+      "best_single": 2.2604,
+      "best_subset": 2.1007,
+      "synergy": 0.1597,
+      "headroom": 0.0,
+      "predicted": "tie"
+    },
+    {
+      "K": 50,
+      "n_pool": 50,
+      "spread": 0.9005,
+      "rel_spread": 0.398,
+      "best_single": 2.2604,
+      "best_subset": 1.9978,
+      "synergy": 0.2626,
+      "headroom": 0.0,
+      "predicted": "tie"
+    },
+    {
+      "K": 90,
+      "n_pool": 90,
+      "spread": 1.0945,
+      "rel_spread": 0.484,
+      "best_single": 2.2604,
+      "best_subset": 2.3694,
+      "synergy": -0.109,
+      "headroom": 0.048,
+      "predicted": "tie"
+    },
+    {
+      "K": 110,
+      "n_pool": 110,
+      "spread": 1.0023,
+      "rel_spread": 0.443,
+      "best_single": 2.2604,
+      "best_subset": 2.2157,
+      "synergy": 0.0447,
+      "headroom": 0.0,
+      "predicted": "tie"
+    },
+    {
+      "K": 130,
+      "n_pool": 130,
+      "spread": 0.9715,
+      "rel_spread": 0.43,
+      "best_single": 2.2604,
+      "best_subset": 2.3364,
+      "synergy": -0.076,
+      "headroom": 0.034,
+      "predicted": "tie"
+    },
+    {
+      "K": 160,
+      "n_pool": 160,
+      "spread": 1.006,
+      "rel_spread": 0.445,
+      "best_single": 2.2604,
+      "best_subset": 2.3575,
+      "synergy": -0.0971,
+      "headroom": 0.043,
+      "predicted": "tie"
+    },
+    {
+      "K": 200,
+      "n_pool": 200,
+      "spread": 0.9393,
+      "rel_spread": 0.416,
+      "best_single": 2.2604,
+      "best_subset": 2.3064,
+      "synergy": -0.046,
+      "headroom": 0.02,
+      "predicted": "tie"
+    }
+  ]
+}
