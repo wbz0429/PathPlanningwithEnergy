@@ -1,0 +1,7 @@
+PAPER NUMBER AUDIT — 2026-08-01
+All paper key numbers verified against committed experiment JSONs (frozen evaluator):
+  15/15 ✓ PASS
+- as-published: hover 72.7%, forward 76.3%, tseng 53.2%
+- zoo refit: tseng 1.90%, LIB 1.91%, VRS 6.94%, dorling 6.98%, morbidi 6.79%, stolaroff 2.39%
+- energy: loop 1.86%, z=-0.35
+- planner: loop 2882, random 3135.2, z=-2.38, win 8.1%
